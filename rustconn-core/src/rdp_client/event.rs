@@ -641,6 +641,20 @@ pub enum RdpClientCommand {
         /// Domain (optional)
         domain: Option<String>,
     },
+
+    /// Send a string as individual Unicode keystroke events with configurable delay.
+    ///
+    /// Bypasses keyboard layout issues by using `TS_UNICODE_KEYBOARD_EVENT` PDU.
+    /// Each grapheme cluster is sent as press+release events for all its chars.
+    /// This is the RDP equivalent of KeePassXC/Remmina "auto-type" feature.
+    AutotypeText {
+        /// Text to type (iterated by grapheme clusters via `unicode-segmentation`)
+        text: String,
+        /// Delay between characters in milliseconds (default: 20ms)
+        inter_char_delay_ms: u32,
+        /// Initial delay before typing starts in milliseconds (default: 0)
+        initial_delay_ms: u32,
+    },
 }
 
 #[cfg(test)]

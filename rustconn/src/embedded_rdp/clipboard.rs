@@ -31,7 +31,7 @@ impl super::EmbeddedRdpWidget {
             let state = self.state.clone();
             let is_embedded = self.is_embedded.clone();
             let remote_clipboard_text = self.remote_clipboard_text.clone();
-            let drawing_area = self.drawing_area.clone();
+            let container = self.container.clone();
             let status_label = self.status_label.clone();
 
             copy_btn.connect_clicked(move |_| {
@@ -39,6 +39,12 @@ impl super::EmbeddedRdpWidget {
                 let embedded = *is_embedded.borrow();
 
                 if current_state != RdpConnectionState::Connected || !embedded {
+                    tracing::debug!(
+                        protocol = "rdp",
+                        ?current_state,
+                        embedded,
+                        "Copy button: not connected or not embedded"
+                    );
                     return;
                 }
 
@@ -46,10 +52,23 @@ impl super::EmbeddedRdpWidget {
                 if let Some(ref text) = *remote_clipboard_text.borrow() {
                     let char_count = text.len();
 
-                    // Copy to local clipboard
-                    let display = drawing_area.display();
-                    let clipboard = display.clipboard();
+                    // Use the root widget's display for clipboard access —
+                    // on Wayland the clipboard is tied to the focused surface,
+                    // and the top-level window surface is the most reliable owner.
+                    let clipboard = if let Some(root) = container.root()
+                        && let Some(window) = root.downcast_ref::<gtk4::Window>()
+                    {
+                        gtk4::prelude::WidgetExt::display(window).clipboard()
+                    } else {
+                        container.display().clipboard()
+                    };
                     clipboard.set_text(text);
+
+                    tracing::debug!(
+                        protocol = "rdp",
+                        chars = char_count,
+                        "Copy button: set local clipboard from remote"
+                    );
 
                     // Show feedback
                     show_status_briefly(
@@ -58,6 +77,10 @@ impl super::EmbeddedRdpWidget {
                         2,
                     );
                 } else {
+                    tracing::debug!(
+                        protocol = "rdp",
+                        "Copy button: no remote clipboard data available"
+                    );
                     show_status_briefly(&status_label, &i18n("No remote clipboard data"), 2);
                 }
             });
@@ -67,7 +90,7 @@ impl super::EmbeddedRdpWidget {
         {
             #[cfg(feature = "rdp-embedded")]
             let ironrdp_tx = self.ironrdp_command_tx.clone();
-            let drawing_area = self.drawing_area.clone();
+            let container = self.container.clone();
             let state = self.state.clone();
             let is_embedded = self.is_embedded.clone();
             #[cfg(feature = "rdp-embedded")]
@@ -79,12 +102,24 @@ impl super::EmbeddedRdpWidget {
                 let embedded = *is_embedded.borrow();
 
                 if current_state != RdpConnectionState::Connected || !embedded {
+                    tracing::debug!(
+                        protocol = "rdp",
+                        ?current_state,
+                        embedded,
+                        "Paste button: not connected or not embedded"
+                    );
                     return;
                 }
 
-                // Get text from local clipboard and send to remote
-                let display = drawing_area.display();
-                let clipboard = display.clipboard();
+                // Use the root widget's display for clipboard access —
+                // on Wayland the clipboard is tied to the focused surface.
+                let clipboard = if let Some(root) = container.root()
+                    && let Some(window) = root.downcast_ref::<gtk4::Window>()
+                {
+                    gtk4::prelude::WidgetExt::display(window).clipboard()
+                } else {
+                    container.display().clipboard()
+                };
 
                 #[cfg(feature = "rdp-embedded")]
                 let using_ironrdp = *is_ironrdp.borrow();
@@ -95,24 +130,57 @@ impl super::EmbeddedRdpWidget {
                 clipboard.read_text_async(
                     None::<&gtk4::gio::Cancellable>,
                     move |result: Result<Option<glib::GString>, glib::Error>| {
-                        if let Ok(Some(text)) = result {
-                            let char_count = text.len();
+                        match result {
+                            Ok(Some(text)) => {
+                                let char_count = text.len();
 
-                            #[cfg(feature = "rdp-embedded")]
-                            if using_ironrdp {
-                                // Send clipboard text via IronRDP
-                                if let Some(ref sender) = *tx.borrow() {
-                                    let _ = sender
-                                        .send(RdpClientCommand::ClipboardText(text.to_string()));
-                                    // Show brief feedback
-                                    show_status_briefly(
-                                        &status,
-                                        &i18n_f("Pasted {} chars", &[&char_count.to_string()]),
-                                        2,
-                                    );
+                                #[cfg(feature = "rdp-embedded")]
+                                if using_ironrdp {
+                                    // Send clipboard text via IronRDP CLIPRDR channel
+                                    if let Some(ref sender) = *tx.borrow() {
+                                        let _ = sender.send(RdpClientCommand::ClipboardText(
+                                            text.to_string(),
+                                        ));
+                                        tracing::debug!(
+                                            protocol = "rdp",
+                                            chars = char_count,
+                                            "Paste button: sent local clipboard to server"
+                                        );
+                                        // Show brief feedback
+                                        show_status_briefly(
+                                            &status,
+                                            &i18n_f("Pasted {} chars", &[&char_count.to_string()]),
+                                            2,
+                                        );
+                                    } else {
+                                        tracing::warn!(
+                                            protocol = "rdp",
+                                            "Paste button: IronRDP command channel not available"
+                                        );
+                                        show_status_briefly(
+                                            &status,
+                                            &i18n("Clipboard channel not ready"),
+                                            2,
+                                        );
+                                    }
                                 }
+                                // For FreeRDP, clipboard is handled by the external process
                             }
-                            // For FreeRDP, clipboard is handled by the external process
+                            Ok(None) => {
+                                tracing::debug!(
+                                    protocol = "rdp",
+                                    "Paste button: local clipboard is empty"
+                                );
+                                show_status_briefly(&status, &i18n("Local clipboard is empty"), 2);
+                            }
+                            Err(e) => {
+                                tracing::warn!(
+                                    protocol = "rdp",
+                                    error = %e,
+                                    "Paste button: failed to read local clipboard"
+                                );
+                                show_status_briefly(&status, &i18n("Cannot read clipboard"), 2);
+                            }
                         }
                     },
                 );

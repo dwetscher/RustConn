@@ -829,6 +829,10 @@ const fn default_jiggler_interval() -> u32 {
     60
 }
 
+const fn default_autotype_delay() -> u32 {
+    20
+}
+
 impl SshConfig {
     /// Builds SSH command arguments based on the configuration
     ///
@@ -1416,6 +1420,19 @@ pub struct RdpConfig {
     /// port forwarding (`ssh -L`).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub jump_host_id: Option<uuid::Uuid>,
+
+    /// Inter-character delay for autotype in milliseconds.
+    /// Controls how fast characters are sent when using "Type Clipboard" or
+    /// "Type Text" features. Higher values needed for Citrix/slow gateways.
+    /// Range: 5–200ms. Default: 20ms.
+    #[serde(default = "default_autotype_delay")]
+    pub autotype_delay_ms: u32,
+
+    /// Initial delay before autotype starts in milliseconds.
+    /// Gives the user time to focus the target input field on the remote desktop.
+    /// Range: 0–5000ms. Default: 0ms.
+    #[serde(default)]
+    pub autotype_initial_delay_ms: u32,
 }
 
 impl RdpConfig {

@@ -281,7 +281,8 @@ pub use tracing::{
     get_tracing_config, init_tracing, is_tracing_initialized, span_names,
 };
 pub use variables::{
-    Variable, VariableError, VariableManager, VariableResult, VariableScope, variable_secret_key,
+    Variable, VariableError, VariableManager, VariableResult, VariableScope,
+    variable_kdbx_lookup_key, variable_secret_key,
 };
 pub use vnc_client::is_embedded_vnc_available;
 #[cfg(feature = "vnc-embedded")]

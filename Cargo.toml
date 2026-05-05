@@ -7,7 +7,7 @@ members = [
 ]
 
 [workspace.package]
-version = "0.13.3"
+version = "0.13.4"
 edition = "2024"
 authors = ["Anton Isaiev <totoshko88@gmail.com>"]
 license = "GPL-3.0-or-later"
@@ -62,6 +62,9 @@ native-tls = "0.2.18"
 # Tracing
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+
+# Unicode text processing
+unicode-segmentation = "1.13"
 
 # Testing
 proptest = "1.10"

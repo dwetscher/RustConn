@@ -546,19 +546,41 @@ pub fn save_variable_to_vault(
 ///
 /// Respects `preferred_backend` from secret settings, using the same
 /// backend selection logic as connection passwords.
+///
+/// Convenience wrapper around [`load_variable_from_vault_with_path`] with no custom path.
+#[allow(dead_code)]
 pub fn load_variable_from_vault(
     settings: &rustconn_core::config::SecretSettings,
     var_name: &str,
 ) -> Result<Option<String>, String> {
+    load_variable_from_vault_with_path(settings, var_name, None)
+}
+
+/// Loads a secret variable value from the configured vault backend,
+/// optionally using a custom KeePass entry path.
+///
+/// When `kdbx_entry_path` is `Some(path)`, the KeePass backend looks up
+/// the entry at that exact path (the function prepends `RustConn/` prefix
+/// is NOT added — the path is used as-is for direct entry lookup).
+/// This allows referencing existing entries in the user's KeePass database.
+pub fn load_variable_from_vault_with_path(
+    settings: &rustconn_core::config::SecretSettings,
+    var_name: &str,
+    kdbx_entry_path: Option<&str>,
+) -> Result<Option<String>, String> {
     use rustconn_core::config::SecretBackendType;
     use secrecy::ExposeSecret;
 
-    let lookup_key = rustconn_core::variable_secret_key(var_name);
+    let default_key = rustconn_core::variable_secret_key(var_name);
+    let lookup_key = kdbx_entry_path
+        .filter(|p| !p.trim().is_empty())
+        .unwrap_or(&default_key);
     let backend_type = select_backend_for_load(settings);
 
     tracing::debug!(
         ?backend_type,
         var_name,
+        lookup_key,
         "Loading secret variable from vault"
     );
 
@@ -572,7 +594,7 @@ pub fn load_variable_from_vault(
                     kdbx,
                     settings.kdbx_password.as_ref(),
                     key,
-                    &lookup_key,
+                    lookup_key,
                     None,
                 )
                 .map(|opt| opt.map(|s| s.expose_secret().to_string()))
@@ -582,7 +604,7 @@ pub fn load_variable_from_vault(
             }
         }
         _ => {
-            let creds = dispatch_vault_op(settings, &lookup_key, VaultOp::Retrieve)?;
+            let creds = dispatch_vault_op(settings, &default_key, VaultOp::Retrieve)?;
             Ok(creds.and_then(|c| c.expose_password().map(String::from)))
         }
     }
@@ -594,13 +616,20 @@ pub fn load_variable_from_vault(
 /// values have their values loaded from the configured vault backend.
 /// Vault load failures are logged but do not prevent other variables
 /// from being returned.
+///
+/// When a variable has a custom `kdbx_entry_path`, that path is used
+/// for KeePass lookup instead of the default `rustconn/var/{name}`.
 pub fn resolve_global_variables(
     settings: &rustconn_core::config::AppSettings,
 ) -> Vec<rustconn_core::Variable> {
     let mut vars = settings.global_variables.clone();
     for var in &mut vars {
         if var.is_secret && var.value.is_empty() {
-            match load_variable_from_vault(&settings.secrets, &var.name) {
+            match load_variable_from_vault_with_path(
+                &settings.secrets,
+                &var.name,
+                var.kdbx_entry_path.as_deref(),
+            ) {
                 Ok(Some(pwd)) => var.value = pwd,
                 Ok(None) => {
                     tracing::debug!(var_name = %var.name, "No secret found in vault for variable");

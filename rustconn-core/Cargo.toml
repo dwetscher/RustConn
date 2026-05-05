@@ -33,6 +33,7 @@ quick-xml = { version = "0.39", features = ["serialize"] }
 argon2 = { workspace = true }
 hostname = "0.4"
 slug = "0.1"
+unicode-segmentation = { workspace = true }
 # HTTP client and archive handling (for CLI download in Flatpak)
 reqwest = { workspace = true }
 zip = { workspace = true }

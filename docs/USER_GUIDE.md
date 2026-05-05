@@ -1,6 +1,6 @@
 # RustConn User Guide
 
-**Version 0.13.3** | GTK4/libadwaita Connection Manager for Linux
+**Version 0.13.4** | GTK4/libadwaita Connection Manager for Linux
 
 RustConn is a modern connection manager designed for Linux with Wayland-first approach. It supports SSH, RDP, VNC, SPICE, MOSH, SFTP, Telnet, Serial, Kubernetes protocols and Zero Trust integrations through a native GTK4/libadwaita interface.
 
@@ -361,7 +361,7 @@ Protocol-specific options are configured in the connection dialog's protocol tab
 | Protocol | Options |
 |----------|---------|
 | SSH | Auth method (password, publickey, keyboard-interactive, agent, security-key/FIDO2), key source (default/file/agent), proxy jump (Jump Host), ProxyJump, IdentitiesOnly, ControlMaster, agent forwarding, Waypipe (Wayland forwarding), X11 forwarding, compression, startup command, verbose mode, custom SSH options, port forwarding (local/remote/dynamic) |
-| RDP | Client mode (embedded/external), performance mode (quality/balanced/speed), resolution, color depth, display scale override, audio redirection, RDP gateway (host, port, username), keyboard layout, disable NLA, clipboard sharing, shared folders, mouse jiggler (prevent idle disconnect, configurable interval 10–600s), custom FreeRDP arguments |
+| RDP | Client mode (embedded/external), performance mode (quality/balanced/speed), resolution, color depth, display scale override, audio redirection, RDP gateway (host, port, username), keyboard layout, disable NLA, clipboard sharing, shared folders, mouse jiggler (prevent idle disconnect, configurable interval 10–600s), autotype (send text as keystrokes, configurable inter-character and initial delay), custom FreeRDP arguments |
 | VNC | Client mode (embedded/external), performance mode (quality/balanced/speed), encoding (Auto/Tight/ZRLE/Hextile/Raw/CopyRect), compression level, quality level, display scale override, view-only mode, scaling, clipboard sharing, custom arguments |
 | SPICE | TLS encryption, CA certificate (with inline validation), skip certificate verification, USB redirection, clipboard sharing, image compression (Auto/Off/GLZ/LZ/QUIC), proxy URL, shared folders |
 | MOSH | Predict mode (Adaptive/Always/Never), SSH port, UDP port range, server binary path, custom arguments |
@@ -583,6 +583,27 @@ On HiDPI/4K displays, the embedded IronRDP client automatically sends the correc
 #### Clipboard
 
 The embedded IronRDP client provides bidirectional clipboard sync via the CLIPRDR channel. Text copied on the remote desktop is automatically available locally (Ctrl+V), and local clipboard changes are announced to the server. The Copy/Paste toolbar buttons remain available as manual fallback. Clipboard sync requires the "Clipboard" option enabled in the RDP connection settings.
+
+#### Autotype (Type as Keystrokes)
+
+When server-side paste is blocked (GPO, Citrix policy, UAC dialogs, password fields that reject Ctrl+V), the Autotype feature sends text character-by-character as individual keystrokes using the RDP Unicode Keyboard Event PDU. This bypasses all clipboard restrictions and is keyboard-layout independent.
+
+**Two input modes:**
+
+- **Type Clipboard** — reads the local clipboard and types its contents into the remote session
+- **Type Text…** — opens a dialog where you enter text (with optional password mode that hides input) and sends it as keystrokes; the text never touches the system clipboard, making it ideal for passwords
+
+**Per-connection timing settings** (Connection Dialog → RDP → Features):
+
+| Setting | Range | Default | Purpose |
+|---------|-------|---------|---------|
+| Autotype Delay | 5–200 ms | 20 ms | Pause between each character. Increase for Citrix gateways or slow connections that drop characters |
+| Autotype Initial Delay | 0–5000 ms | 0 ms | Pause before typing starts. Gives time to focus the target input field |
+
+**Technical details:**
+- Uses `TS_UNICODE_KEYBOARD_EVENT` PDU — layout-independent (DE/US/FR mismatches don't matter)
+- Iterates by Unicode grapheme clusters (composed characters like é, ñ are sent as single units)
+- Only available in embedded IronRDP mode (external FreeRDP runs in a separate process)
 
 #### Quick Actions
 
@@ -1517,13 +1538,28 @@ Global variables allow you to use placeholders in connection fields that are res
 
 **Secret Variables:** Toggle visibility with the eye icon. Secret values are auto-saved to the configured vault backend on dialog save and cleared from the settings file.
 
+**KeePass Custom Entry Path:**
+
+When using KeePass/KeePassXC as the secret backend, secret variables can reference an existing entry in your KeePass database instead of the default `RustConn/rustconn/var/{name}` path:
+
+1. Mark the variable as **Secret**
+2. A **KeePass entry** field appears (only when KeePass backend is active)
+3. Enter the full path to an existing entry, e.g., `Internet/MyRouter` or `Network/Switches/RADIUS`
+4. The password is read from that entry's Password attribute at connection time
+
+This avoids duplicating secrets — you can reuse entries already in your KeePass database. When a custom path is set, RustConn reads from the entry but never creates or overwrites it.
+
+If the field is left empty, the default path `RustConn/rustconn/var/{name}` is used (created automatically on save).
+
 **Example:**
 ```
 Variable: PROD_USER = admin
 Variable: PROD_DOMAIN = corp.example.com
+Variable: RADIUS (secret, KeePass entry: Network/RADIUS_Secret)
 
 Connection Username: ${PROD_USER}  →  admin
 Connection Domain: ${PROD_DOMAIN}  →  corp.example.com
+Connection Password Source: Variable → RADIUS  →  reads from KeePass entry "Network/RADIUS_Secret"
 ```
 
 **Tips:**

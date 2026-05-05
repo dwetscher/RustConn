@@ -6,7 +6,7 @@
 #
 
 Name:           rustconn
-Version:        0.13.3
+Version:        0.13.4
 Release:        0
 Summary:        Modern connection manager for Linux (SSH, RDP, VNC, SPICE, MOSH, Telnet, Serial, Kubernetes, Zero Trust)
 License:        GPL-3.0-or-later
@@ -238,6 +238,15 @@ done
 %{_datadir}/locale/*/LC_MESSAGES/rustconn.mo
 
 %changelog
+* Mon May 05 2026 Anton Isaiev <totoshko88@gmail.com> - 0.13.4-1
+- [Fixed] RDP toolbar Copy/Paste buttons do nothing on Wayland (COSMIC,
+  GNOME) — replaced drawing_area.display().clipboard() with
+  root().native().display().clipboard() which uses the top-level window
+  surface; Paste button now shows status feedback instead of silently
+  swallowing errors; CLIPRDR client_capabilities now advertises
+  USE_LONG_FORMAT_NAMES flag required by Windows Server 2016+; added
+  tracing for all clipboard button operations (#126)
+
 * Mon May 04 2026 Anton Isaiev <totoshko88@gmail.com> - 0.13.3-1
 - Version bump to 0.13.3
 - Added RDP Security Layer / TLS Compatibility options (#124)

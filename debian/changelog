@@ -1,3 +1,15 @@
+rustconn (0.13.4-1) unstable; urgency=medium
+
+  * [Fixed] RDP toolbar Copy/Paste buttons do nothing on Wayland (COSMIC,
+    GNOME) — replaced drawing_area.display().clipboard() with
+    root().native().display().clipboard() which uses the top-level window
+    surface; Paste button now shows status feedback instead of silently
+    swallowing errors; CLIPRDR client_capabilities now advertises
+    USE_LONG_FORMAT_NAMES flag required by Windows Server 2016+; added
+    tracing for all clipboard button operations (#126)
+
+ -- Anton Isaiev <totoshko88@gmail.com>  Mon, 05 May 2026 18:00:00 +0200
+
 rustconn (0.13.3-1) unstable; urgency=medium
 
   * Version bump to 0.13.3

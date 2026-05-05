@@ -131,6 +131,43 @@ pub async fn process_command<W: FramedWrite>(
             handle_clipboard_copy(active_stage, writer, formats).await;
         }
         RdpClientCommand::Authenticate { .. } => {}
+        RdpClientCommand::AutotypeText {
+            text,
+            inter_char_delay_ms,
+            initial_delay_ms,
+        } => {
+            use unicode_segmentation::UnicodeSegmentation;
+
+            // Initial delay gives the user time to focus the target field
+            if initial_delay_ms > 0 {
+                tokio::time::sleep(std::time::Duration::from_millis(u64::from(
+                    initial_delay_ms,
+                )))
+                .await;
+            }
+
+            let delay = std::time::Duration::from_millis(u64::from(inter_char_delay_ms));
+
+            // Iterate by grapheme clusters so composed characters (é = ´+e)
+            // are sent as a single unit
+            for grapheme in text.graphemes(true) {
+                for ch in grapheme.chars() {
+                    // Press
+                    let press = create_unicode_event(ch, true);
+                    send_input_events(active_stage, image, writer, &[press]).await;
+                    // Release
+                    let release = create_unicode_event(ch, false);
+                    send_input_events(active_stage, image, writer, &[release]).await;
+                }
+                tokio::time::sleep(delay).await;
+            }
+
+            tracing::debug!(
+                chars = text.len(),
+                inter_char_delay_ms,
+                "Autotype completed"
+            );
+        }
         RdpClientCommand::ClipboardData { format_id, data } => {
             handle_clipboard_data(active_stage, writer, format_id, data).await;
         }

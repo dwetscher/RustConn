@@ -39,6 +39,17 @@ pub struct Variable {
     pub is_secret: bool,
     /// Optional description for documentation
     pub description: Option<String>,
+    /// Optional custom KeePass entry path for secret lookup.
+    ///
+    /// When set, the variable's secret value is read from this specific entry
+    /// in the KeePass database instead of the default `rustconn/var/{name}` path.
+    /// This allows reusing existing KeePass entries (e.g., `Internet/MyRouter`)
+    /// without duplicating them under the RustConn hierarchy.
+    ///
+    /// The path is relative to the database root (no leading `/`).
+    /// Example: `Network/Switches/RADIUS_Secret`
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub kdbx_entry_path: Option<String>,
 }
 
 impl Drop for Variable {
@@ -58,6 +69,7 @@ impl Variable {
             value: value.into(),
             is_secret: false,
             description: None,
+            kdbx_entry_path: None,
         }
     }
 
@@ -69,6 +81,7 @@ impl Variable {
             value: value.into(),
             is_secret: true,
             description: None,
+            kdbx_entry_path: None,
         }
     }
 
@@ -109,6 +122,21 @@ impl Variable {
 #[must_use]
 pub fn variable_secret_key(name: &str) -> String {
     format!("rustconn/var/{name}")
+}
+
+/// Returns the effective KeePass lookup key for a variable.
+///
+/// If the variable has a custom `kdbx_entry_path`, that path is used directly
+/// (without the `RustConn/` prefix — the caller adds it). Otherwise falls back
+/// to the standard `rustconn/var/{name}` format.
+#[must_use]
+pub fn variable_kdbx_lookup_key(var: &Variable) -> String {
+    if let Some(ref custom_path) = var.kdbx_entry_path
+        && !custom_path.trim().is_empty()
+    {
+        return custom_path.clone();
+    }
+    variable_secret_key(&var.name)
 }
 
 /// Variable scope for resolution

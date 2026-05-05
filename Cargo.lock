@@ -4736,7 +4736,7 @@ dependencies = [
 
 [[package]]
 name = "rustconn"
-version = "0.13.3"
+version = "0.13.4"
 dependencies = [
  "chrono",
  "cpal",
@@ -4764,7 +4764,7 @@ dependencies = [
 
 [[package]]
 name = "rustconn-cli"
-version = "0.13.3"
+version = "0.13.4"
 dependencies = [
  "chrono",
  "clap",
@@ -4785,7 +4785,7 @@ dependencies = [
 
 [[package]]
 name = "rustconn-core"
-version = "0.13.3"
+version = "0.13.4"
 dependencies = [
  "ar",
  "argon2",
@@ -4825,6 +4825,7 @@ dependencies = [
  "toml",
  "tracing",
  "tracing-subscriber",
+ "unicode-segmentation",
  "uuid",
  "vnc-rs",
  "zeroize",
@@ -6082,6 +6083,12 @@ name = "unicode-script"
 version = "0.5.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "383ad40bb927465ec0ce7720e033cb4ca06912855fc35db31b5755d0de75b1ee"
+
+[[package]]
+name = "unicode-segmentation"
+version = "1.13.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9629274872b2bfaf8d66f5f15725007f635594914870f65218920345aa11aa8c"
 
 [[package]]
 name = "unicode-vo"

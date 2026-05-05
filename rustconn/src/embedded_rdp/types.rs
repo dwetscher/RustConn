@@ -149,6 +149,10 @@ pub struct RdpConfig {
     pub jiggler_enabled: bool,
     /// Mouse jiggler interval in seconds (10–600, default: 60)
     pub jiggler_interval_secs: u32,
+    /// Inter-character delay for autotype in milliseconds (default: 20ms)
+    pub autotype_delay_ms: u32,
+    /// Initial delay before autotype starts in milliseconds (default: 0ms)
+    pub autotype_initial_delay_ms: u32,
 }
 
 impl Default for RdpConfig {
@@ -179,6 +183,8 @@ impl Default for RdpConfig {
             tls_security_level: None,
             jiggler_enabled: false,
             jiggler_interval_secs: 60,
+            autotype_delay_ms: 20,
+            autotype_initial_delay_ms: 0,
         }
     }
 }

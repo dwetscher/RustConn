@@ -182,6 +182,8 @@ fn arb_rdp_config() -> impl Strategy<Value = RdpConfig> {
                 jiggler_enabled: false,
                 jiggler_interval_secs: 60,
                 jump_host_id: None,
+                autotype_delay_ms: 20,
+                autotype_initial_delay_ms: 0,
             },
         )
 }

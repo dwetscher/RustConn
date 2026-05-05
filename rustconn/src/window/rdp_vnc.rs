@@ -508,6 +508,10 @@ fn start_embedded_rdp_session(
     embedded_config.jiggler_enabled = rdp_config.jiggler_enabled;
     embedded_config.jiggler_interval_secs = rdp_config.jiggler_interval_secs;
 
+    // Pass autotype timing settings
+    embedded_config.autotype_delay_ms = rdp_config.autotype_delay_ms;
+    embedded_config.autotype_initial_delay_ms = rdp_config.autotype_initial_delay_ms;
+
     // Pass certificate verification setting
     embedded_config.ignore_certificate = rdp_config.ignore_certificate;
 
