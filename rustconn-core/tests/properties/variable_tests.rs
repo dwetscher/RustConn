@@ -658,3 +658,67 @@ mod edge_case_tests {
         );
     }
 }
+
+// ========== Unit Tests for variable_kdbx_lookup_key ==========
+
+#[cfg(test)]
+mod kdbx_lookup_key_tests {
+    use rustconn_core::{Variable, variable_kdbx_lookup_key};
+
+    #[test]
+    fn test_no_custom_path_returns_default_format() {
+        let var = Variable::new("my_password", "secret_value").with_secret(true);
+        assert_eq!(variable_kdbx_lookup_key(&var), "rustconn/var/my_password");
+    }
+
+    #[test]
+    fn test_custom_path_returns_custom_path() {
+        let mut var = Variable::new("router_pass", "value").with_secret(true);
+        var.kdbx_entry_path = Some("Internet/MyRouter".to_string());
+        assert_eq!(variable_kdbx_lookup_key(&var), "Internet/MyRouter");
+    }
+
+    #[test]
+    fn test_empty_custom_path_falls_back_to_default() {
+        let mut var = Variable::new("db_pass", "value").with_secret(true);
+        var.kdbx_entry_path = Some(String::new());
+        assert_eq!(variable_kdbx_lookup_key(&var), "rustconn/var/db_pass");
+    }
+
+    #[test]
+    fn test_whitespace_only_custom_path_falls_back_to_default() {
+        let mut var = Variable::new("api_key", "value").with_secret(true);
+        var.kdbx_entry_path = Some("   ".to_string());
+        assert_eq!(variable_kdbx_lookup_key(&var), "rustconn/var/api_key");
+    }
+
+    #[test]
+    fn test_none_custom_path_falls_back_to_default() {
+        let mut var = Variable::new("token", "value").with_secret(true);
+        var.kdbx_entry_path = None;
+        assert_eq!(variable_kdbx_lookup_key(&var), "rustconn/var/token");
+    }
+
+    #[test]
+    fn test_custom_path_with_deep_hierarchy() {
+        let mut var = Variable::new("radius_secret", "value").with_secret(true);
+        var.kdbx_entry_path = Some("Network/Switches/RADIUS_Secret".to_string());
+        assert_eq!(
+            variable_kdbx_lookup_key(&var),
+            "Network/Switches/RADIUS_Secret"
+        );
+    }
+
+    #[test]
+    fn test_custom_path_with_spaces_is_used_as_is() {
+        let mut var = Variable::new("wifi", "value").with_secret(true);
+        var.kdbx_entry_path = Some("Home Network/WiFi Password".to_string());
+        assert_eq!(variable_kdbx_lookup_key(&var), "Home Network/WiFi Password");
+    }
+
+    #[test]
+    fn test_non_secret_variable_still_works() {
+        let var = Variable::new("plain_var", "value");
+        assert_eq!(variable_kdbx_lookup_key(&var), "rustconn/var/plain_var");
+    }
+}

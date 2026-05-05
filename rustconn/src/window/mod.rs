@@ -1520,6 +1520,15 @@ impl MainWindow {
                         let settings = state_for_save.borrow().settings().clone();
                         for var in &vars_to_save {
                             if var.is_secret && !var.value.is_empty() {
+                                // Skip saving to vault if variable uses a custom KeePass
+                                // entry path — the entry already exists in the database
+                                if var
+                                    .kdbx_entry_path
+                                    .as_ref()
+                                    .is_some_and(|p| !p.trim().is_empty())
+                                {
+                                    continue;
+                                }
                                 let pwd = var.value.clone();
                                 let var_name = var.name.clone();
                                 let var_name_log = var_name.clone();

@@ -95,6 +95,15 @@ pub fn cmd_show(config_path: Option<&Path>, name: &str) -> Result<(), CliError> 
             if let Some(jump_id) = config.jump_host_id {
                 println!("  Jump Host: {}", resolve_jump(jump_id));
             }
+            if config.autotype_delay_ms != 20 {
+                println!("  Autotype Delay: {}ms", config.autotype_delay_ms);
+            }
+            if config.autotype_initial_delay_ms != 0 {
+                println!(
+                    "  Autotype Initial Delay: {}ms",
+                    config.autotype_initial_delay_ms
+                );
+            }
         }
         rustconn_core::models::ProtocolConfig::Serial(ref config) => {
             println!("  Device:   {}", config.device);

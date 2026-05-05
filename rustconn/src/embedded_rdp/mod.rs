@@ -47,6 +47,7 @@ pub mod thread;
 pub mod types;
 pub mod ui;
 
+mod autotype;
 mod clipboard;
 mod connection;
 mod drawing;
@@ -249,6 +250,20 @@ impl EmbeddedRdpWidget {
         paste_button.set_tooltip_text(Some(&i18n("Paste from local clipboard to remote session")));
         toolbar.append(&paste_button);
 
+        // Autotype: Type Clipboard button - sends clipboard as keystrokes
+        let type_clipboard_button = Button::with_label(&i18n("Type Clipboard"));
+        type_clipboard_button.set_tooltip_text(Some(&i18n(
+            "Send clipboard contents as keystrokes (bypasses paste restrictions)",
+        )));
+        toolbar.append(&type_clipboard_button);
+
+        // Autotype: Type Text button - opens dialog for ad-hoc text input
+        let type_text_button = Button::with_label(&i18n("Type Text…"));
+        type_text_button.set_tooltip_text(Some(&i18n(
+            "Type custom text as keystrokes into remote session",
+        )));
+        toolbar.append(&type_text_button);
+
         // Separator
         let separator = gtk4::Separator::new(Orientation::Vertical);
         separator.set_margin_start(4);
@@ -408,6 +423,10 @@ impl EmbeddedRdpWidget {
         widget.setup_resize_handler();
         widget.setup_clipboard_buttons(&copy_button, &paste_button);
         widget.setup_ctrl_alt_del_button(&ctrl_alt_del_button);
+        #[cfg(feature = "rdp-embedded")]
+        widget.setup_autotype_clipboard_button(&type_clipboard_button);
+        #[cfg(feature = "rdp-embedded")]
+        widget.setup_autotype_dialog_button(&type_text_button);
         widget.setup_quick_actions();
         widget.setup_reconnect_button();
         widget.setup_visibility_handler();

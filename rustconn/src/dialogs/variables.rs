@@ -48,6 +48,8 @@ struct VariableRow {
     is_secret_check: CheckButton,
     /// Entry for description
     description_entry: Entry,
+    /// Entry for custom KeePass entry path
+    kdbx_path_entry: Entry,
     /// Delete button
     delete_button: Button,
 }
@@ -273,6 +275,25 @@ impl VariablesDialog {
         grid.attach(&desc_label, 0, 3, 1, 1);
         grid.attach(&description_entry, 1, 3, 2, 1);
 
+        // Row 4: KeePass entry path (visible only for secret variables with KeePass backend)
+        let kdbx_path_label = Label::builder()
+            .label(i18n("KeePass entry:"))
+            .halign(gtk4::Align::End)
+            .build();
+        let kdbx_path_entry = Entry::builder()
+            .hexpand(true)
+            .placeholder_text(i18n("e.g. Internet/MyRouter (optional)"))
+            .tooltip_text(i18n(
+                "Custom KeePass entry path. If set, the password is read from this \
+                 existing entry instead of the default RustConn/rustconn/var/ path.",
+            ))
+            .build();
+        kdbx_path_label.set_visible(false);
+        kdbx_path_entry.set_visible(false);
+
+        grid.attach(&kdbx_path_label, 0, 4, 1, 1);
+        grid.attach(&kdbx_path_entry, 1, 4, 2, 1);
+
         main_box.append(&grid);
 
         // Wire Show/Hide toggle — track visibility state in Rc
@@ -294,6 +315,7 @@ impl VariablesDialog {
         // Wire Load from Vault button
         let secret_entry_for_load = secret_entry.clone();
         let name_entry_for_load = name_entry.clone();
+        let kdbx_path_entry_for_load = kdbx_path_entry.clone();
         let settings_for_load = settings.clone();
         load_vault_btn.connect_clicked(move |btn| {
             let var_name = name_entry_for_load.text().to_string();
@@ -303,6 +325,15 @@ impl VariablesDialog {
             let entry_clone = secret_entry_for_load.clone();
             let btn_clone = btn.clone();
             let settings_snap = settings_for_load.borrow().clone();
+            let custom_path = {
+                let text = kdbx_path_entry_for_load.text();
+                let trimmed = text.trim().to_string();
+                if trimmed.is_empty() {
+                    None
+                } else {
+                    Some(trimmed)
+                }
+            };
 
             btn.set_sensitive(false);
             btn.set_icon_name("content-loading-symbolic");
@@ -310,7 +341,11 @@ impl VariablesDialog {
             crate::utils::spawn_blocking_with_callback(
                 move || {
                     if let Some(ref s) = settings_snap {
-                        crate::state::load_variable_from_vault(&s.secrets, &var_name)
+                        crate::state::load_variable_from_vault_with_path(
+                            &s.secrets,
+                            &var_name,
+                            custom_path.as_deref(),
+                        )
                     } else {
                         // No settings — fall back to libsecret
                         let lookup_key = rustconn_core::variable_secret_key(&var_name);
@@ -374,10 +409,26 @@ impl VariablesDialog {
         let value_entry_clone = value_entry.clone();
         let secret_entry_clone = secret_entry.clone();
         let secret_buttons_clone = secret_buttons_box.clone();
+        let kdbx_path_label_clone = kdbx_path_label.clone();
+        let kdbx_path_entry_clone = kdbx_path_entry.clone();
+        let settings_for_toggle = settings.clone();
         is_secret_check.connect_toggled(move |check| {
             let is_secret = check.is_active();
             value_entry_clone.set_visible(!is_secret);
             secret_buttons_clone.set_visible(is_secret);
+
+            // Show KeePass entry path field only when secret AND backend is KeePass
+            let show_kdbx = is_secret
+                && settings_for_toggle.borrow().as_ref().is_some_and(|s| {
+                    s.secrets.kdbx_enabled
+                        && matches!(
+                            s.secrets.preferred_backend,
+                            rustconn_core::config::SecretBackendType::KeePassXc
+                                | rustconn_core::config::SecretBackendType::KdbxFile
+                        )
+                });
+            kdbx_path_label_clone.set_visible(show_kdbx);
+            kdbx_path_entry_clone.set_visible(show_kdbx);
 
             // Transfer value between entries when toggling
             if is_secret {
@@ -403,6 +454,9 @@ impl VariablesDialog {
             if let Some(ref desc) = var.description {
                 description_entry.set_text(desc);
             }
+            if let Some(ref kdbx_path) = var.kdbx_entry_path {
+                kdbx_path_entry.set_text(kdbx_path);
+            }
         }
 
         let row = ListBoxRow::builder().child(&main_box).build();
@@ -414,6 +468,7 @@ impl VariablesDialog {
             secret_entry,
             is_secret_check,
             description_entry,
+            kdbx_path_entry,
             delete_button,
         }
     }
@@ -442,9 +497,17 @@ impl VariablesDialog {
                     Some(desc.trim().to_string())
                 };
 
+                let kdbx_path = row.kdbx_path_entry.text();
+                let kdbx_entry_path = if kdbx_path.trim().is_empty() {
+                    None
+                } else {
+                    Some(kdbx_path.trim().to_string())
+                };
+
                 let mut var = Variable::new(name, value);
                 var.is_secret = is_secret;
                 var.description = description;
+                var.kdbx_entry_path = kdbx_entry_path;
                 Some(var)
             })
             .collect()

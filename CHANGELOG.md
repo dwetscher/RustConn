@@ -5,6 +5,19 @@ All notable changes to RustConn will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.13.4] - 2026-05-05
+
+### Added
+- **RDP Autotype: send text as keystrokes bypassing clipboard restrictions** — new "Type Clipboard" and "Type Text…" toolbar buttons in embedded RDP sessions; sends text character-by-character using `TS_UNICODE_KEYBOARD_EVENT` PDU which is keyboard-layout independent (works regardless of DE/US/other layout mismatches); solves scenarios where server-side paste is blocked by GPO, Citrix policy, UAC dialogs, or password fields that reject Ctrl+V; "Type Clipboard" reads the local clipboard and types it into the remote session; "Type Text…" opens a dialog where the user enters text (with optional password mode) that never touches the system clipboard — ideal for sensitive strings; per-connection configurable timing: inter-character delay (5–200ms, default 20ms) and initial delay before typing starts (0–5000ms, default 0ms); higher delays needed for Citrix gateways that drop characters when events arrive too fast; iterates by Unicode grapheme clusters so composed characters (é, ñ) are sent as single units; only available for embedded IronRDP mode (external FreeRDP runs in a separate process where keystroke injection is not possible) ([#127](https://github.com/totoshko88/RustConn/issues/127))
+- **KeePass custom entry path for secret variables** — secret variables can now reference an existing entry in the KeePass database instead of the default `RustConn/rustconn/var/{name}` path; in the Variables dialog (Menu → Tools → Variables), when a variable is marked as Secret and the KeePass backend is active, a new "KeePass entry" field appears where you can specify the full path to an existing entry (e.g., `Internet/MyRouter` or `Network/Switches/RADIUS`); the password is read directly from that entry's Password attribute — no need to duplicate secrets under the RustConn hierarchy; when a custom path is set, RustConn does not attempt to create or overwrite the entry on save ([#114](https://github.com/totoshko88/RustConn/issues/114))
+
+### Fixed
+- **RDP toolbar Copy/Paste buttons do nothing on Wayland (COSMIC, GNOME)** — the clipboard buttons used `drawing_area.display().clipboard()` which on Wayland may not have clipboard ownership because the clipboard is tied to the focused surface; replaced with `root().native().display().clipboard()` which uses the top-level window surface — the reliable clipboard owner on all Wayland compositors; also fixed: Paste button silently swallowed errors when local clipboard was empty or unreadable (now shows status feedback: "Local clipboard is empty" / "Cannot read clipboard" / "Clipboard channel not ready"); CLIPRDR `client_capabilities` now advertises `USE_LONG_FORMAT_NAMES` flag required by Windows Server 2016+ for proper format list exchange — without it some servers never announce clipboard formats, making the Copy button permanently disabled; added tracing for all clipboard button operations to aid future debugging ([#126](https://github.com/totoshko88/RustConn/issues/126))
+
+### Dependencies
+- unicode-segmentation 1.13.2 (new)
+- tower-http 0.6.8 → 0.6.9
+
 ## [0.13.3] - 2026-05-05
 
 ### Improved

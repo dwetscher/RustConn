@@ -144,6 +144,17 @@
     <control>touch</control>
   </supports>
   <releases>
+    <release version="0.13.4" date="2026-05-05">
+      <description>
+        <p>Version 0.13.4 — RDP Autotype, KeePass custom paths, and clipboard fix:</p>
+        <ul>
+          <li>RDP Autotype: send text as keystrokes bypassing clipboard restrictions — Type Clipboard and Type Text toolbar buttons using TS_UNICODE_KEYBOARD_EVENT PDU; keyboard-layout independent; configurable timing</li>
+          <li>KeePass custom entry path for secret variables — reference existing KeePass entries instead of the default hierarchy</li>
+          <li>Fixed RDP toolbar Copy/Paste buttons doing nothing on Wayland (COSMIC, GNOME) — uses top-level window surface for reliable clipboard ownership</li>
+          <li>Paste button now shows status feedback; CLIPRDR advertises USE_LONG_FORMAT_NAMES for Windows Server 2016+</li>
+        </ul>
+      </description>
+    </release>
     <release version="0.13.3" date="2026-05-04">
       <description>
         <p>Version 0.13.3 — RDP legacy server support and GNOME HIG improvements:</p>

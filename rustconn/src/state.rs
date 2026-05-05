@@ -199,6 +199,7 @@ struct CredentialResolutionContext {
     kdbx_key_file: Option<std::path::PathBuf>,
     secret_settings: rustconn_core::config::SecretSettings,
     secret_manager: SecretManager,
+    global_variables: Vec<rustconn_core::Variable>,
 }
 
 impl AppState {
@@ -936,6 +937,7 @@ impl AppState {
         let kdbx_key_file = self.settings.secrets.kdbx_key_file.clone();
         let secret_settings = self.settings.secrets.clone();
         let secret_manager = self.secret_manager.clone();
+        let global_variables = self.settings.global_variables.clone();
 
         // Get groups for hierarchical path building
         let groups: Vec<ConnectionGroup> = self
@@ -958,6 +960,7 @@ impl AppState {
                     kdbx_key_file,
                     secret_settings,
                     secret_manager,
+                    global_variables,
                 })
             },
             callback,
@@ -994,7 +997,13 @@ impl AppState {
                 var_name,
                 "[resolve_credentials_blocking] Resolving variable password"
             );
-            match load_variable_from_vault(&secret_settings, var_name) {
+            // Look up the variable's custom kdbx_entry_path if configured
+            let kdbx_entry_path = ctx
+                .global_variables
+                .iter()
+                .find(|v| v.name == *var_name)
+                .and_then(|v| v.kdbx_entry_path.as_deref());
+            match load_variable_from_vault_with_path(&secret_settings, var_name, kdbx_entry_path) {
                 Ok(Some(password)) => {
                     tracing::debug!(var_name, "[resolve_credentials_blocking] Variable resolved");
                     let creds = if let Some(ref username) = connection.username {

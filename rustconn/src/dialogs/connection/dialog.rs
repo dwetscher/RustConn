@@ -177,6 +177,8 @@ pub struct ConnectionDialog {
     rdp_show_local_cursor_check: CheckButton,
     rdp_jiggler_check: CheckButton,
     rdp_jiggler_interval_spin: gtk4::SpinButton,
+    rdp_autotype_delay_spin: gtk4::SpinButton,
+    rdp_autotype_initial_delay_spin: gtk4::SpinButton,
     rdp_jump_host_dropdown: DropDown,
     rdp_connections_data: Rc<RefCell<Vec<(Option<Uuid>, String)>>>,
     rdp_shared_folders: Rc<RefCell<Vec<SharedFolder>>>,
@@ -533,6 +535,8 @@ impl ConnectionDialog {
             rdp_show_local_cursor_check,
             rdp_jiggler_check,
             rdp_jiggler_interval_spin,
+            rdp_autotype_delay_spin,
+            rdp_autotype_initial_delay_spin,
             rdp_jump_host_dropdown,
             rdp_shared_folders,
             rdp_shared_folders_list,
@@ -850,6 +854,8 @@ impl ConnectionDialog {
             &rdp_show_local_cursor_check,
             &rdp_jiggler_check,
             &rdp_jiggler_interval_spin,
+            &rdp_autotype_delay_spin,
+            &rdp_autotype_initial_delay_spin,
             &rdp_jump_host_dropdown,
             &rdp_connections_data,
             &rdp_shared_folders,
@@ -1032,6 +1038,8 @@ impl ConnectionDialog {
             rdp_show_local_cursor_check,
             rdp_jiggler_check,
             rdp_jiggler_interval_spin,
+            rdp_autotype_delay_spin,
+            rdp_autotype_initial_delay_spin,
             rdp_jump_host_dropdown,
             rdp_connections_data,
             rdp_shared_folders,
@@ -1907,6 +1915,8 @@ impl ConnectionDialog {
         rdp_show_local_cursor_check: &CheckButton,
         rdp_jiggler_check: &CheckButton,
         rdp_jiggler_interval_spin: &SpinButton,
+        rdp_autotype_delay_spin: &SpinButton,
+        rdp_autotype_initial_delay_spin: &SpinButton,
         rdp_jump_host_dropdown: &DropDown,
         rdp_connections_data: &Rc<RefCell<Vec<(Option<Uuid>, String)>>>,
         rdp_shared_folders: &Rc<RefCell<Vec<SharedFolder>>>,
@@ -2072,6 +2082,8 @@ impl ConnectionDialog {
         let rdp_show_local_cursor_check = rdp_show_local_cursor_check.clone();
         let rdp_jiggler_check = rdp_jiggler_check.clone();
         let rdp_jiggler_interval_spin = rdp_jiggler_interval_spin.clone();
+        let rdp_autotype_delay_spin = rdp_autotype_delay_spin.clone();
+        let rdp_autotype_initial_delay_spin = rdp_autotype_initial_delay_spin.clone();
         let rdp_jump_host_dropdown = rdp_jump_host_dropdown.clone();
         let rdp_connections_data = rdp_connections_data.clone();
         let rdp_shared_folders = rdp_shared_folders.clone();
@@ -2251,6 +2263,8 @@ impl ConnectionDialog {
                 rdp_show_local_cursor_check: &rdp_show_local_cursor_check,
                 rdp_jiggler_check: &rdp_jiggler_check,
                 rdp_jiggler_interval_spin: &rdp_jiggler_interval_spin,
+                rdp_autotype_delay_spin: &rdp_autotype_delay_spin,
+                rdp_autotype_initial_delay_spin: &rdp_autotype_initial_delay_spin,
                 rdp_jump_host_dropdown: &rdp_jump_host_dropdown,
                 rdp_connections_data: &rdp_connections_data,
                 rdp_shared_folders: &rdp_shared_folders,
@@ -2411,6 +2425,8 @@ impl ConnectionDialog {
         CheckButton,
         CheckButton,
         CheckButton,
+        SpinButton,
+        SpinButton,
         SpinButton,
         DropDown,
         Rc<RefCell<Vec<SharedFolder>>>,
@@ -2644,6 +2660,36 @@ impl ConnectionDialog {
         rdp_jiggler_check.connect_toggled(move |check| {
             spin_ref.set_sensitive(check.is_active());
         });
+
+        // Autotype settings — inter-character delay and initial delay
+        let autotype_adjustment = gtk4::Adjustment::new(20.0, 5.0, 200.0, 5.0, 10.0, 0.0);
+        let rdp_autotype_delay_spin = gtk4::SpinButton::builder()
+            .adjustment(&autotype_adjustment)
+            .digits(0)
+            .valign(gtk4::Align::Center)
+            .build();
+        let autotype_delay_row = adw::ActionRow::builder()
+            .title(i18n("Autotype Delay"))
+            .subtitle(i18n(
+                "Milliseconds between keystrokes (increase for Citrix)",
+            ))
+            .build();
+        autotype_delay_row.add_suffix(&rdp_autotype_delay_spin);
+        features_group.add(&autotype_delay_row);
+
+        let autotype_initial_adjustment =
+            gtk4::Adjustment::new(0.0, 0.0, 5000.0, 100.0, 500.0, 0.0);
+        let rdp_autotype_initial_delay_spin = gtk4::SpinButton::builder()
+            .adjustment(&autotype_initial_adjustment)
+            .digits(0)
+            .valign(gtk4::Align::Center)
+            .build();
+        let autotype_initial_row = adw::ActionRow::builder()
+            .title(i18n("Autotype Initial Delay"))
+            .subtitle(i18n("Milliseconds to wait before typing starts"))
+            .build();
+        autotype_initial_row.add_suffix(&rdp_autotype_initial_delay_spin);
+        features_group.add(&autotype_initial_row);
 
         // Disable NLA
         let disable_nla_check = CheckButton::new();
@@ -2937,6 +2983,8 @@ impl ConnectionDialog {
             rdp_show_local_cursor_check,
             rdp_jiggler_check,
             rdp_jiggler_interval_spin,
+            rdp_autotype_delay_spin,
+            rdp_autotype_initial_delay_spin,
             rdp_jump_host_dropdown,
             shared_folders,
             folders_list,
@@ -6208,6 +6256,10 @@ impl ConnectionDialog {
             .set_value(f64::from(rdp.jiggler_interval_secs));
         self.rdp_jiggler_interval_spin
             .set_sensitive(rdp.jiggler_enabled);
+        self.rdp_autotype_delay_spin
+            .set_value(f64::from(rdp.autotype_delay_ms));
+        self.rdp_autotype_initial_delay_spin
+            .set_value(f64::from(rdp.autotype_initial_delay_ms));
         self.rdp_disable_nla_check.set_active(rdp.disable_nla);
         self.rdp_security_layer_dropdown
             .set_selected(rdp.security_layer.index());
@@ -7446,6 +7498,8 @@ struct ConnectionDialogData<'a> {
     rdp_show_local_cursor_check: &'a CheckButton,
     rdp_jiggler_check: &'a CheckButton,
     rdp_jiggler_interval_spin: &'a SpinButton,
+    rdp_autotype_delay_spin: &'a SpinButton,
+    rdp_autotype_initial_delay_spin: &'a SpinButton,
     rdp_jump_host_dropdown: &'a DropDown,
     rdp_connections_data: &'a Rc<RefCell<Vec<(Option<Uuid>, String)>>>,
     rdp_shared_folders: &'a Rc<RefCell<Vec<SharedFolder>>>,
@@ -8528,6 +8582,8 @@ impl ConnectionDialogData<'_> {
                     None
                 }
             },
+            autotype_delay_ms: self.rdp_autotype_delay_spin.value() as u32,
+            autotype_initial_delay_ms: self.rdp_autotype_initial_delay_spin.value() as u32,
         }
     }
 

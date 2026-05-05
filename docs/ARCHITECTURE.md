@@ -1,6 +1,6 @@
 # RustConn Architecture Guide
 
-**Version 0.13.3** | Last updated: May 2026
+**Version 0.13.4** | Last updated: May 2026
 
 This document describes the internal architecture of RustConn for contributors and maintainers.
 
@@ -811,6 +811,12 @@ Bidirectional clipboard sync between local desktop and remote RDP session via th
 │  Phase 3: Local clipboard monitoring                        │
 │    gdk::Clipboard::connect_changed() → ClipboardText cmd    │
 │    (handler disconnected on session end/error)              │
+│                                                             │
+│  Autotype (autotype.rs):                                    │
+│    Type Clipboard btn → read clipboard → AutotypeText cmd   │
+│    Type Text… btn → dialog → AutotypeText cmd               │
+│    AutotypeText → grapheme iteration → UnicodeKeyboardEvent │
+│    (inter-char delay configurable per connection)           │
 └─────────────────────────────────────────────────────────────┘
 ```
 
@@ -979,6 +985,7 @@ rustconn/src/
 │   └── ...
 ├── embedded_rdp/          # Embedded RDP viewer (modular structure)
 │   ├── mod.rs             # EmbeddedRdpWidget struct, signals, public API (~860 lines)
+│   ├── autotype.rs        # Autotype: send text as keystrokes (Type Clipboard / Type Text dialog)
 │   ├── clipboard.rs       # Copy/Paste and Ctrl+Alt+Del button handlers
 │   ├── connection.rs      # connect/disconnect/reconnect, IronRDP polling, external fallback
 │   ├── drawing.rs         # DrawingArea draw function, framebuffer rendering, status overlay

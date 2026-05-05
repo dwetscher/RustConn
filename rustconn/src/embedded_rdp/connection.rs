@@ -702,6 +702,7 @@ impl super::EmbeddedRdpWidget {
                                 // and auto-sync to local GTK clipboard
                                 tracing::debug!(
                                     protocol = "rdp",
+                                    chars = text.len(),
                                     "Received clipboard text from server"
                                 );
                                 *remote_clipboard_text.borrow_mut() = Some(text.clone());
@@ -710,10 +711,16 @@ impl super::EmbeddedRdpWidget {
                                     "Copy remote clipboard to local",
                                 )));
 
-                                // Phase 2: Auto-sync server clipboard to local GTK clipboard
+                                // Phase 2: Auto-sync server clipboard to local GTK clipboard.
+                                // Use root native surface for reliable Wayland clipboard ownership.
                                 *clipboard_sync_suppressed.borrow_mut() = true;
-                                let display = drawing_area.display();
-                                let clipboard = display.clipboard();
+                                let clipboard = if let Some(root) = drawing_area.root()
+                                    && let Some(window) = root.downcast_ref::<gtk4::Window>()
+                                {
+                                    gtk4::prelude::WidgetExt::display(window).clipboard()
+                                } else {
+                                    drawing_area.display().clipboard()
+                                };
                                 clipboard.set_text(&text);
                                 let suppressed = clipboard_sync_suppressed.clone();
                                 glib::timeout_add_local_once(

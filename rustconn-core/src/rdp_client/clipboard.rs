@@ -165,7 +165,11 @@ impl CliprdrBackend for RustConnClipboardBackend {
     }
 
     fn client_capabilities(&self) -> ClipboardGeneralCapabilityFlags {
-        ClipboardGeneralCapabilityFlags::empty()
+        // Advertise USE_LONG_FORMAT_NAMES so the server sends full format
+        // names (required for file clipboard and proper text exchange with
+        // Windows Server 2016+). Without this flag some servers skip the
+        // CLIPRDR format list announcement entirely.
+        ClipboardGeneralCapabilityFlags::USE_LONG_FORMAT_NAMES
     }
 
     fn on_process_negotiated_capabilities(
