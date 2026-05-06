@@ -94,5 +94,6 @@ rustconn/src/embedded_rdp/mod.rs
 rustconn/src/embedded_rdp/autotype.rs
 rustconn/src/embedded_rdp/clipboard.rs
 rustconn/src/embedded_rdp/connection.rs
+rustconn/src/embedded_rdp/resize.rs
 rustconn/src/embedded_spice.rs
 rustconn/src/embedded_vnc.rs

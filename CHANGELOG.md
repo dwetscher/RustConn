@@ -5,6 +5,14 @@ All notable changes to RustConn will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.13.5] - 2026-05-06
+
+### Fixed
+- **RDP: dynamic resize without reconnect via Display Control Channel** — window resize no longer triggers a full session disconnect/reconnect cycle; instead, the new resolution is sent in-place via the MS-RDPEDISP Display Control Virtual Channel (`SetDesktopSize` → `encode_resize`), which is the same mechanism used by mstsc, xfreerdp, and Remmina; the session continues seamlessly with the server-side desktop resized to match the new widget dimensions; debounce (500ms) and threshold (50px) remain to avoid flooding the server with resize requests; FreeRDP external mode still falls back to reconnect since it has no DVC access from the widget side ([#131](https://github.com/totoshko88/RustConn/issues/131))
+
+### Added
+- **RDP: "Reconnect on Resize" option** — new checkbox in the RDP connection dialog (Advanced → Features) that forces a full reconnect on window resize instead of using the Display Control Channel; useful for legacy RDP servers (Windows Server 2008/2012) that don't support MS-RDPEDISP, or when the server ignores dynamic resolution changes; disabled by default (dynamic resize is preferred)
+
 ## [0.13.4] - 2026-05-05
 
 ### Added

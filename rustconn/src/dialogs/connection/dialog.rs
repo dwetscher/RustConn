@@ -179,6 +179,7 @@ pub struct ConnectionDialog {
     rdp_jiggler_interval_spin: gtk4::SpinButton,
     rdp_autotype_delay_spin: gtk4::SpinButton,
     rdp_autotype_initial_delay_spin: gtk4::SpinButton,
+    rdp_reconnect_on_resize_check: CheckButton,
     rdp_jump_host_dropdown: DropDown,
     rdp_connections_data: Rc<RefCell<Vec<(Option<Uuid>, String)>>>,
     rdp_shared_folders: Rc<RefCell<Vec<SharedFolder>>>,
@@ -537,6 +538,7 @@ impl ConnectionDialog {
             rdp_jiggler_interval_spin,
             rdp_autotype_delay_spin,
             rdp_autotype_initial_delay_spin,
+            rdp_reconnect_on_resize_check,
             rdp_jump_host_dropdown,
             rdp_shared_folders,
             rdp_shared_folders_list,
@@ -856,6 +858,7 @@ impl ConnectionDialog {
             &rdp_jiggler_interval_spin,
             &rdp_autotype_delay_spin,
             &rdp_autotype_initial_delay_spin,
+            &rdp_reconnect_on_resize_check,
             &rdp_jump_host_dropdown,
             &rdp_connections_data,
             &rdp_shared_folders,
@@ -1040,6 +1043,7 @@ impl ConnectionDialog {
             rdp_jiggler_interval_spin,
             rdp_autotype_delay_spin,
             rdp_autotype_initial_delay_spin,
+            rdp_reconnect_on_resize_check,
             rdp_jump_host_dropdown,
             rdp_connections_data,
             rdp_shared_folders,
@@ -1917,6 +1921,7 @@ impl ConnectionDialog {
         rdp_jiggler_interval_spin: &SpinButton,
         rdp_autotype_delay_spin: &SpinButton,
         rdp_autotype_initial_delay_spin: &SpinButton,
+        rdp_reconnect_on_resize_check: &CheckButton,
         rdp_jump_host_dropdown: &DropDown,
         rdp_connections_data: &Rc<RefCell<Vec<(Option<Uuid>, String)>>>,
         rdp_shared_folders: &Rc<RefCell<Vec<SharedFolder>>>,
@@ -2084,6 +2089,7 @@ impl ConnectionDialog {
         let rdp_jiggler_interval_spin = rdp_jiggler_interval_spin.clone();
         let rdp_autotype_delay_spin = rdp_autotype_delay_spin.clone();
         let rdp_autotype_initial_delay_spin = rdp_autotype_initial_delay_spin.clone();
+        let rdp_reconnect_on_resize_check = rdp_reconnect_on_resize_check.clone();
         let rdp_jump_host_dropdown = rdp_jump_host_dropdown.clone();
         let rdp_connections_data = rdp_connections_data.clone();
         let rdp_shared_folders = rdp_shared_folders.clone();
@@ -2265,6 +2271,7 @@ impl ConnectionDialog {
                 rdp_jiggler_interval_spin: &rdp_jiggler_interval_spin,
                 rdp_autotype_delay_spin: &rdp_autotype_delay_spin,
                 rdp_autotype_initial_delay_spin: &rdp_autotype_initial_delay_spin,
+                rdp_reconnect_on_resize_check: &rdp_reconnect_on_resize_check,
                 rdp_jump_host_dropdown: &rdp_jump_host_dropdown,
                 rdp_connections_data: &rdp_connections_data,
                 rdp_shared_folders: &rdp_shared_folders,
@@ -2428,6 +2435,7 @@ impl ConnectionDialog {
         SpinButton,
         SpinButton,
         SpinButton,
+        CheckButton,
         DropDown,
         Rc<RefCell<Vec<SharedFolder>>>,
         gtk4::ListBox,
@@ -2690,6 +2698,18 @@ impl ConnectionDialog {
             .build();
         autotype_initial_row.add_suffix(&rdp_autotype_initial_delay_spin);
         features_group.add(&autotype_initial_row);
+
+        // Reconnect on Resize — force full reconnect instead of Display Control
+        let rdp_reconnect_on_resize_check = CheckButton::new();
+        let reconnect_resize_row = adw::ActionRow::builder()
+            .title(i18n("Reconnect on Resize"))
+            .subtitle(i18n(
+                "Full reconnect instead of dynamic resize (for legacy servers or fixed resolution)",
+            ))
+            .activatable_widget(&rdp_reconnect_on_resize_check)
+            .build();
+        reconnect_resize_row.add_suffix(&rdp_reconnect_on_resize_check);
+        features_group.add(&reconnect_resize_row);
 
         // Disable NLA
         let disable_nla_check = CheckButton::new();
@@ -2985,6 +3005,7 @@ impl ConnectionDialog {
             rdp_jiggler_interval_spin,
             rdp_autotype_delay_spin,
             rdp_autotype_initial_delay_spin,
+            rdp_reconnect_on_resize_check,
             rdp_jump_host_dropdown,
             shared_folders,
             folders_list,
@@ -6260,6 +6281,8 @@ impl ConnectionDialog {
             .set_value(f64::from(rdp.autotype_delay_ms));
         self.rdp_autotype_initial_delay_spin
             .set_value(f64::from(rdp.autotype_initial_delay_ms));
+        self.rdp_reconnect_on_resize_check
+            .set_active(rdp.reconnect_on_resize);
         self.rdp_disable_nla_check.set_active(rdp.disable_nla);
         self.rdp_security_layer_dropdown
             .set_selected(rdp.security_layer.index());
@@ -7500,6 +7523,7 @@ struct ConnectionDialogData<'a> {
     rdp_jiggler_interval_spin: &'a SpinButton,
     rdp_autotype_delay_spin: &'a SpinButton,
     rdp_autotype_initial_delay_spin: &'a SpinButton,
+    rdp_reconnect_on_resize_check: &'a CheckButton,
     rdp_jump_host_dropdown: &'a DropDown,
     rdp_connections_data: &'a Rc<RefCell<Vec<(Option<Uuid>, String)>>>,
     rdp_shared_folders: &'a Rc<RefCell<Vec<SharedFolder>>>,
@@ -8584,6 +8608,7 @@ impl ConnectionDialogData<'_> {
             },
             autotype_delay_ms: self.rdp_autotype_delay_spin.value() as u32,
             autotype_initial_delay_ms: self.rdp_autotype_initial_delay_spin.value() as u32,
+            reconnect_on_resize: self.rdp_reconnect_on_resize_check.is_active(),
         }
     }
 

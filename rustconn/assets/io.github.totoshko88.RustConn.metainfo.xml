@@ -144,6 +144,14 @@
     <control>touch</control>
   </supports>
   <releases>
+    <release version="0.13.5" date="2026-05-06">
+      <description>
+        <p>Version 0.13.5 — RDP dynamic resize fix:</p>
+        <ul>
+          <li>Fixed RDP dynamic resize without reconnect — window resize no longer triggers a full session disconnect/reconnect cycle; the new resolution is sent in-place via the MS-RDPEDISP Display Control Virtual Channel; FreeRDP external mode still falls back to reconnect (#131)</li>
+        </ul>
+      </description>
+    </release>
     <release version="0.13.4" date="2026-05-05">
       <description>
         <p>Version 0.13.4 — RDP Autotype, KeePass custom paths, and clipboard fix:</p>

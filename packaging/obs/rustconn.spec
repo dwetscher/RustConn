@@ -6,7 +6,7 @@
 #
 
 Name:           rustconn
-Version:        0.13.4
+Version:        0.13.5
 Release:        0
 Summary:        Modern connection manager for Linux (SSH, RDP, VNC, SPICE, MOSH, Telnet, Serial, Kubernetes, Zero Trust)
 License:        GPL-3.0-or-later
@@ -238,6 +238,16 @@ done
 %{_datadir}/locale/*/LC_MESSAGES/rustconn.mo
 
 %changelog
+* Tue May 06 2026 Anton Isaiev <totoshko88@gmail.com> - 0.13.5-1
+- [Fixed] RDP: dynamic resize without reconnect via Display Control
+  Channel — window resize no longer triggers a full session
+  disconnect/reconnect cycle; the new resolution is sent in-place via
+  the MS-RDPEDISP Display Control Virtual Channel (SetDesktopSize →
+  encode_resize); the session continues seamlessly with the server-side
+  desktop resized to match the new widget dimensions; debounce (500ms)
+  and threshold (50px) remain to avoid flooding the server; FreeRDP
+  external mode still falls back to reconnect (#131)
+
 * Mon May 05 2026 Anton Isaiev <totoshko88@gmail.com> - 0.13.4-1
 - [Added] RDP Autotype: send text as keystrokes bypassing clipboard
   restrictions — Type Clipboard and Type Text toolbar buttons in embedded
