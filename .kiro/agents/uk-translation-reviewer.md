@@ -21,6 +21,7 @@ Always use the 2nd person singular imperative (Наказовий спосіб) 
 - `Edit` → `Редагуй`
 - `Add` → `Додай`
 - `Select` / `Choose` → `Обери`
+- `Configure` → `Налаштуй` (❌ not `Настрой`)
 
 Infinitives are acceptable ONLY in full sentences like "What to include..." / "Що включати...", or questions like "Увімкнути синхронізацію?".
 
@@ -30,12 +31,19 @@ Use precise terminology over common machine-translation defaults:
   Example: `Connection password` -> `Пароль з'єднанка`.
 - Connection (process): `З'єднування`.
   🚫 Avoid `з'єднання` to prevent confusion between object and process.
-- Settings: `Устави` (❌ not `налаштування`).
+- Settings: `Устави` (❌ not `налаштування` in the sense of "Settings" menu/page).
+- Configure/Set up (verb, imperative): `Налаштуй` (❌ not `Настрой`).
+- Configured (state): `Налаштовано` (❌ not `Настроєно`).
+- Not configured: `Не налаштовано`.
 - Default (By default): `Типово` (❌ not `за замовчуванням`).
 - Properties: `Ознаки` (❌ not `властивості`).
 - Variable (noun): `Змінниця` (❌ not `змінна`).
 - Directory/Folder: `Тека` (❌ not `папка`).
 - Quit: `Вийди` (or `Вихід`).
+- Tags: `Познаки` (❌ not `мітки` or `теги`).
+- Timestamp: `Познака часу` (Plural: `познаки часу`; ❌ not `мітка часу`).
+- No / None (absence): `Нема` (❌ not `Немає`).
+- Keyboard: `Клавіятура` (Gen: `клавіятури`; ❌ not `клавіатура`).
 
 ## 3. Orthography & Phonetics (Kharkiv Style)
 Follow traditional Ukrainian phonetic and morphological rules:
@@ -45,6 +53,7 @@ Follow traditional Ukrainian phonetic and morphological rules:
   `Audio` → `Авдіо` (❌ not `Аудіо`).
 - Ia → Iya:
   `Initialization` → `Ініціялізація` (❌ not `ініціалізація`).
+  `Keyboard` → `Клавіятура` (❌ not `клавіатура`).
 - Feminine Genitive Case: Nouns ending in a consonant + `ь` (e.g., якість, швидкість) take the `-и` ending in the genitive case.
   `Of quality` → `якости` (❌ not `якості`).
   `Of speed` → `швидкости` (❌ not `швидкості`).
