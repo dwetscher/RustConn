@@ -3,7 +3,7 @@
 </p>
 <h1 align="center">RustConn</h1>
 <p align="center">
-  Modern connection manager for Linux and macOS — SSH, RDP, VNC, SPICE, and more
+  Modern connection manager — SSH, RDP, VNC, SPICE, and more
 </p>
 <p align="center">
   <a href="https://flathub.org/apps/io.github.totoshko88.RustConn"><img src="https://img.shields.io/flathub/v/io.github.totoshko88.RustConn" alt="Flathub"></a>
@@ -17,7 +17,7 @@
 
 ---
 
-RustConn is a connection orchestrator for Linux and macOS with a GTK4/libadwaita interface.
+RustConn is a cross-platform connection orchestrator with a GTK4/libadwaita interface.
 It brings SSH, RDP, VNC, SPICE, MOSH, Telnet, Serial, Kubernetes, and Zero Trust connections under one roof — with embedded Rust clients where possible and seamless integration with external tools where needed.
 
 [![Demo](https://img.youtube.com/vi/4cMxo-lxfQ8/maxresdefault.jpg)](https://youtu.be/4cMxo-lxfQ8)
