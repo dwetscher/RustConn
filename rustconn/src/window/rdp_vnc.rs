@@ -594,14 +594,28 @@ fn start_embedded_rdp_session(
             // If never connected, close the tab — no point showing failed tab for initial failure
             if !was_connected_clone.get() {
                 notebook_for_state.close_tab(session_id);
-                // Show toast with connection failure info
-                crate::toast::show_error_toast_on_active_window(&crate::i18n::i18n(
-                    "RDP connection failed. Check that the remote host is reachable.",
-                ));
+                // Note: specific error toast is shown by connect_error callback.
+                // Only show generic fallback if on_error was not triggered.
             }
             sidebar_for_state.update_connection_status(&connection_id.to_string(), "failed");
         }
         crate::embedded_rdp::RdpConnectionState::Connecting => {}
+    });
+
+    // Connect error callback — shows specific error message as toast
+    let notebook_for_error = notebook.clone();
+    embedded_widget.connect_error(move |error_msg| {
+        if let Some(window) = notebook_for_error
+            .widget()
+            .ancestor(gtk4::Window::static_type())
+            .and_then(|w| w.downcast::<gtk4::Window>().ok())
+        {
+            crate::toast::show_toast_on_window(
+                &window,
+                error_msg,
+                crate::toast::ToastType::Error,
+            );
+        }
     });
 
     // Connect reconnect callback

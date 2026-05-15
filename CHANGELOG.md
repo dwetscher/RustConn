@@ -7,29 +7,34 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.13.16] - 2026-05-15
 
-### Added
-- **macOS port** — full macOS support with native PTY, tray icon, Homebrew formula, DMG packaging
-- **macOS tray icon** (`tray-macos` feature) — native NSStatusItem via `tray-icon` + `muda` crates with dynamic menu updates (Show/Hide, Recent Connections, Active Sessions, Quick Connect, Local Shell, About, Quit)
-- **macOS Keychain backend** — native credential storage via Security.framework (`security-framework` crate), no CLI tools needed
-- **Native PTY spawn for macOS** — VTE `spawn_async` workaround via `openpty()` + `Pty::foreign_sync()` with `process_group(0)` for job control
-- **macOS PATH extension** — GUI apps launched via `.app` bundle get Homebrew and tool paths injected automatically
-- **Unified `detection_command()` helper** — all secret backend detection uses extended PATH for macOS compatibility
-- **Platform-aware URL opener** — `open` on macOS, `xdg-open` on Linux for web vaults and file managers
-- **DMG build script** — automated `.dmg` creation with bundled icons, locales, GSettings schemas, ad-hoc code signing
-- **Homebrew formula** — complete `rustconn.rb` for Homebrew Tap distribution
+### Added — macOS Port
 
-### Fixed
-- **macOS tray: main-thread initialization** — `NSStatusItem` now created on main thread (was background thread causing silent failure)
-- **macOS tray: dynamic menu rebuild** — menu updates on state change via `set_menu()` (was static after creation)
-- **X11 renderer fallback skipped on macOS** — `ensure_x11_renderer_fallback()` gated with `#[cfg(not(target_os = "macos"))]`
-- **Cross-platform `statvfs` types** — `u64::from()` with platform-specific clippy attributes
-- **Secret backend detection on macOS** — all backends use extended PATH, removed per-tool fallback path lists
-- **Removed invalid Cellar path** — `/usr/local/Cellar/keepassxc/keepassxc-cli` never existed
-- **PTY child process cleanup** — kill + waitpid on `Pty::foreign_sync()` failure prevents zombies
-- **PTY child handle race** — `std::mem::forget(child)` prevents double-waitpid with GLib watcher
+First macOS release with full native support:
+
+- **Native PTY** — VTE `spawn_async` workaround via `openpty()` + `Pty::foreign_sync()` with job control
+- **Tray icon** (`tray-macos` feature) — NSStatusItem via `tray-icon` + `muda` with dynamic menu (Show/Hide, Recent, Quick Connect, Quit)
+- **macOS Keychain** — native credential storage via Security.framework
+- **DMG packaging** — automated build with bundled Adwaita icons, locales, GSettings schemas, ad-hoc code signing
+- **Homebrew formula** — `brew tap totoshko88/rustconn && brew install rustconn`
+- **PATH extension** — `.app` bundle injects Homebrew paths for CLI tool detection (KeePassXC, bw, op, etc.)
+- **Platform-aware URL opener** — `open` on macOS, `xdg-open` on Linux
+
+### Fixed — macOS
+
+- **Tray icon** — main-thread init, Retina 44px template icon, diagnostic logging on failure
+- **DMG bundle** — `cp -RL` resolves Homebrew symlinks; fixed iconset glob; wrapper exports full PATH
+- **Icon theme** — `register_app_icon()` discovers bundle's `Resources/share/icons` and Homebrew paths
+- **PTY** — child process cleanup (no zombies), handle race prevention via `std::mem::forget`
+- **Secret detection** — unified `detection_command()` with extended PATH, removed invalid Cellar paths
+- **X11 fallback** — skipped on macOS via `#[cfg(not(target_os = "macos"))]`
+
+### Fixed — General
+
+- **RDP error messages** — IronRDP CredSSP/NLA errors now show specific cause (invalid credentials, account locked, password expired) instead of generic "Connection failed"
+- **Settings dialog width** — increased to 800px to prevent tab label truncation on localized builds
 
 ### Dependencies
-- **Updated**: winnow 1.0.2→1.0.3
+- **Updated**: tray-icon 0.19→0.20 (fixes muda version conflict), winnow 1.0.2→1.0.3
 
 ## [0.13.15] - 2026-05-14
 

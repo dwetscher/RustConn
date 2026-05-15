@@ -11,15 +11,18 @@ class Rustconn < Formula
   depends_on "gettext" => :build
   depends_on "librsvg" => :build
 
+  # Runtime dependencies — installed automatically by Homebrew
   depends_on "gtk4"
   depends_on "libadwaita"
   depends_on "vte3"
   depends_on "adwaita-icon-theme"
   depends_on "openssl@3"
   depends_on "dbus"
+  depends_on "glib"
+  depends_on :macos
 
   def install
-    # Build without wayland and tray (not available on macOS)
+    # Build GUI with macOS-specific features (no wayland, no D-Bus tray)
     system "cargo", "build", "--release",
            "-p", "rustconn",
            "--no-default-features",
@@ -68,12 +71,14 @@ class Rustconn < Formula
     system "iconutil", "-c", "icns", buildpath/"iconset/RustConn.iconset",
            "-o", "#{app_dir}/Resources/RustConn.icns"
 
-    # Wrapper script
+    # Wrapper script — sets up environment for GTK4/libadwaita runtime
     (app_dir/"MacOS/rustconn-wrapper").write <<~EOS
       #!/bin/bash
-      export XDG_DATA_DIRS="#{HOMEBREW_PREFIX}/share:/usr/local/share:/usr/share"
+      export XDG_DATA_DIRS="$HOME/.local/share:#{HOMEBREW_PREFIX}/share:/usr/local/share:/usr/share"
       export GSETTINGS_SCHEMA_DIR="#{HOMEBREW_PREFIX}/share/glib-2.0/schemas"
       export LOCALEDIR="#{share}/locale"
+      export PATH="#{HOMEBREW_PREFIX}/bin:#{HOMEBREW_PREFIX}/sbin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:$PATH"
+      cd "$HOME"
       exec "#{bin}/rustconn" "$@"
     EOS
     chmod 0755, "#{app_dir}/MacOS/rustconn-wrapper"
@@ -104,28 +109,55 @@ class Rustconn < Formula
           <true/>
           <key>LSMinimumSystemVersion</key>
           <string>13.0</string>
+          <key>NSDocumentsFolderUsageDescription</key>
+          <string>RustConn needs access to import SSH configs and connection files.</string>
+          <key>NSAppleEventsUsageDescription</key>
+          <string>RustConn needs to open URLs in your default browser.</string>
       </dict>
       </plist>
     EOS
+
+    # Create a launch script in bin for convenience (no env vars needed)
+    (bin/"rustconn-app").write <<~EOS
+      #!/bin/bash
+      open "#{prefix}/RustConn.app" "$@"
+    EOS
+    chmod 0755, bin/"rustconn-app"
+  end
+
+  def post_install
+    # Compile GSettings schemas (required for GTK4 apps)
+    system "#{Formula["glib"].opt_bin}/glib-compile-schemas",
+           "#{HOMEBREW_PREFIX}/share/glib-2.0/schemas"
+    # Update icon cache
+    system "#{Formula["gtk4"].opt_bin}/gtk4-update-icon-cache", "-f", "-t",
+           "#{HOMEBREW_PREFIX}/share/icons/hicolor"
   end
 
   def caveats
     <<~EOS
-      RustConn has been installed. To launch:
-        open #{prefix}/RustConn.app
+      RustConn has been installed with all dependencies.
 
-      Or from terminal:
-        XDG_DATA_DIRS="#{HOMEBREW_PREFIX}/share" \\
-        GSETTINGS_SCHEMA_DIR="#{HOMEBREW_PREFIX}/share/glib-2.0/schemas" \\
-        LOCALEDIR="#{share}/locale" \\
-        rustconn
+      To launch the GUI:
+        rustconn-app
+        # or: open #{prefix}/RustConn.app
 
-      Note: fzf-completion in the built-in terminal requires launching
-      via the .app bundle (open RustConn.app) for proper session setup.
+      To add to Applications (Launchpad):
+        ln -sf #{prefix}/RustConn.app /Applications/RustConn.app
+
+      CLI tool:
+        rustconn-cli --help
+
+      Optional password manager integrations:
+        brew install --cask keepassxc     # KeePassXC
+        brew install bitwarden-cli        # Bitwarden
+        brew install --cask 1password-cli # 1Password
+        brew install pass                 # Pass (GPG)
     EOS
   end
 
   test do
     assert_match "rustconn", shell_output("#{bin}/rustconn --help 2>&1", 0)
+    assert_match "rustconn-cli", shell_output("#{bin}/rustconn-cli --help 2>&1", 0)
   end
 end

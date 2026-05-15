@@ -25,7 +25,6 @@
 //! }
 //! ```
 
-use gtk4::glib::object::Cast;
 use std::sync::OnceLock;
 
 /// Cached display server detection result

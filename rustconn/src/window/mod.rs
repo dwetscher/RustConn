@@ -3245,6 +3245,37 @@ impl MainWindow {
                     icon_theme.add_search_path(user_icons.to_string_lossy().as_ref());
                 }
             }
+
+            // 4. macOS .app bundle: icons bundled inside Resources/share/icons
+            #[cfg(target_os = "macos")]
+            {
+                if let Ok(exe_path) = std::env::current_exe() {
+                    // exe is at RustConn.app/Contents/MacOS/rustconn
+                    // icons are at RustConn.app/Contents/Resources/share/icons
+                    if let Some(macos_dir) = exe_path.parent() {
+                        let bundle_icons = macos_dir
+                            .parent() // Contents/
+                            .map(|p| p.join("Resources/share/icons"));
+                        if let Some(ref icons_path) = bundle_icons {
+                            if icons_path.exists() {
+                                icon_theme
+                                    .add_search_path(icons_path.to_string_lossy().as_ref());
+                            }
+                        }
+                    }
+                }
+
+                // Also add Homebrew icon paths (for non-bundled runs)
+                let homebrew_icons = [
+                    "/opt/homebrew/share/icons",
+                    "/usr/local/share/icons",
+                ];
+                for path in &homebrew_icons {
+                    if std::path::Path::new(path).exists() {
+                        icon_theme.add_search_path(path);
+                    }
+                }
+            }
         }
     }
 

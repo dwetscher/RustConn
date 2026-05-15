@@ -155,7 +155,7 @@ impl SettingsDialog {
     pub fn new(_parent: Option<&gtk4::Window>) -> Self {
         let dialog = adw::PreferencesDialog::builder()
             .search_enabled(true)
-            .content_width(700)
+            .content_width(800)
             .build();
 
         // Create all pages

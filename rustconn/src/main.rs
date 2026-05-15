@@ -254,7 +254,100 @@ fn ensure_x11_renderer_fallback() {
     tracing::warn!(?err, "GSK_RENDERER re-exec failed; using default renderer");
 }
 
+/// Detects if running inside a macOS .app bundle and re-execs with the
+/// correct environment if needed. This avoids using a bash wrapper as
+/// CFBundleExecutable (which breaks NSStatusItem / tray icon).
+///
+/// Uses the same re-exec pattern as `ensure_x11_renderer_fallback()`:
+/// detect → set env → exec self. Only triggers once (guard variable).
+#[cfg(target_os = "macos")]
+fn setup_macos_bundle_env() {
+    use std::env;
+    use std::os::unix::process::CommandExt;
+
+    // Guard: don't re-exec if we already did
+    if env::var_os("_RUSTCONN_BUNDLE_ENV_SET").is_some() {
+        return;
+    }
+
+    // Detect bundle: executable is at .app/Contents/MacOS/rustconn
+    let exe_path = match env::current_exe() {
+        Ok(p) => p,
+        Err(_) => return,
+    };
+
+    let macos_dir = exe_path.parent().unwrap_or(&exe_path);
+    let contents_dir = macos_dir.parent().unwrap_or(macos_dir);
+    let bundle_dir = contents_dir.parent().unwrap_or(contents_dir);
+
+    // Verify this looks like a .app bundle
+    let bundle_name = bundle_dir
+        .file_name()
+        .and_then(|n| n.to_str())
+        .unwrap_or("");
+    if !bundle_name.ends_with(".app") {
+        return;
+    }
+
+    // Check if env vars are already set (e.g. launched from terminal with wrapper)
+    if env::var_os("GSETTINGS_SCHEMA_DIR").is_some() {
+        return;
+    }
+
+    // Build environment and re-exec
+    let resources_dir = contents_dir.join("Resources");
+    let resources_share = resources_dir.join("share");
+
+    let xdg = format!(
+        "{}:/opt/homebrew/share:/usr/local/share:/usr/share",
+        resources_share.display()
+    );
+
+    let schemas = resources_share.join("glib-2.0/schemas");
+    let schemas_str = if schemas.exists() {
+        schemas.to_string_lossy().into_owned()
+    } else {
+        "/opt/homebrew/share/glib-2.0/schemas".to_string()
+    };
+
+    let locale_dir = resources_dir.join("locale");
+    let locale_str = locale_dir.to_string_lossy().into_owned();
+
+    let path = format!(
+        "/opt/homebrew/bin:/opt/homebrew/sbin:/usr/local/bin:{}",
+        env::var("PATH").unwrap_or_else(|_| "/usr/bin:/bin:/usr/sbin:/sbin".to_string())
+    );
+
+    let home = env::var("HOME").unwrap_or_else(|_| "/".to_string());
+
+    // Collect current args
+    let args: Vec<String> = env::args().collect();
+
+    // Re-exec with bundle environment
+    let err = std::process::Command::new(&exe_path)
+        .args(&args[1..])
+        .env("XDG_DATA_DIRS", &xdg)
+        .env("GSETTINGS_SCHEMA_DIR", &schemas_str)
+        .env("LOCALEDIR", &locale_str)
+        .env("PATH", &path)
+        .env("HOME", &home)
+        .env("_RUSTCONN_BUNDLE_ENV_SET", "1")
+        .current_dir(&home)
+        .exec();
+
+    // exec() only returns on error
+    eprintln!("RustConn bundle re-exec failed: {err}");
+}
+
 fn main() -> gtk4::glib::ExitCode {
+    // macOS .app bundle: detect bundle Resources path and set env vars.
+    // When launched via LaunchServices (Finder/Dock/Launchpad), the process
+    // has minimal environment. We detect the bundle by checking if our
+    // executable lives inside a .app/Contents/MacOS/ directory.
+    // This MUST happen before i18n::init() which reads LOCALEDIR.
+    #[cfg(target_os = "macos")]
+    setup_macos_bundle_env();
+
     // Initialize internationalization (gettext)
     i18n::init();
 

@@ -137,16 +137,26 @@ fn build_ui(app: &adw::Application, tray_manager: SharedTrayManager) {
     let enable_tray = state.borrow().settings().ui.enable_tray_icon;
     if enable_tray {
         // macOS: TrayManager uses NSStatusItem which MUST be created on the
-        // main thread. Create it synchronously here (it's fast — no D-Bus).
+        // main thread AFTER the NSApplication run loop is fully active.
+        // When launched via `open RustConn.app` (LaunchServices), NSApplication
+        // needs time to complete activation before NSStatusItem can be created.
+        // A 500ms delay ensures the run loop is spinning and the app is fully
+        // activated. Without this, TrayIconBuilder::build() succeeds but the
+        // status item is never displayed in the menu bar.
         #[cfg(feature = "tray-macos")]
         {
-            if let Some(tray) = TrayManager::new() {
-                let mut initial_cache = TrayStateCache::default();
-                update_tray_state(&tray, &state, &mut initial_cache);
-                *tray_manager.borrow_mut() = Some(tray);
-            } else {
-                tracing::warn!("Failed to create macOS tray icon");
-            }
+            let state_for_tray = state.clone();
+            let tray_mgr_for_init = tray_manager.clone();
+            glib::timeout_add_local_once(std::time::Duration::from_millis(500), move || {
+                if let Some(tray) = TrayManager::new() {
+                    let mut initial_cache = TrayStateCache::default();
+                    update_tray_state(&tray, &state_for_tray, &mut initial_cache);
+                    *tray_mgr_for_init.borrow_mut() = Some(tray);
+                    tracing::info!("macOS tray icon created successfully");
+                } else {
+                    tracing::warn!("Failed to create macOS tray icon");
+                }
+            });
         }
 
         // Linux: Spawn TrayManager on a background thread so that the blocking

@@ -485,6 +485,15 @@ jobs:
           ./RustConn-${VERSION}-x86_64.AppImage
           \`\`\`
 
+          ### macOS (Homebrew)
+          \`\`\`bash
+          brew tap totoshko88/rustconn
+          brew install rustconn
+          open \$(brew --prefix)/opt/rustconn/RustConn.app
+          \`\`\`
+          All dependencies (GTK4, libadwaita, VTE, Adwaita icons) are installed automatically.
+          Requires macOS 13 (Ventura) or later.
+
           ### OBS Repositories
           Packages available at: https://build.opensuse.org/package/show/home:totoshko88:rustconn/rustconn
 

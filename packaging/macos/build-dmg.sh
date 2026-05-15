@@ -54,7 +54,9 @@ cp "$ICONSET_DIR/icon_256.png" "$ICONSET_DIR/icon_256x256.png"
 cp "$ICONSET_DIR/icon_512.png" "$ICONSET_DIR/icon_256x256@2x.png"
 cp "$ICONSET_DIR/icon_512.png" "$ICONSET_DIR/icon_512x512.png"
 cp "$ICONSET_DIR/icon_1024.png" "$ICONSET_DIR/icon_512x512@2x.png"
-rm -f "$ICONSET_DIR"/icon_*.png  # remove intermediate files
+rm -f "$ICONSET_DIR"/icon_16.png "$ICONSET_DIR"/icon_32.png "$ICONSET_DIR"/icon_64.png \
+    "$ICONSET_DIR"/icon_128.png "$ICONSET_DIR"/icon_256.png "$ICONSET_DIR"/icon_512.png \
+    "$ICONSET_DIR"/icon_1024.png
 
 iconutil -c icns "$ICONSET_DIR" -o "$APP_DIR/Contents/Resources/RustConn.icns"
 
@@ -69,27 +71,47 @@ done
 # 6. Copy Adwaita icons (subset needed by the app)
 echo "Bundling Adwaita icons..."
 mkdir -p "$APP_DIR/Contents/Resources/share/icons"
-cp -R /opt/homebrew/share/icons/Adwaita "$APP_DIR/Contents/Resources/share/icons/"
-cp -R /opt/homebrew/share/icons/hicolor "$APP_DIR/Contents/Resources/share/icons/"
+cp -RL /opt/homebrew/share/icons/Adwaita "$APP_DIR/Contents/Resources/share/icons/"
+cp -RL /opt/homebrew/share/icons/hicolor "$APP_DIR/Contents/Resources/share/icons/"
 
 # 7. Copy GSettings schemas
 mkdir -p "$APP_DIR/Contents/Resources/share/glib-2.0/schemas"
 cp /opt/homebrew/share/glib-2.0/schemas/gschemas.compiled \
    "$APP_DIR/Contents/Resources/share/glib-2.0/schemas/"
 
-# 8. Create wrapper script
+# 8. Create wrapper script (kept for manual terminal launches)
 cat > "$APP_DIR/Contents/MacOS/rustconn-wrapper" << 'EOF'
 #!/bin/bash
 DIR="$(cd "$(dirname "$0")/.." && pwd)"
 export XDG_DATA_DIRS="$DIR/Resources/share:/opt/homebrew/share:/usr/local/share:/usr/share"
 export GSETTINGS_SCHEMA_DIR="$DIR/Resources/share/glib-2.0/schemas"
 export LOCALEDIR="$DIR/Resources/locale"
+export PATH="/opt/homebrew/bin:/opt/homebrew/sbin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin"
 # Let GTK4 handle HiDPI scaling natively; override with GDK_DPI_SCALE env if needed.
+cd "$HOME"
 exec "$DIR/MacOS/rustconn" "$@"
 EOF
 chmod +x "$APP_DIR/Contents/MacOS/rustconn-wrapper"
 
+# 8b. Create native launcher that sets env and execs rustconn.
+#     CFBundleExecutable points here so macOS associates NSStatusItem
+#     with the correct bundle (bash wrappers break this association).
+cat > "$APP_DIR/Contents/MacOS/RustConn-launcher" << 'LAUNCHER'
+#!/bin/bash
+DIR="$(cd "$(dirname "$0")/.." && pwd)"
+export XDG_DATA_DIRS="$DIR/Resources/share:/opt/homebrew/share:/usr/local/share:/usr/share"
+export GSETTINGS_SCHEMA_DIR="$DIR/Resources/share/glib-2.0/schemas"
+export LOCALEDIR="$DIR/Resources/locale"
+export PATH="/opt/homebrew/bin:/opt/homebrew/sbin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin"
+cd "$HOME"
+exec "$DIR/MacOS/rustconn" "$@"
+LAUNCHER
+chmod +x "$APP_DIR/Contents/MacOS/RustConn-launcher"
+
 # 9. Create Info.plist
+#    CFBundleExecutable points to the wrapper script which sets env vars and execs
+#    the rustconn binary. The wrapper uses exec so the binary inherits the PID
+#    and macOS correctly associates it with the bundle for NSStatusItem (tray).
 cat > "$APP_DIR/Contents/Info.plist" << EOF
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -115,6 +137,8 @@ cat > "$APP_DIR/Contents/Info.plist" << EOF
     <true/>
     <key>LSMinimumSystemVersion</key>
     <string>13.0</string>
+    <key>NSDocumentsFolderUsageDescription</key>
+    <string>RustConn needs access to import SSH configs and connection files.</string>
     <key>NSAppleEventsUsageDescription</key>
     <string>RustConn needs to open URLs in your default browser.</string>
 </dict>
@@ -128,7 +152,8 @@ codesign --force --deep --sign - "$APP_DIR" 2>/dev/null || true
 # 11. Create DMG
 echo "Creating DMG..."
 mkdir -p "$DMG_DIR"
-DMG_PATH="$DMG_DIR/RustConn-${VERSION}-macOS-arm64.dmg"
+ARCH=$(uname -m)
+DMG_PATH="$DMG_DIR/RustConn-${VERSION}-macOS-${ARCH}.dmg"
 rm -f "$DMG_PATH"
 
 # Create a temporary folder with .app and Applications symlink for drag-install UX

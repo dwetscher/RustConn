@@ -429,20 +429,42 @@ mod tray_macos_impl {
             let (sender, receiver) = mpsc::channel();
             let state = Arc::new(Mutex::new(TrayState::default()));
 
-            // Render icon
-            let rgba_data = render_svg_to_rgba(22)?;
-            let icon = tray_icon::Icon::from_rgba(rgba_data, 22, 22).ok()?;
+            // Render icon — macOS menu bar uses 22pt icons (44px for Retina)
+            let rgba_data = match render_svg_to_rgba(44) {
+                Some(data) => data,
+                None => {
+                    tracing::warn!("macOS tray: failed to render SVG icon");
+                    return None;
+                }
+            };
+            let icon = match tray_icon::Icon::from_rgba(rgba_data, 44, 44) {
+                Ok(i) => i,
+                Err(e) => {
+                    tracing::warn!(%e, "macOS tray: failed to create icon from RGBA");
+                    return None;
+                }
+            };
 
             // Build menu
             let menu = Self::build_menu(&state);
 
             // Create tray icon (must be on main thread)
-            let tray_icon = TrayIconBuilder::new()
+            // Note: icon_as_template=false shows the full-color icon in the menu bar.
+            // Template mode (true) requires a monochrome black+alpha image;
+            // our SVG is full-color so template mode would render it invisible.
+            let tray_icon = match TrayIconBuilder::new()
                 .with_icon(icon)
+                .with_icon_as_template(false)
                 .with_tooltip("RustConn")
                 .with_menu(Box::new(menu))
                 .build()
-                .ok()?;
+            {
+                Ok(t) => t,
+                Err(e) => {
+                    tracing::warn!(%e, "macOS tray: TrayIconBuilder::build() failed");
+                    return None;
+                }
+            };
 
             // Set up menu event handler on a background thread.
             // MenuEvent::receiver() is thread-safe — only the TrayIcon itself

@@ -2,7 +2,7 @@
 
 ## System Requirements
 
-- **OS:** Linux (Wayland-first, X11 supported)
+- **OS:** Linux (Wayland-first, X11 supported), macOS 13+ (Ventura)
 - **GTK:** 4.14+
 - **libadwaita:** 1.5+
 - **Rust:** 1.95+ (for building from source)
@@ -168,6 +168,64 @@ See [docs/SNAP.md](SNAP.md) for detailed snap documentation.
 chmod +x RustConn-*-x86_64.AppImage
 ./RustConn-*-x86_64.AppImage
 ```
+
+## macOS (Homebrew)
+
+RustConn is available via a Homebrew Tap. All dependencies (GTK4, libadwaita, VTE,
+Adwaita icons, OpenSSL, D-Bus) are installed automatically by Homebrew.
+
+Requires macOS 13 (Ventura) or later.
+
+```bash
+# Install
+brew tap totoshko88/rustconn
+brew install rustconn
+
+# Launch GUI
+rustconn-app
+# or: open $(brew --prefix)/opt/rustconn/RustConn.app
+
+# Optional: add to Applications / Launchpad
+ln -sf $(brew --prefix)/opt/rustconn/RustConn.app /Applications/RustConn.app
+```
+
+### What Gets Installed
+
+| Component | Description |
+|-----------|-------------|
+| `rustconn` | GUI application binary |
+| `rustconn-cli` | CLI tool for scripting and automation |
+| `rustconn-app` | Convenience launcher (opens .app bundle) |
+| `RustConn.app` | macOS application bundle with icon and environment setup |
+| Locales | 16 languages (be, cs, da, de, es, fr, it, kk, nl, pl, pt, sk, sv, uk, uz, zh-cn) |
+
+### Optional: Password Manager CLIs
+
+```bash
+brew install --cask keepassxc      # KeePassXC (local database)
+brew install bitwarden-cli         # Bitwarden
+brew install --cask 1password-cli  # 1Password
+brew install pass                  # Pass (GPG-based)
+```
+
+### Updating
+
+```bash
+brew update && brew upgrade rustconn
+```
+
+### Uninstalling
+
+```bash
+brew uninstall rustconn
+brew untap totoshko88/rustconn
+rm -f /Applications/RustConn.app
+```
+
+### Building from Source on macOS
+
+See [docs/MACOS_BUILD.md](MACOS_BUILD.md) for manual build instructions, DMG packaging,
+and troubleshooting.
 
 ## Debian / Ubuntu (OBS Repository)
 
@@ -366,6 +424,13 @@ flatpak uninstall io.github.totoshko88.RustConn
 **Snap:**
 ```bash
 sudo snap remove rustconn
+```
+
+**macOS (Homebrew):**
+```bash
+brew uninstall rustconn
+brew untap totoshko88/rustconn
+rm -f /Applications/RustConn.app
 ```
 
 **Debian/Ubuntu:**

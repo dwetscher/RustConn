@@ -3,7 +3,7 @@
 </p>
 <h1 align="center">RustConn</h1>
 <p align="center">
-  Modern connection manager for Linux — SSH, RDP, VNC, SPICE, and more
+  Modern connection manager for Linux and macOS — SSH, RDP, VNC, SPICE, and more
 </p>
 <p align="center">
   <a href="https://flathub.org/apps/io.github.totoshko88.RustConn"><img src="https://img.shields.io/flathub/v/io.github.totoshko88.RustConn" alt="Flathub"></a>
@@ -17,7 +17,7 @@
 
 ---
 
-RustConn is a connection orchestrator for Linux with a GTK4/Wayland-native interface.
+RustConn is a connection orchestrator for Linux and macOS with a GTK4/libadwaita interface.
 It brings SSH, RDP, VNC, SPICE, MOSH, Telnet, Serial, Kubernetes, and Zero Trust connections under one roof — with embedded Rust clients where possible and seamless integration with external tools where needed.
 
 [![Demo](https://img.youtube.com/vi/4cMxo-lxfQ8/maxresdefault.jpg)](https://youtu.be/4cMxo-lxfQ8)
@@ -62,6 +62,7 @@ flatpak install flathub io.github.totoshko88.RustConn
 |--------|---------------|
 | **Flatpak** (recommended) | `flatpak install flathub io.github.totoshko88.RustConn` |
 | **Snap** | `sudo snap install rustconn` ([permissions](docs/SNAP.md)) |
+| **macOS (Homebrew)** | `brew tap totoshko88/rustconn && brew install rustconn` |
 | **Debian 13 / Ubuntu 24.04 / Ubuntu 26.04** | OBS apt repository ([setup](docs/INSTALL.md#debian--ubuntu-obs-repository)) |
 | **openSUSE** (Tumbleweed, Slowroll, Leap 16.0) | OBS zypper repository ([setup](docs/INSTALL.md#opensuse-obs)) |
 | **Fedora 43 / 44** | OBS dnf repository ([setup](docs/INSTALL.md#fedora-obs)) |
@@ -86,6 +87,7 @@ flatpak install flathub io.github.totoshko88.RustConn
 | [User Guide](docs/USER_GUIDE.md) | Complete usage documentation |
 | [Installation](docs/INSTALL.md) | All installation methods and repository setup |
 | [Build Guide](docs/BUILD.md) | Building from source, feature flags, per-distro prerequisites |
+| [macOS Build](docs/MACOS_BUILD.md) | Building and running on macOS, Homebrew, DMG packaging |
 | [CLI Reference](docs/CLI_REFERENCE.md) | `rustconn-cli` commands and examples |
 | [Architecture](docs/ARCHITECTURE.md) | Crate structure and design decisions |
 | [CI & Build Flow](docs/CI_BUILD_FLOW.md) | CI pipelines, OBS packaging, Flathub release process |

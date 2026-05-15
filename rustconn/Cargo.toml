@@ -34,7 +34,7 @@ ksni = { version = "0.3", features = ["blocking"], optional = true }
 # SVG rendering for tray icon (renders SVG to ARGB32 pixmap)
 resvg = { version = "0.47", optional = true }
 # macOS tray icon via NSStatusItem (cross-platform crate, used only on macOS)
-tray-icon = { version = "0.19", optional = true }
+tray-icon = { version = "0.20", optional = true }
 # Menu builder for macOS tray (companion to tray-icon)
 muda = { version = "0.16", optional = true }
 # Internationalization (gettext)

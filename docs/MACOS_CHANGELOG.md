@@ -41,6 +41,7 @@
 
 - **VTE `spawn_async` broken on macOS** — Homebrew VTE build does not connect PTY to child process. Workaround: native PTY via `openpty()` + `Pty::foreign_sync()`.
 - **Full session leader not possible without unsafe** — `process_group(0)` provides basic job control (Ctrl-C), but full `setsid` + `TIOCSCTTY` requires unsafe `pre_exec`. This means `Ctrl-Z` (suspend) may not work in all cases.
+- **Tray icon not visible when launched from Finder/Dock** — NSStatusItem is created successfully but macOS does not display it when the app is launched via LaunchServices (`open RustConn.app`, Finder double-click, Dock). Works correctly when launched from terminal (`./RustConn.app/Contents/MacOS/rustconn-wrapper`). This is a known interaction between GTK4's GLib main loop and macOS NSApplication activation policy. Workaround: launch from terminal, or use the `rustconn-wrapper` script. Fix planned for a future release via native Objective-C bridge.
 - **Wayland not available** — Build without `wayland-native` feature.
 - **CSS parser warnings** — libadwaita 1.9 CSS uses features not yet supported by GTK4 4.22 CSS parser. Cosmetic only, no functional impact.
 - **libsecret not available** — GNOME Keyring doesn't exist on macOS. Use macOS Keychain (native), KeePassXC, Bitwarden, 1Password, or Pass backends instead.

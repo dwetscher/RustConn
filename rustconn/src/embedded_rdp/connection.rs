@@ -1220,9 +1220,13 @@ impl super::EmbeddedRdpWidget {
                 }
             }
         } else {
-            // Non-protocol error — report normally
+            // Non-protocol error — report normally with user-friendly message
             *ctx.state.borrow_mut() = RdpConnectionState::Error;
             ctx.toolbar.set_visible(false);
+
+            // Parse IronRDP error into user-friendly message
+            let user_msg = Self::parse_ironrdp_error(msg);
+
             // Use take-invoke-restore to avoid RefCell re-entrancy panic:
             // the state_changed callback may close the tab, which fires
             // Disconnected and tries to borrow the same cell again.
@@ -1234,10 +1238,62 @@ impl super::EmbeddedRdpWidget {
 
             let error_cb = ctx.on_error.borrow_mut().take();
             if let Some(ref callback) = error_cb {
-                callback(msg);
+                callback(&user_msg);
             }
             *ctx.on_error.borrow_mut() = error_cb;
         }
+    }
+
+    /// Parses IronRDP error messages into user-friendly descriptions.
+    ///
+    /// Maps known NTSTATUS codes and error patterns to localized messages
+    /// that help users understand what went wrong.
+    #[cfg(feature = "rdp-embedded")]
+    fn parse_ironrdp_error(msg: &str) -> String {
+        // CredSSP / NLA authentication failures
+        // STATUS_LOGON_FAILURE (0xc000006d) — wrong username or password
+        if msg.contains("0xc000006d") || msg.contains("STATUS_LOGON_FAILURE") {
+            return i18n("Authentication failed: invalid username or password.");
+        }
+        // STATUS_ACCOUNT_DISABLED (0xc0000072)
+        if msg.contains("0xc0000072") {
+            return i18n("Authentication failed: account is disabled.");
+        }
+        // STATUS_ACCOUNT_LOCKED_OUT (0xc0000234)
+        if msg.contains("0xc0000234") {
+            return i18n("Authentication failed: account is locked out.");
+        }
+        // STATUS_PASSWORD_EXPIRED (0xc0000071)
+        if msg.contains("0xc0000071") {
+            return i18n("Authentication failed: password has expired.");
+        }
+        // STATUS_ACCOUNT_EXPIRED (0xc0000193)
+        if msg.contains("0xc0000193") {
+            return i18n("Authentication failed: account has expired.");
+        }
+        // STATUS_LOGON_TYPE_NOT_GRANTED (0xc000015b)
+        if msg.contains("0xc000015b") {
+            return i18n(
+                "Authentication failed: user is not allowed to log on to this computer.",
+            );
+        }
+        // Generic CredSSP error
+        if msg.contains("CredSSP") || msg.contains("Credssp") {
+            return i18n("NLA authentication failed. Check username and password.");
+        }
+        // TLS errors
+        if msg.contains("TLS") || msg.contains("tls") {
+            return i18n("TLS connection failed. The server may not support this security level.");
+        }
+        // Connection refused / unreachable
+        if msg.contains("Connection refused") || msg.contains("connection refused") {
+            return i18n("Connection refused. Check host and port.");
+        }
+        if msg.contains("timed out") || msg.contains("Timeout") {
+            return i18n("Connection timed out. Check that the host is reachable.");
+        }
+        // Fallback: return original message (already formatted by EmbeddedClientError)
+        msg.to_string()
     }
 
     /// Handles cursor update events from IronRDP, with HiDPI downscaling

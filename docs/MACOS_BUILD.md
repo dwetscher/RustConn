@@ -159,13 +159,17 @@ cat > RustConn.app/Contents/Info.plist << 'EOF'
     <key>CFBundlePackageType</key>
     <string>APPL</string>
     <key>CFBundleVersion</key>
-    <string>0.13.15</string>
+    <string>0.13.16</string>
     <key>CFBundleShortVersionString</key>
-    <string>0.13.15</string>
+    <string>0.13.16</string>
     <key>NSHighResolutionCapable</key>
     <true/>
+    <key>LSMinimumSystemVersion</key>
+    <string>13.0</string>
     <key>NSDocumentsFolderUsageDescription</key>
     <string>RustConn needs access to import SSH configs and connection files.</string>
+    <key>NSAppleEventsUsageDescription</key>
+    <string>RustConn needs to open URLs in your default browser.</string>
 </dict>
 </plist>
 EOF
@@ -178,30 +182,91 @@ open RustConn.app
 
 ```bash
 ./packaging/macos/build-dmg.sh --release
-# Output: dist/RustConn-<VERSION>-macOS-arm64.dmg
+# Output: dist/RustConn-<VERSION>-macOS-$(uname -m).dmg
 ```
 
 ---
 
 ## Homebrew Tap Installation
 
-### For Users
+### For Users (recommended)
+
+The Homebrew formula installs RustConn with all required dependencies automatically:
 
 ```bash
+# 1. Add the tap
 brew tap totoshko88/rustconn
+
+# 2. Install (builds from source with all dependencies)
 brew install rustconn
+
+# 3. Launch the .app bundle
 open $(brew --prefix)/opt/rustconn/RustConn.app
 ```
 
-### Publishing a New Release
+This will automatically install all required runtime libraries (GTK4, libadwaita, VTE, Adwaita icons, etc.) via Homebrew dependencies.
+
+### What Gets Installed
+
+| Component | Location |
+|-----------|----------|
+| `rustconn` binary | `$(brew --prefix)/bin/rustconn` |
+| `rustconn-cli` binary | `$(brew --prefix)/bin/rustconn-cli` |
+| `.app` bundle | `$(brew --prefix)/opt/rustconn/RustConn.app` |
+| Locales (16 languages) | `$(brew --prefix)/share/locale/*/LC_MESSAGES/rustconn.mo` |
+| App icon | `$(brew --prefix)/share/icons/hicolor/scalable/apps/` |
+
+### Optional: Add to Applications
+
+To have RustConn appear in Launchpad / Applications:
+
+```bash
+ln -sf $(brew --prefix)/opt/rustconn/RustConn.app /Applications/RustConn.app
+```
+
+### Optional: CLI Tools for Secret Backends
+
+RustConn can integrate with external password managers. Install the ones you use:
+
+```bash
+# KeePassXC (local database)
+brew install --cask keepassxc
+
+# Bitwarden CLI
+brew install bitwarden-cli
+
+# 1Password CLI
+brew install --cask 1password-cli
+
+# Pass (GPG-based)
+brew install pass
+```
+
+### Updating
+
+```bash
+brew update
+brew upgrade rustconn
+```
+
+### Uninstalling
+
+```bash
+brew uninstall rustconn
+brew untap totoshko88/rustconn
+rm -f /Applications/RustConn.app  # if symlinked
+```
+
+### Publishing a New Release (Maintainers)
 
 1. Tag the release on GitHub: `git tag vX.Y.Z && git push --tags`
 2. Get the archive SHA256:
    ```bash
    curl -sL https://github.com/totoshko88/RustConn/archive/refs/tags/vX.Y.Z.tar.gz | shasum -a 256
    ```
-3. Update `sha256` in `packaging/macos/rustconn.rb`
+3. Update `url`, `sha256` in `packaging/macos/rustconn.rb`
 4. Push to `homebrew-rustconn` tap repository
+5. Verify: `brew update && brew upgrade rustconn`
 
 ---
 
@@ -254,7 +319,7 @@ These are harmless — libadwaita 1.9 CSS uses features not yet supported by GTK
 Tray initialization thread exited without creating tray
 ```
 
-Expected on macOS — the tray feature uses D-Bus StatusNotifierItem which doesn't exist on macOS. Build without `tray` feature to suppress.
+Expected if built with the Linux `tray` feature instead of `tray-macos`. The Linux tray uses D-Bus StatusNotifierItem which doesn't exist on macOS. Build with `--features tray-macos` (not `tray`) to get native NSStatusItem menu bar icon.
 
 ### Window Too Large / DPI Issues
 
