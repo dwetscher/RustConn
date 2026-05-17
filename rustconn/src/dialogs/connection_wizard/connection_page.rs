@@ -75,7 +75,7 @@ impl ConnectionPage {
         content_box.set_margin_end(12);
 
         let clamp = adw::Clamp::builder()
-            .maximum_size(450)
+            .maximum_size(520)
             .child(&content_box)
             .build();
 
@@ -311,6 +311,27 @@ impl ConnectionPage {
             next_btn_v.set_sensitive(valid);
         });
 
+        // URL validation for Web protocol
+        let next_btn_url = next_button.clone();
+        let current_protocol_url = current_protocol.clone();
+        url_row.connect_changed(move |row| {
+            let proto = *current_protocol_url.borrow();
+            if proto == Some(ProtocolType::Web) {
+                let url = row.text();
+                let url_trimmed = url.trim();
+                let valid = url_trimmed
+                    .strip_prefix("https://")
+                    .or_else(|| url_trimmed.strip_prefix("http://"))
+                    .is_some_and(|rest| !rest.is_empty());
+                next_btn_url.set_sensitive(valid);
+                if valid || url_trimmed.is_empty() {
+                    row.remove_css_class("error");
+                } else {
+                    row.add_css_class("error");
+                }
+            }
+        });
+
         // ZT provider change
         let zt_cmd = zt_command_row.clone();
         let zt_f1 = zt_field1_row.clone();
@@ -440,7 +461,19 @@ impl ConnectionPage {
                 self.host_row.set_visible(false);
                 self.port_row.set_visible(false);
                 self.web_group.set_visible(true);
-                self.next_button.set_sensitive(true);
+                // Validate current URL value
+                let url = self.url_row.text();
+                let url_trimmed = url.trim();
+                let valid = url_trimmed
+                    .strip_prefix("https://")
+                    .or_else(|| url_trimmed.strip_prefix("http://"))
+                    .is_some_and(|rest| !rest.is_empty());
+                self.next_button.set_sensitive(valid);
+                if valid || url_trimmed.is_empty() {
+                    self.url_row.remove_css_class("error");
+                } else {
+                    self.url_row.add_css_class("error");
+                }
             }
         }
 
@@ -644,7 +677,6 @@ impl ConnectionPage {
     }
 
     #[must_use]
-    #[allow(dead_code)] // Reserved for Zero Trust provider-specific field collection
     pub fn zt_provider_index(&self) -> u32 {
         self.zt_provider_row.selected()
     }
@@ -656,7 +688,6 @@ impl ConnectionPage {
     }
 
     #[must_use]
-    #[allow(dead_code)] // Reserved for Zero Trust provider-specific field collection
     pub fn zt_fields(&self) -> (Option<String>, Option<String>, Option<String>) {
         let f = |row: &adw::EntryRow| -> Option<String> {
             let t = row.text().trim().to_string();

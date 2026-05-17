@@ -61,6 +61,9 @@ pub struct PartialConnection {
     // Zero Trust
     pub zt_provider: Option<ZeroTrustProvider>,
     pub zt_command: Option<String>,
+    pub zt_field1: Option<String>,
+    pub zt_field2: Option<String>,
+    pub zt_field3: Option<String>,
     // Serial
     pub serial_device: Option<String>,
     pub serial_baud: Option<u32>,
@@ -74,6 +77,118 @@ pub struct PartialConnection {
 }
 
 impl PartialConnection {
+    /// Create a `PartialConnection` from an existing `Connection`.
+    ///
+    /// Extracts wizard-relevant fields from the full connection for
+    /// "clone & modify" / "Duplicate via Wizard…" workflows.
+    #[must_use]
+    pub fn from_connection(conn: &Connection) -> Self {
+        use rustconn_core::models::ProtocolConfig;
+
+        let protocol = Some(conn.protocol);
+        let name = Some(conn.name.clone());
+        let host = Some(conn.host.clone());
+        let port = Some(conn.port);
+        let username = conn.username.clone();
+        let domain = conn.domain.clone();
+        let theme_override = conn.theme_override.clone();
+
+        let mut partial = Self {
+            protocol,
+            name,
+            host,
+            port,
+            username,
+            domain,
+            theme_override,
+            ..Default::default()
+        };
+
+        match &conn.protocol_config {
+            ProtocolConfig::Ssh(cfg) | ProtocolConfig::Sftp(cfg) => {
+                partial.auth_method = Some(cfg.auth_method.clone());
+                partial.key_path = cfg.key_path.clone();
+                partial.jump_host_id = cfg.jump_host_id;
+            }
+            ProtocolConfig::Mosh(cfg) => {
+                partial.port = cfg.ssh_port.or(partial.port);
+            }
+            ProtocolConfig::Rdp(cfg) => {
+                partial.jump_host_id = cfg.jump_host_id;
+            }
+            ProtocolConfig::Vnc(cfg) => {
+                partial.jump_host_id = cfg.jump_host_id;
+            }
+            ProtocolConfig::Spice(cfg) => {
+                partial.jump_host_id = cfg.jump_host_id;
+            }
+            ProtocolConfig::Serial(cfg) => {
+                partial.serial_device = Some(cfg.device.clone());
+                partial.serial_baud = Some(cfg.baud_rate.value());
+            }
+            ProtocolConfig::Kubernetes(cfg) => {
+                partial.k8s_context = cfg.context.clone();
+                partial.k8s_namespace = cfg.namespace.clone();
+                partial.k8s_pod = cfg.pod.clone();
+                partial.k8s_container = cfg.container.clone();
+            }
+            ProtocolConfig::ZeroTrust(cfg) => {
+                partial.zt_provider = Some(cfg.provider);
+                match &cfg.provider_config {
+                    rustconn_core::models::ZeroTrustProviderConfig::Generic(g) => {
+                        partial.zt_command = Some(g.command_template.clone());
+                    }
+                    rustconn_core::models::ZeroTrustProviderConfig::AwsSsm(c) => {
+                        partial.zt_field1 = Some(c.target.clone());
+                        partial.zt_field2 = c.region.clone();
+                        partial.zt_field3 = Some(c.profile.clone());
+                    }
+                    rustconn_core::models::ZeroTrustProviderConfig::GcpIap(c) => {
+                        partial.zt_field1 = Some(c.instance.clone());
+                        partial.zt_field2 = Some(c.zone.clone());
+                        partial.zt_field3 = c.project.clone();
+                    }
+                    rustconn_core::models::ZeroTrustProviderConfig::AzureBastion(c) => {
+                        partial.zt_field1 = Some(c.target_resource_id.clone());
+                        partial.zt_field2 = Some(c.resource_group.clone());
+                        partial.zt_field3 = Some(c.bastion_name.clone());
+                    }
+                    rustconn_core::models::ZeroTrustProviderConfig::AzureSsh(c) => {
+                        partial.zt_field1 = Some(c.vm_name.clone());
+                        partial.zt_field2 = Some(c.resource_group.clone());
+                    }
+                    rustconn_core::models::ZeroTrustProviderConfig::CloudflareAccess(c) => {
+                        partial.zt_field1 = Some(c.hostname.clone());
+                    }
+                    rustconn_core::models::ZeroTrustProviderConfig::Teleport(c) => {
+                        partial.zt_field1 = Some(c.host.clone());
+                        partial.zt_field2 = c.cluster.clone();
+                    }
+                    rustconn_core::models::ZeroTrustProviderConfig::TailscaleSsh(c) => {
+                        partial.zt_field1 = Some(c.host.clone());
+                    }
+                    rustconn_core::models::ZeroTrustProviderConfig::Boundary(c) => {
+                        partial.zt_field1 = Some(c.target.clone());
+                        partial.zt_field2 = c.addr.clone();
+                    }
+                    rustconn_core::models::ZeroTrustProviderConfig::HoopDev(c) => {
+                        partial.zt_field1 = Some(c.connection_name.clone());
+                        partial.zt_field2 = c.gateway_url.clone();
+                    }
+                    rustconn_core::models::ZeroTrustProviderConfig::OciBastion(_) => {
+                        // OCI Bastion has too many fields for wizard
+                    }
+                }
+            }
+            ProtocolConfig::Web(_) => {
+                partial.url = Some(conn.host.clone());
+            }
+            ProtocolConfig::Telnet(_) => {}
+        }
+
+        partial
+    }
+
     /// Generate an auto-name based on protocol and host/device/pod
     #[must_use]
     pub fn auto_name(&self) -> String {
@@ -141,7 +256,10 @@ impl PartialConnection {
                 ProtocolConfig::Ssh(cfg)
             }
             ProtocolType::Mosh => {
-                let cfg = rustconn_core::models::MoshConfig::default();
+                let cfg = rustconn_core::models::MoshConfig {
+                    ssh_port: Some(port),
+                    ..Default::default()
+                };
                 ProtocolConfig::Mosh(cfg)
             }
             ProtocolType::Sftp => {
@@ -182,10 +300,21 @@ impl PartialConnection {
                 ProtocolConfig::Telnet(rustconn_core::models::TelnetConfig::default())
             }
             ProtocolType::Serial => {
-                let cfg = rustconn_core::models::SerialConfig {
+                let mut cfg = rustconn_core::models::SerialConfig {
                     device: self.serial_device.clone().unwrap_or_default(),
                     ..Default::default()
                 };
+                if let Some(baud) = self.serial_baud {
+                    cfg.baud_rate = match baud {
+                        9600 => rustconn_core::models::SerialBaudRate::B9600,
+                        19200 => rustconn_core::models::SerialBaudRate::B19200,
+                        38400 => rustconn_core::models::SerialBaudRate::B38400,
+                        57600 => rustconn_core::models::SerialBaudRate::B57600,
+                        230_400 => rustconn_core::models::SerialBaudRate::B230400,
+                        460_800 => rustconn_core::models::SerialBaudRate::B460800,
+                        _ => rustconn_core::models::SerialBaudRate::B115200,
+                    };
+                }
                 ProtocolConfig::Serial(cfg)
             }
             ProtocolType::Kubernetes => {
@@ -203,9 +332,19 @@ impl PartialConnection {
                 ProtocolConfig::Web(rustconn_core::models::WebConfig::default())
             }
             ProtocolType::ZeroTrust => {
+                let provider = self.zt_provider.unwrap_or(ZeroTrustProvider::Generic);
+                let provider_config = Self::build_zt_provider_config(
+                    provider,
+                    self.zt_command.as_deref(),
+                    self.zt_field1.as_deref(),
+                    self.zt_field2.as_deref(),
+                    self.zt_field3.as_deref(),
+                );
                 let cfg = rustconn_core::models::ZeroTrustConfig {
-                    provider: self.zt_provider.unwrap_or(ZeroTrustProvider::Generic),
-                    ..Default::default()
+                    provider,
+                    provider_config,
+                    custom_args: Vec::new(),
+                    detected_provider: None,
                 };
                 ProtocolConfig::ZeroTrust(cfg)
             }
@@ -225,12 +364,28 @@ impl PartialConnection {
         }
         conn
     }
+
+    /// Build a `ZeroTrustProviderConfig` from wizard fields
+    ///
+    /// Delegates to `ZeroTrustProviderConfig::from_wizard_fields` in rustconn-core.
+    #[must_use]
+    pub fn build_zt_provider_config(
+        provider: ZeroTrustProvider,
+        command: Option<&str>,
+        field1: Option<&str>,
+        field2: Option<&str>,
+        field3: Option<&str>,
+    ) -> rustconn_core::models::ZeroTrustProviderConfig {
+        rustconn_core::models::ZeroTrustProviderConfig::from_wizard_fields(
+            provider, command, field1, field2, field3,
+        )
+    }
 }
 
 /// The Connection Wizard dialog
 #[allow(dead_code)] // Fields kept for GTK widget lifecycle
 pub struct ConnectionWizard {
-    window: adw::Window,
+    dialog: adw::Dialog,
     nav_view: adw::NavigationView,
     protocol_page: ProtocolPage,
     connection_page: ConnectionPage,
@@ -243,17 +398,12 @@ pub struct ConnectionWizard {
 impl ConnectionWizard {
     /// Creates a new Connection Wizard
     #[must_use]
-    pub fn new(parent: Option<&gtk4::Window>, state: SharedAppState) -> Rc<Self> {
-        let window = adw::Window::builder()
+    pub fn new(state: SharedAppState) -> Rc<Self> {
+        let dialog = adw::Dialog::builder()
             .title(i18n("New Connection"))
-            .modal(true)
-            .default_width(500)
-            .default_height(520)
+            .content_width(600)
+            .content_height(520)
             .build();
-
-        if let Some(parent_win) = parent {
-            window.set_transient_for(Some(parent_win));
-        }
 
         let nav_view = adw::NavigationView::new();
 
@@ -261,7 +411,7 @@ impl ConnectionWizard {
         let header = adw::HeaderBar::new();
         toolbar_view.add_top_bar(&header);
         toolbar_view.set_content(Some(&nav_view));
-        window.set_content(Some(&toolbar_view));
+        dialog.set_child(Some(&toolbar_view));
 
         let protocol_page = ProtocolPage::new();
         let connection_page = ConnectionPage::new(state.clone());
@@ -273,7 +423,7 @@ impl ConnectionWizard {
         let on_complete: WizardCallback = Rc::new(RefCell::new(None));
 
         let wizard = Rc::new(Self {
-            window,
+            dialog,
             nav_view,
             protocol_page,
             connection_page,
@@ -314,7 +464,7 @@ impl ConnectionWizard {
         let w = wizard.clone();
         wizard.auth_page.connect_save(move || {
             let conn = w.build_connection();
-            w.window.close();
+            w.dialog.close();
             if let Some(ref cb) = *w.on_complete.borrow() {
                 cb(WizardResult::Save(conn));
             }
@@ -323,7 +473,7 @@ impl ConnectionWizard {
         let w = wizard.clone();
         wizard.auth_page.connect_save_and_connect(move || {
             let conn = w.build_connection();
-            w.window.close();
+            w.dialog.close();
             if let Some(ref cb) = *w.on_complete.borrow() {
                 cb(WizardResult::SaveAndConnect(conn));
             }
@@ -332,7 +482,7 @@ impl ConnectionWizard {
         let w = wizard.clone();
         wizard.protocol_page.connect_advanced(move || {
             let partial = w.collect_partial();
-            w.window.close();
+            w.dialog.close();
             if let Some(ref cb) = *w.on_complete.borrow() {
                 cb(WizardResult::OpenAdvanced(partial));
             }
@@ -341,7 +491,7 @@ impl ConnectionWizard {
         let w = wizard.clone();
         wizard.connection_page.connect_advanced(move || {
             let partial = w.collect_partial();
-            w.window.close();
+            w.dialog.close();
             if let Some(ref cb) = *w.on_complete.borrow() {
                 cb(WizardResult::OpenAdvanced(partial));
             }
@@ -350,7 +500,7 @@ impl ConnectionWizard {
         let w = wizard.clone();
         wizard.auth_page.connect_advanced(move || {
             let partial = w.collect_partial();
-            w.window.close();
+            w.dialog.close();
             if let Some(ref cb) = *w.on_complete.borrow() {
                 cb(WizardResult::OpenAdvanced(partial));
             }
@@ -364,6 +514,11 @@ impl ConnectionWizard {
         let is_k8s = protocol == Some(ProtocolType::Kubernetes);
         let is_zt = protocol == Some(ProtocolType::ZeroTrust);
         let is_web = protocol == Some(ProtocolType::Web);
+        let zt_fields = if is_zt {
+            self.connection_page.zt_fields()
+        } else {
+            (None, None, None)
+        };
 
         PartialConnection {
             protocol,
@@ -386,12 +541,32 @@ impl ConnectionWizard {
             key_path: self.auth_page.key_path(),
             jump_host_id: self.connection_page.selected_jump_host(),
             theme_override: self.auth_page.theme_override(),
-            zt_provider: None,
+            zt_provider: if is_zt {
+                use rustconn_core::models::ZeroTrustProvider;
+                match self.connection_page.zt_provider_index() {
+                    0 => Some(ZeroTrustProvider::Generic),
+                    1 => Some(ZeroTrustProvider::AwsSsm),
+                    2 => Some(ZeroTrustProvider::GcpIap),
+                    3 => Some(ZeroTrustProvider::AzureBastion),
+                    4 => Some(ZeroTrustProvider::AzureSsh),
+                    5 => Some(ZeroTrustProvider::CloudflareAccess),
+                    6 => Some(ZeroTrustProvider::Teleport),
+                    7 => Some(ZeroTrustProvider::TailscaleSsh),
+                    8 => Some(ZeroTrustProvider::Boundary),
+                    9 => Some(ZeroTrustProvider::HoopDev),
+                    _ => Some(ZeroTrustProvider::Generic),
+                }
+            } else {
+                None
+            },
             zt_command: if is_zt {
                 self.connection_page.zt_command()
             } else {
                 None
             },
+            zt_field1: zt_fields.0,
+            zt_field2: zt_fields.1,
+            zt_field3: zt_fields.2,
             serial_device: if is_serial {
                 Some(self.connection_page.serial_device()).filter(|s| !s.is_empty())
             } else {
@@ -463,7 +638,11 @@ impl ConnectionWizard {
                 if protocol == ProtocolType::Sftp {
                     ProtocolConfig::Sftp(cfg)
                 } else if protocol == ProtocolType::Mosh {
-                    ProtocolConfig::Mosh(rustconn_core::models::MoshConfig::default())
+                    let mosh_cfg = rustconn_core::models::MoshConfig {
+                        ssh_port: Some(port),
+                        ..Default::default()
+                    };
+                    ProtocolConfig::Mosh(mosh_cfg)
                 } else {
                     ProtocolConfig::Ssh(cfg)
                 }
@@ -521,19 +700,19 @@ impl ConnectionWizard {
                 ProtocolConfig::Kubernetes(cfg)
             }
             ProtocolType::ZeroTrust => {
-                let zt_cfg = if let Some(ref cmd) = partial.zt_command {
-                    rustconn_core::models::ZeroTrustConfig {
-                        provider: ZeroTrustProvider::Generic,
-                        provider_config: rustconn_core::models::ZeroTrustProviderConfig::Generic(
-                            rustconn_core::models::GenericZeroTrustConfig {
-                                command_template: cmd.clone(),
-                            },
-                        ),
-                        custom_args: Vec::new(),
-                        detected_provider: None,
-                    }
-                } else {
-                    rustconn_core::models::ZeroTrustConfig::default()
+                let provider = partial.zt_provider.unwrap_or(ZeroTrustProvider::Generic);
+                let provider_config = PartialConnection::build_zt_provider_config(
+                    provider,
+                    partial.zt_command.as_deref(),
+                    partial.zt_field1.as_deref(),
+                    partial.zt_field2.as_deref(),
+                    partial.zt_field3.as_deref(),
+                );
+                let zt_cfg = rustconn_core::models::ZeroTrustConfig {
+                    provider,
+                    provider_config,
+                    custom_args: Vec::new(),
+                    detected_provider: None,
                 };
                 ProtocolConfig::ZeroTrust(zt_cfg)
             }
@@ -551,9 +730,9 @@ impl ConnectionWizard {
         conn
     }
 
-    /// Present the wizard window
-    pub fn present(&self) {
-        self.window.present();
+    /// Present the wizard dialog
+    pub fn present(&self, parent: &impl IsA<gtk4::Widget>) {
+        self.dialog.present(Some(parent));
     }
 
     /// Connect completion callback

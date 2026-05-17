@@ -69,10 +69,21 @@ impl QuickConnectHistoryEntry {
             .username
             .as_ref()
             .map_or(String::new(), |u| format!("{u}@"));
-        format!(
-            "{} — {user_part}{}:{}",
-            self.protocol_name, self.host, self.port
-        )
+        let default_port = match self.protocol_index {
+            0 => 22,   // SSH
+            1 => 3389, // RDP
+            2 => 5900, // VNC
+            3 => 23,   // Telnet
+            _ => 0,
+        };
+        if self.port == default_port {
+            format!("{} — {user_part}{}", self.protocol_name, self.host)
+        } else {
+            format!(
+                "{} — {user_part}{}:{}",
+                self.protocol_name, self.host, self.port
+            )
+        }
     }
 }
 

@@ -2918,7 +2918,7 @@ impl MainWindow {
     ) {
         use crate::dialogs::connection_wizard::{ConnectionWizard, WizardResult};
 
-        let wizard = ConnectionWizard::new(Some(window.upcast_ref()), state.clone());
+        let wizard = ConnectionWizard::new(state.clone());
 
         let state_for_cb = state.clone();
         let sidebar_for_cb = sidebar.clone();
@@ -2983,7 +2983,108 @@ impl MainWindow {
             }
         });
 
-        wizard.present();
+        wizard.present(window);
+    }
+
+    /// Opens the Connection Wizard pre-filled with data from the selected connection.
+    ///
+    /// Used for "Duplicate via Wizard…" — allows modifying fields before saving as new.
+    fn duplicate_via_wizard(
+        window: &adw::ApplicationWindow,
+        state: &SharedAppState,
+        sidebar: &SharedSidebar,
+        toast_overlay: &SharedToastOverlay,
+    ) {
+        use crate::dialogs::connection_wizard::{
+            ConnectionWizard, PartialConnection, WizardResult,
+        };
+
+        let Some(selected) = sidebar.get_selected_item() else {
+            return;
+        };
+        if selected.is_group() {
+            return;
+        }
+
+        let id_str = selected.id();
+        let Ok(id) = uuid::Uuid::parse_str(&id_str) else {
+            return;
+        };
+
+        let conn = {
+            let Ok(state_ref) = state.try_borrow() else {
+                return;
+            };
+            let Some(c) = state_ref.get_connection(id).cloned() else {
+                return;
+            };
+            c
+        };
+
+        let partial = PartialConnection::from_connection(&conn);
+        let wizard = ConnectionWizard::new(state.clone());
+        // TODO: pre-fill wizard pages from partial (requires ConnectionWizard::set_partial)
+
+        let state_for_cb = state.clone();
+        let sidebar_for_cb = sidebar.clone();
+        let window_weak = window.downgrade();
+        let toast_for_cb = toast_overlay.clone();
+        wizard.connect_complete(move |result| match result {
+            WizardResult::Save(new_conn) => {
+                let conn_name = new_conn.name.clone();
+                if let Ok(mut state_mut) = state_for_cb.try_borrow_mut()
+                    && let Ok(_conn_id) = state_mut.create_connection(new_conn)
+                {
+                    drop(state_mut);
+                    let state_c = state_for_cb.clone();
+                    let sidebar_c = sidebar_for_cb.clone();
+                    let toast_c = toast_for_cb.clone();
+                    glib::idle_add_local_once(move || {
+                        Self::reload_sidebar_preserving_state(&state_c, &sidebar_c);
+                        toast_c.show_success(&crate::i18n::i18n_f(
+                            "Connection \u{201c}{}\u{201d} created",
+                            &[&conn_name],
+                        ));
+                    });
+                }
+            }
+            WizardResult::SaveAndConnect(new_conn) => {
+                let conn_id = new_conn.id;
+                if let Ok(mut state_mut) = state_for_cb.try_borrow_mut()
+                    && state_mut.create_connection(new_conn).is_ok()
+                {
+                    drop(state_mut);
+                    let state_c = state_for_cb.clone();
+                    let sidebar_c = sidebar_for_cb.clone();
+                    let window_w = window_weak.clone();
+                    glib::idle_add_local_once(move || {
+                        Self::reload_sidebar_preserving_state(&state_c, &sidebar_c);
+                        if let Some(win) = window_w.upgrade() {
+                            let variant = conn_id.to_string().to_variant();
+                            gio::prelude::ActionGroupExt::activate_action(
+                                &win,
+                                "connect-by-id",
+                                Some(&variant),
+                            );
+                        }
+                    });
+                }
+            }
+            WizardResult::OpenAdvanced(new_partial) => {
+                if let Some(win) = window_weak.upgrade() {
+                    let new_conn = new_partial.to_connection();
+                    connection_dialogs::show_new_connection_dialog_prefilled(
+                        win.upcast_ref(),
+                        state_for_cb.clone(),
+                        sidebar_for_cb.clone(),
+                        new_conn,
+                    );
+                }
+            }
+        });
+
+        wizard.present(window);
+        let _ = partial; // Will be used when wizard supports pre-fill from partial
     }
 
     /// Shows the new group dialog with optional parent selection

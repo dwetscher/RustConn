@@ -60,7 +60,7 @@ impl AuthPage {
         content_box.set_margin_end(12);
 
         let clamp = adw::Clamp::builder()
-            .maximum_size(450)
+            .maximum_size(520)
             .child(&content_box)
             .build();
 
