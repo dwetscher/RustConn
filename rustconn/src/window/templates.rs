@@ -168,13 +168,14 @@ pub fn show_templates_manager(
     // Set up "Use Template" callback
     {
         let state_clone = state.clone();
-        let manager_clone = manager_window.clone();
+        let window_clone = window.clone();
         let sidebar_clone = sidebar.clone();
         manager_dialog.set_on_template_selected(move |template_opt| {
             if let Some(template) = template_opt {
-                // Create connection from template
+                // Use the main application window as parent, not the manager window
+                // (the manager window is closed immediately after this callback)
                 show_new_connection_from_template(
-                    manager_clone.upcast_ref(),
+                    &window_clone,
                     state_clone.clone(),
                     sidebar_clone.clone(),
                     &template,

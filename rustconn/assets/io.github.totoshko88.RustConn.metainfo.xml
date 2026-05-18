@@ -142,6 +142,17 @@
     <control>touch</control>
   </supports>
   <releases>
+    <release version="0.14.1" date="2026-05-18">
+      <description>
+        <p>Version 0.14.1 — Bug fixes and Flatpak dependency updates:</p>
+        <ul>
+          <li>Per-connection Skip port check toggle for RDP Gateway and jump host scenarios</li>
+          <li>Fixed RDP Gateway connections failing with Host unreachable error</li>
+          <li>Fixed highlight overlay colored underlines persisting after clear command</li>
+          <li>Flatpak: updated VTE 0.80.3 to 0.80.5, FreeRDP 3.25.0 to 3.26.0</li>
+        </ul>
+      </description>
+    </release>
     <release version="0.14.0" date="2026-05-18">
       <description>
         <p>Version 0.14.0 — Connection Wizard and UX overhaul:</p>

@@ -6,7 +6,7 @@
 #
 
 Name:           rustconn
-Version:        0.14.0
+Version:        0.14.1
 Release:        0
 Summary:        Modern connection manager for Linux (SSH, RDP, VNC, SPICE, MOSH, Telnet, Serial, Kubernetes, Zero Trust)
 License:        GPL-3.0-or-later
@@ -238,6 +238,13 @@ done
 %{_datadir}/locale/*/LC_MESSAGES/rustconn.mo
 
 %changelog
+* Sun May 18 2026 Anton Isaiev <totoshko88@gmail.com> - 0.14.1-0
+- Update to version 0.14.1
+- [Added] Per-connection "Skip port check" toggle (#153)
+- [Fixed] RDP Gateway: "Host unreachable" before connection (#153)
+- [Fixed] Highlight overlay: colored underlines persisted after clear (#154)
+- [Dependencies] Flatpak: vte 0.80.3→0.80.5, freerdp 3.25.0→3.26.0
+
 * Sun May 18 2026 Anton Isaiev <totoshko88@gmail.com> - 0.14.0-0
 - Update to version 0.14.0
 - [Added] Connection Wizard (Ctrl+N) — step-by-step dialog for creating

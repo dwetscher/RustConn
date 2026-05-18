@@ -42,6 +42,7 @@ pub(super) fn create_advanced_tab() -> (
     adw::SpinRow,
     adw::SpinRow,
     adw::SpinRow,
+    adw::SwitchRow,
 ) {
     let scrolled = ScrolledWindow::builder()
         .hscrollbar_policy(gtk4::PolicyType::Never)
@@ -427,6 +428,22 @@ pub(super) fn create_advanced_tab() -> (
 
     content.append(&retry_group);
 
+    // === Connection Behavior Section ===
+    let connection_group = adw::PreferencesGroup::builder()
+        .title(i18n("Connection Behavior"))
+        .build();
+
+    let skip_port_check_toggle = adw::SwitchRow::builder()
+        .title(i18n("Skip port check before connecting"))
+        .subtitle(i18n(
+            "Bypass TCP probe of the host. Useful for low-bandwidth links or hosts only reachable via a gateway.",
+        ))
+        .active(false)
+        .build();
+    connection_group.add(&skip_port_check_toggle);
+
+    content.append(&connection_group);
+
     // === Highlight Rules Section ===
     let highlight_group = adw::PreferencesGroup::builder()
         .title(i18n("Highlight Rules"))
@@ -606,6 +623,7 @@ pub(super) fn create_advanced_tab() -> (
         retry_max_attempts_spin,
         retry_initial_delay_spin,
         retry_max_delay_spin,
+        skip_port_check_toggle,
     )
 }
 

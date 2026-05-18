@@ -16,11 +16,23 @@
 //!    per line, and draws colored rectangles (background) and underlines
 //!    (foreground) using Cairo.
 //!
+//! ## Coordinate system (issue #154)
+//!
+//! VTE uses a single buffer-coordinate system that spans the full scrollback
+//! plus the visible viewport.  `text_range_format(0, 0, row_count, col_count)`
+//! reads the **first** `row_count` rows of the entire buffer — this is only
+//! the visible viewport when the scrollback is empty.  After `clear` (which
+//! pushes the previous screen into scrollback before erasing the visible
+//! area), rows `0..row_count` become the oldest scrollback lines that still
+//! contain the original colored text, while the visible viewport now lives
+//! at `[vadjustment.value() .. vadjustment.value() + row_count)`.
+//!
+//! The fix: anchor the read range to the current viewport top
+//! (`vadjustment.value()`), so highlights are computed for the lines that
+//! VTE is actually painting at any given moment.
+//!
 //! ## Limitations
 //!
-//! - Lines that contain only whitespace are skipped to prevent stale highlights
-//!   after `clear` (issue #154). This means highlight rules that intentionally
-//!   match whitespace-only patterns will not render on the overlay.
 //! - Wide characters (CJK) occupy 2 terminal columns but `chars().count()`
 //!   treats them as 1 character, so highlight positions may be slightly off
 //!   for lines containing wide characters.
@@ -123,18 +135,32 @@ impl HighlightOverlay {
                     return;
                 }
 
-                for row in 0..row_count {
-                    let (line_opt, _) =
-                        term_for_draw.text_range_format(vte4::Format::Text, row, 0, row, col_count);
+                // Anchor the read range to the current viewport top.
+                //
+                // VTE addresses the entire scrollback + visible area in a
+                // single coordinate system.  Reading rows 0..row_count
+                // returns the first lines of the scrollback (which still
+                // contain the original colored text after `clear`), not
+                // the visible viewport.  See module-level docs for details
+                // on issue #154.
+                let viewport_top = term_for_draw
+                    .vadjustment()
+                    .map_or(0_i64, |adj| adj.value() as i64);
+
+                for visible_row in 0..row_count {
+                    let buffer_row = viewport_top.saturating_add(visible_row);
+                    let (line_opt, _) = term_for_draw.text_range_format(
+                        vte4::Format::Text,
+                        buffer_row,
+                        0,
+                        buffer_row,
+                        col_count,
+                    );
                     let Some(line_gstr) = line_opt else {
                         continue;
                     };
                     let line = line_gstr.as_str();
-                    // Use trim() to skip lines that contain only whitespace —
-                    // after `clear`, VTE may return space-filled lines from the
-                    // erased display area that would otherwise produce stale
-                    // highlight matches (see issue #154).
-                    if line.trim().is_empty() {
+                    if line.is_empty() {
                         continue;
                     }
 
@@ -143,7 +169,7 @@ impl HighlightOverlay {
                         continue;
                     }
 
-                    let y = row as f64 * cell_h;
+                    let y = visible_row as f64 * cell_h;
 
                     for m in &matches {
                         // Convert byte offsets to column positions

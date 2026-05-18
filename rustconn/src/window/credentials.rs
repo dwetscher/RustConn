@@ -534,24 +534,28 @@ impl MainWindow {
             let settings = state_ref.settings();
             let conn = state_ref.get_connection(connection_id);
             if let Some(conn) = conn {
-                // Skip port check when a jump host is configured — the destination
-                // is only reachable through the SSH tunnel, so a direct TCP probe
-                // will always time out.
-                let has_jump_host = matches!(
+                // Skip port check when the destination is only reachable
+                // through an indirect path:
+                //   - SSH jump host (tunnel)
+                //   - RDP Gateway (FreeRDP routes via /g:gateway:443)
+                // A direct TCP probe of the target host would time out in
+                // both cases (issue #153).
+                let bypasses_direct_check = matches!(
                     &conn.protocol_config,
-                    rustconn_core::ProtocolConfig::Rdp(rdp) if rdp.jump_host_id.is_some()
+                    rustconn_core::ProtocolConfig::Rdp(rdp)
+                        if rdp.jump_host_id.is_some() || rdp.gateway.is_some()
                 );
                 let should = settings.connection.pre_connect_port_check
                     && !conn.skip_port_check
-                    && !has_jump_host;
-                if has_jump_host
+                    && !bypasses_direct_check;
+                if bypasses_direct_check
                     && settings.connection.pre_connect_port_check
                     && !conn.skip_port_check
                 {
                     tracing::debug!(
                         protocol = "rdp",
                         host = %conn.host,
-                        "Skipping port check — connection uses a jump host"
+                        "Skipping port check — connection uses a jump host or RDP Gateway"
                     );
                 }
                 (

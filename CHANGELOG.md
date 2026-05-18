@@ -5,6 +5,23 @@ All notable changes to RustConn will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+## [0.14.1] - 2026-05-18
+
+### Added
+
+- **Per-connection "Skip port check" toggle** — new switch in the Advanced tab → Connection Behavior section to bypass the pre-connect TCP probe for the selected connection; useful for low-bandwidth links and hosts only reachable through an RDP Gateway or jump host (#153)
+
+### Fixed
+
+- **"Use Template" freezes UI** — clicking "Use Template" in the template manager opened the new-connection dialog as a modal child of the manager window, which was immediately closed; the orphaned modal blocked all input. The dialog is now parented to the main application window (#155)
+- **RDP Gateway: "Host unreachable" before connection** — the pre-connect port check probed the target RDP host directly even when an RDP Gateway was configured, so connections through corporate gateways always failed with "Connection failed. Host unreachable.". The check is now skipped automatically when `RdpConfig.gateway` is set, mirroring the existing jump-host behaviour, so FreeRDP can route via `/g:gateway:443` as expected (#153)
+- **Highlight overlay: colored underlines persisted after `clear`** — overlay was reading rows from absolute buffer position 0 instead of the visible viewport, so after `clear` (which pushes the previous screen into scrollback) the overlay re-rendered highlights from the now-hidden scrollback lines on top of the cleared viewport pixels; fixed by anchoring the read range to `vadjustment.value()` (#154)
+
+### Dependencies
+- **Updated (Flatpak)**: vte 0.80.3→0.80.5, freerdp 3.25.0→3.26.0
+
 ## [0.14.0] - 2026-05-18
 
 ### Added

@@ -353,6 +353,8 @@ pub struct ConnectionDialog {
     retry_max_attempts_spin: adw::SpinRow,
     retry_initial_delay_spin: adw::SpinRow,
     retry_max_delay_spin: adw::SpinRow,
+    // Skip pre-connect TCP port check for this connection
+    skip_port_check_toggle: adw::SwitchRow,
     // State
     editing_id: Rc<RefCell<Option<Uuid>>>,
     // Callback
@@ -765,6 +767,7 @@ impl ConnectionDialog {
             retry_max_attempts_spin,
             retry_initial_delay_spin,
             retry_max_delay_spin,
+            skip_port_check_toggle,
         ) = super::advanced_tab::create_advanced_tab();
         view_stack
             .add_titled(&advanced_tab, Some("advanced"), &i18n("Advanced"))
@@ -1003,6 +1006,7 @@ impl ConnectionDialog {
             &retry_max_attempts_spin,
             &retry_initial_delay_spin,
             &retry_max_delay_spin,
+            &skip_port_check_toggle,
         );
 
         let result = Self {
@@ -1212,6 +1216,7 @@ impl ConnectionDialog {
             retry_max_attempts_spin,
             retry_initial_delay_spin,
             retry_max_delay_spin,
+            skip_port_check_toggle,
             editing_id,
             on_save,
             connections_data,
@@ -2103,6 +2108,7 @@ impl ConnectionDialog {
         retry_max_attempts_spin: &adw::SpinRow,
         retry_initial_delay_spin: &adw::SpinRow,
         retry_max_delay_spin: &adw::SpinRow,
+        skip_port_check_toggle: &adw::SwitchRow,
     ) {
         let window = window.clone();
         let on_save = on_save.clone();
@@ -2289,6 +2295,7 @@ impl ConnectionDialog {
         let retry_max_attempts_spin = retry_max_attempts_spin.clone();
         let retry_initial_delay_spin = retry_initial_delay_spin.clone();
         let retry_max_delay_spin = retry_max_delay_spin.clone();
+        let skip_port_check_toggle = skip_port_check_toggle.clone();
 
         save_btn.connect_clicked(move |_| {
             let local_variables = Self::collect_local_variables(&variables_rows);
@@ -2480,6 +2487,7 @@ impl ConnectionDialog {
                 retry_max_attempts_spin: &retry_max_attempts_spin,
                 retry_initial_delay_spin: &retry_initial_delay_spin,
                 retry_max_delay_spin: &retry_max_delay_spin,
+                skip_port_check_toggle: &skip_port_check_toggle,
             };
 
             if let Err(err) = data.validate() {
@@ -3852,6 +3860,9 @@ impl ConnectionDialog {
         // Set session recording toggle
         self.recording_toggle
             .set_active(conn.session_recording_enabled);
+
+        // Set skip-port-check toggle (per-connection override)
+        self.skip_port_check_toggle.set_active(conn.skip_port_check);
 
         // Set highlight rules
         self.set_highlight_rules(&conn.highlight_rules);
@@ -6012,6 +6023,8 @@ struct ConnectionDialogData<'a> {
     retry_max_attempts_spin: &'a adw::SpinRow,
     retry_initial_delay_spin: &'a adw::SpinRow,
     retry_max_delay_spin: &'a adw::SpinRow,
+    // Skip pre-connect TCP port check for this connection
+    skip_port_check_toggle: &'a adw::SwitchRow,
 }
 
 impl ConnectionDialogData<'_> {
@@ -6256,6 +6269,9 @@ impl ConnectionDialogData<'_> {
 
         // Set session recording
         conn.session_recording_enabled = self.recording_toggle.is_active();
+
+        // Set skip-port-check override
+        conn.skip_port_check = self.skip_port_check_toggle.is_active();
 
         // Set highlight rules (filter out empty patterns)
         conn.highlight_rules = self
