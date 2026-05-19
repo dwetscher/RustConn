@@ -74,7 +74,7 @@ pub fn create_header_bar() -> (adw::HeaderBar, gtk4::Spinner) {
 
     // Add group button
     let add_group_button = Button::from_icon_name("folder-new-symbolic");
-    add_group_button.set_tooltip_text(Some(&i18n("New Group (Ctrl+Shift+N)")));
+    add_group_button.set_tooltip_text(Some(&i18n("New Group (Ctrl+Shift+G)")));
     add_group_button.set_action_name(Some("win.new-group"));
     add_group_button.update_property(&[gtk4::accessible::Property::Label(&i18n("New Group"))]);
     header_bar.pack_start(&add_group_button);

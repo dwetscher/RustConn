@@ -197,11 +197,20 @@ impl CsvImporter {
             None => ProtocolType::Ssh,
         };
 
-        let port = mapping
-            .port_col
-            .and_then(&get)
-            .and_then(|s| s.parse::<u16>().ok())
-            .unwrap_or_else(|| protocol_type.default_port());
+        let port = match mapping.port_col.and_then(&get) {
+            Some(s) => match s.parse::<u16>() {
+                Ok(p) if p > 0 => p,
+                _ => {
+                    result.add_skipped(SkippedEntry::with_location(
+                        name,
+                        format!("Invalid port '{s}' (must be 1-65535)"),
+                        format!("row {}", row_idx + 1),
+                    ));
+                    return;
+                }
+            },
+            None => protocol_type.default_port(),
+        };
 
         let mut conn = Connection::new(
             name.clone(),

@@ -919,7 +919,7 @@ Serial, Kubernetes, and Zero Trust connections from a single application.",
 /// Shows an error dialog
 fn show_error_dialog(app: &adw::Application, title: &str, message: &str) {
     let dialog = adw::AlertDialog::new(Some(title), Some(message));
-    dialog.add_response("ok", "OK");
+    dialog.add_response("ok", &crate::i18n::i18n("OK"));
     dialog.set_default_response(Some("ok"));
 
     // Present without a parent window — avoids creating an orphaned

@@ -221,7 +221,7 @@ pub fn create_embedded_toolbar() -> (
     toolbar.append(&separator);
 
     // Ctrl+Alt+Del button
-    let ctrl_alt_del_button = gtk4::Button::with_label("Ctrl+Alt+Del");
+    let ctrl_alt_del_button = gtk4::Button::with_label(&i18n("Ctrl+Alt+Del"));
     ctrl_alt_del_button.add_css_class("suggested-action");
     ctrl_alt_del_button.set_tooltip_text(Some(&i18n("Send Ctrl+Alt+Del to remote session")));
     ctrl_alt_del_button.update_property(&[gtk4::accessible::Property::Label(&i18n(

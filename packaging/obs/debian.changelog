@@ -1,3 +1,16 @@
+rustconn (0.14.2-1) unstable; urgency=medium
+
+  * CLI: fix `add --protocol web` port=0 error
+  * CLI: add SecureCRT export/import format to CLI enums
+  * CSV import: reject invalid port values instead of silent fallback
+  * Security: return SecretString from keyring helpers, eliminate plain String intermediates
+  * Fix tooltip showing wrong shortcut for New Group
+  * i18n: localize connection dialog validation messages
+  * i18n: localize Ctrl+Alt+Del button labels in embedded viewers
+  * i18n: localize AlertDialog fallback OK button
+
+ -- Anton Isaiev <totoshko88@gmail.com>  Mon, 19 May 2026 12:00:00 +0300
+
 rustconn (0.14.1-1) unstable; urgency=medium
 
   * Version bump to 0.14.1

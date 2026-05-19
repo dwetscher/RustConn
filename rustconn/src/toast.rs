@@ -207,7 +207,7 @@ pub fn show_toast_on_window(window: &impl IsA<gui::Window>, message: &str, toast
         .custom_title()
         .unwrap_or_else(|| crate::i18n::i18n("Info"));
     let dialog = adw::AlertDialog::new(Some(&heading), Some(message));
-    dialog.add_response("ok", "OK");
+    dialog.add_response("ok", &crate::i18n::i18n("OK"));
     dialog.set_default_response(Some("ok"));
     dialog.present(Some(widget));
 }

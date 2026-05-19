@@ -142,6 +142,19 @@
     <control>touch</control>
   </supports>
   <releases>
+    <release version="0.14.2" date="2026-05-19">
+      <description>
+        <p>Bug fixes and i18n improvements:</p>
+        <ul>
+          <li>CLI: fix add --protocol web port error</li>
+          <li>CLI: add SecureCRT export/import format</li>
+          <li>CSV import: reject invalid port values</li>
+          <li>Security: eliminate plain String intermediates for keyring passwords</li>
+          <li>Fix tooltip showing wrong shortcut for New Group</li>
+          <li>i18n: localize validation messages and button labels</li>
+        </ul>
+      </description>
+    </release>
     <release version="0.14.1" date="2026-05-18">
       <description>
         <p>Version 0.14.1 - Predefined Templates &amp; Wizard Improvements:</p>

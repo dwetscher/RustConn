@@ -5090,7 +5090,7 @@ impl ConnectionDialog {
         &self,
         kdbx_enabled: bool,
         kdbx_path: Option<std::path::PathBuf>,
-        kdbx_password: Option<String>,
+        kdbx_password: Option<&secrecy::SecretString>,
         kdbx_key_file: Option<std::path::PathBuf>,
         groups: Vec<rustconn_core::models::ConnectionGroup>,
         secret_settings: rustconn_core::config::SecretSettings,
@@ -5105,6 +5105,7 @@ impl ConnectionDialog {
         let group_dropdown = self.group_dropdown.clone();
         let groups_data = self.groups_data.clone();
         let window = self.window.clone();
+        let kdbx_password = kdbx_password.cloned();
 
         // Clone groups for use in closure
         let groups = Rc::new(groups);
@@ -5215,9 +5216,7 @@ impl ConnectionDialog {
                     {
                         if let Some(ref kdbx_path) = kdbx_path {
                             let kdbx_path = kdbx_path.clone();
-                            let db_password = kdbx_password
-                                .as_ref()
-                                .map(|p| secrecy::SecretString::from(p.clone()));
+                            let db_password = kdbx_password.clone();
                             let key_file = kdbx_key_file.clone();
 
                             spawn_blocking_with_callback(
@@ -5396,7 +5395,7 @@ impl ConnectionDialog {
         &self,
         kdbx_enabled: bool,
         kdbx_path: Option<std::path::PathBuf>,
-        kdbx_password: Option<String>,
+        kdbx_password: Option<&secrecy::SecretString>,
         kdbx_key_file: Option<std::path::PathBuf>,
         groups: Vec<rustconn_core::models::ConnectionGroup>,
         secret_settings: rustconn_core::config::SecretSettings,
@@ -5410,6 +5409,7 @@ impl ConnectionDialog {
         let group_dropdown = self.group_dropdown.clone();
         let groups_data = self.groups_data.clone();
         let window = self.window.clone();
+        let kdbx_password = kdbx_password.cloned();
         let groups = Rc::new(groups);
 
         self.vault_test_button.connect_clicked(move |btn| {
@@ -5507,9 +5507,7 @@ impl ConnectionDialog {
             {
                 if let Some(ref kdbx_path) = kdbx_path {
                     let kdbx_path = kdbx_path.clone();
-                    let db_password = kdbx_password
-                        .as_ref()
-                        .map(|p| secrecy::SecretString::from(p.clone()));
+                    let db_password = kdbx_password.clone();
                     let key_file = kdbx_key_file.clone();
 
                     spawn_blocking_with_callback(
@@ -6031,7 +6029,7 @@ impl ConnectionDialogData<'_> {
     fn validate(&self) -> Result<(), String> {
         let name = self.name_entry.text();
         if name.trim().is_empty() {
-            return Err("Connection name is required".to_string());
+            return Err(i18n("Connection name is required"));
         }
 
         // Protocol-specific validation using dropdown indices
@@ -6045,18 +6043,18 @@ impl ConnectionDialogData<'_> {
         if !is_zerotrust && !is_serial && !is_kubernetes {
             let host = self.host_entry.text();
             if host.trim().is_empty() {
-                return Err("Host is required".to_string());
+                return Err(i18n("Host is required"));
             }
 
             let host_str = host.trim();
             if host_str.contains(' ') {
-                return Err("Host cannot contain spaces".to_string());
+                return Err(i18n("Host cannot contain spaces"));
             }
 
             #[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss)]
             let port = self.port_spin.value() as u16;
             if port == 0 {
-                return Err("Port must be greater than 0".to_string());
+                return Err(i18n("Port must be greater than 0"));
             }
         }
 
@@ -6064,7 +6062,7 @@ impl ConnectionDialogData<'_> {
         if is_serial {
             let device = self.serial_device_entry.text();
             if device.trim().is_empty() {
-                return Err("Device path is required for serial connections".to_string());
+                return Err(i18n("Device path is required for serial connections"));
             }
         }
         if protocol_idx == 0 {
@@ -6077,9 +6075,9 @@ impl ConnectionDialogData<'_> {
                 if key_source_idx == 1 {
                     let key_path = self.ssh_key_entry.text();
                     if key_path.trim().is_empty() {
-                        return Err(
-                            "SSH key path is required for public key authentication".to_string()
-                        );
+                        return Err(i18n(
+                            "SSH key path is required for public key authentication",
+                        ));
                     }
                 }
             }
@@ -6089,9 +6087,9 @@ impl ConnectionDialogData<'_> {
                 let pw_source_idx = self.password_source_dropdown.selected();
                 if pw_source_idx == 4 {
                     // None
-                    return Err(
-                        "Password source is 'None' but auth method is Password. Set source to Prompt or Vault.".to_string()
-                    );
+                    return Err(i18n(
+                        "Password source is 'None' but auth method is Password. Set source to Prompt or Vault.",
+                    ));
                 }
             }
         }
@@ -6100,7 +6098,7 @@ impl ConnectionDialogData<'_> {
         if is_kubernetes && !self.k8s_busybox_check.is_active() {
             let pod = self.k8s_pod_entry.text();
             if pod.trim().is_empty() {
-                return Err("Pod name is required when Busybox mode is disabled".to_string());
+                return Err(i18n("Pod name is required when Busybox mode is disabled"));
             }
         }
         // RDP (1) and VNC (2) use native embedding, no client validation needed
@@ -6109,14 +6107,13 @@ impl ConnectionDialogData<'_> {
         if self.wol_enabled_check.is_active() {
             let mac_text = self.wol_mac_entry.text();
             if mac_text.trim().is_empty() {
-                return Err("MAC address is required when WOL is enabled".to_string());
+                return Err(i18n("MAC address is required when WOL is enabled"));
             }
             // Validate MAC address format
             if MacAddress::parse(mac_text.trim()).is_err() {
-                return Err(
-                    "Invalid MAC address format. Use AA:BB:CC:DD:EE:FF or AA-BB-CC-DD-EE-FF"
-                        .to_string(),
-                );
+                return Err(i18n(
+                    "Invalid MAC address format. Use AA:BB:CC:DD:EE:FF or AA-BB-CC-DD-EE-FF",
+                ));
             }
         }
 

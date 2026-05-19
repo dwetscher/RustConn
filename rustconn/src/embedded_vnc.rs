@@ -174,7 +174,7 @@ impl EmbeddedVncWidget {
         toolbar.append(&separator);
 
         // Ctrl+Alt+Del button
-        let ctrl_alt_del_button = Button::with_label("Ctrl+Alt+Del");
+        let ctrl_alt_del_button = Button::with_label(&i18n("Ctrl+Alt+Del"));
         ctrl_alt_del_button.add_css_class("suggested-action");
         ctrl_alt_del_button.set_tooltip_text(Some(&i18n("Send Ctrl+Alt+Del to remote session")));
         toolbar.append(&ctrl_alt_del_button);

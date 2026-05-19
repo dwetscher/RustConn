@@ -6,7 +6,7 @@
 #
 
 Name:           rustconn
-Version:        0.14.1
+Version:        0.14.2
 Release:        0
 Summary:        Modern connection manager for Linux (SSH, RDP, VNC, SPICE, MOSH, Telnet, Serial, Kubernetes, Zero Trust)
 License:        GPL-3.0-or-later
@@ -238,6 +238,14 @@ done
 %{_datadir}/locale/*/LC_MESSAGES/rustconn.mo
 
 %changelog
+* Mon May 19 2026 Anton Isaiev <totoshko88@gmail.com> - 0.14.2-1
+- CLI: fix `add --protocol web` port=0 error
+- CLI: add SecureCRT export/import format
+- CSV import: reject invalid port values instead of silent fallback
+- Security: eliminate plain String intermediates for keyring passwords
+- Fix tooltip showing wrong shortcut for New Group
+- i18n: localize validation messages, Ctrl+Alt+Del labels, OK button
+
 * Sun May 18 2026 Anton Isaiev <totoshko88@gmail.com> - 0.14.1-0
 - Update to version 0.14.1
 - [Added] Predefined connection templates — 20 built-in templates for common

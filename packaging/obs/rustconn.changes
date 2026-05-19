@@ -1,4 +1,15 @@
 -------------------------------------------------------------------
+Mon May 19 09:00:00 UTC 2026 - totoshko88@gmail.com
+
+- Update to version 0.14.2
+  * CLI: fix `add --protocol web` port=0 error
+  * CLI: add SecureCRT export/import format
+  * CSV import: reject invalid port values instead of silent fallback
+  * Security: eliminate plain String intermediates for keyring passwords
+  * Fix tooltip showing wrong shortcut for New Group
+  * i18n: localize validation messages, Ctrl+Alt+Del labels, OK button
+
+-------------------------------------------------------------------
 Sun May 18 2026 Anton Isaiev <totoshko88@gmail.com> - 0.14.1
 
 - Update to version 0.14.1

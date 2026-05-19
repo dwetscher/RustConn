@@ -722,18 +722,13 @@ fn show_add_edit_dialog(
 
             // Set up password load button
             if let Ok(state_ref) = state_c.try_borrow() {
-                use secrecy::ExposeSecret;
                 let settings = state_ref.settings();
                 let groups: Vec<rustconn_core::models::ConnectionGroup> =
                     state_ref.list_groups().iter().cloned().cloned().collect();
                 dialog.connect_password_load_button_with_groups(
                     settings.secrets.kdbx_enabled,
                     settings.secrets.kdbx_path.clone(),
-                    settings
-                        .secrets
-                        .kdbx_password
-                        .as_ref()
-                        .map(|p| p.expose_secret().to_string()),
+                    settings.secrets.kdbx_password.as_ref(),
                     settings.secrets.kdbx_key_file.clone(),
                     groups.clone(),
                     settings.secrets.clone(),
@@ -741,11 +736,7 @@ fn show_add_edit_dialog(
                 dialog.connect_vault_test_button(
                     settings.secrets.kdbx_enabled,
                     settings.secrets.kdbx_path.clone(),
-                    settings
-                        .secrets
-                        .kdbx_password
-                        .as_ref()
-                        .map(|p| p.expose_secret().to_string()),
+                    settings.secrets.kdbx_password.as_ref(),
                     settings.secrets.kdbx_key_file.clone(),
                     groups,
                     settings.secrets.clone(),

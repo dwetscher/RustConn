@@ -38,6 +38,7 @@ pub fn cmd_export(
         ExportFormatArg::RoyalTs => rustconn_core::export::ExportFormat::RoyalTs,
         ExportFormatArg::MobaXterm => rustconn_core::export::ExportFormat::MobaXterm,
         ExportFormatArg::Csv => rustconn_core::export::ExportFormat::Csv,
+        ExportFormatArg::SecureCrt => rustconn_core::export::ExportFormat::SecureCrt,
     };
 
     let options = rustconn_core::export::ExportOptions::new(export_format, output.to_path_buf());
@@ -358,6 +359,12 @@ fn import_connections(
         }
         ImportFormatArg::Csv => {
             let importer = rustconn_core::import::CsvImporter::new();
+            importer
+                .import_from_path(file)
+                .map_err(|e| CliError::Import(e.to_string()))?
+        }
+        ImportFormatArg::SecureCrt => {
+            let importer = rustconn_core::import::SecureCrtImporter::new();
             importer
                 .import_from_path(file)
                 .map_err(|e| CliError::Import(e.to_string()))?

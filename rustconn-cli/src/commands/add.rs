@@ -347,7 +347,7 @@ fn create_connection(
             Connection::new(
                 name.to_string(),
                 host.to_string(),
-                0,
+                port,
                 rustconn_core::models::ProtocolConfig::Web(
                     rustconn_core::models::WebConfig::default(),
                 ),

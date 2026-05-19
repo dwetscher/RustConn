@@ -573,7 +573,8 @@ pub fn create_secrets_page() -> SecretsPageWidgets {
             // If password field is empty, try loading from keyring
             let password = if password_text.is_empty() && save_to_keyring {
                 if let Some(val) = get_bw_password_from_keyring() {
-                    val
+                    use secrecy::ExposeSecret;
+                    val.expose_secret().to_string()
                 } else {
                     update_status_label(&status_label, &i18n("Enter password"), "warning");
                     return;
@@ -1827,15 +1828,14 @@ fn save_bw_password_to_keyring(password: &str) {
 }
 
 /// Loads Bitwarden master password from system keyring via rustconn-core
-fn get_bw_password_from_keyring() -> Option<String> {
+fn get_bw_password_from_keyring() -> Option<secrecy::SecretString> {
     let result = crate::async_utils::with_runtime(|rt| {
         rt.block_on(rustconn_core::secret::get_master_password_from_keyring())
     });
     match result {
         Ok(Ok(Some(secret))) => {
-            use secrecy::ExposeSecret;
             tracing::debug!("Bitwarden master password loaded from keyring");
-            Some(secret.expose_secret().to_string())
+            Some(secret)
         }
         Ok(Ok(None)) => {
             tracing::debug!("No Bitwarden password found in keyring");
@@ -1871,15 +1871,14 @@ fn save_op_token_to_keyring(token: &str) {
 }
 
 /// Loads 1Password service account token from system keyring
-fn get_op_token_from_keyring() -> Option<String> {
+fn get_op_token_from_keyring() -> Option<secrecy::SecretString> {
     let result = crate::async_utils::with_runtime(|rt| {
         rt.block_on(rustconn_core::secret::get_token_from_keyring())
     });
     match result {
         Ok(Ok(Some(secret))) => {
-            use secrecy::ExposeSecret;
             tracing::debug!("1Password token loaded from keyring");
-            Some(secret.expose_secret().to_string())
+            Some(secret)
         }
         Ok(Ok(None) | Err(_)) | Err(_) => None,
     }
@@ -1904,15 +1903,14 @@ fn save_pb_passphrase_to_keyring(passphrase: &str) {
 }
 
 /// Loads Passbolt GPG passphrase from system keyring
-fn get_pb_passphrase_from_keyring() -> Option<String> {
+fn get_pb_passphrase_from_keyring() -> Option<secrecy::SecretString> {
     let result = crate::async_utils::with_runtime(|rt| {
         rt.block_on(rustconn_core::secret::get_passphrase_from_keyring())
     });
     match result {
         Ok(Ok(Some(secret))) => {
-            use secrecy::ExposeSecret;
             tracing::debug!("Passbolt passphrase loaded from keyring");
-            Some(secret.expose_secret().to_string())
+            Some(secret)
         }
         Ok(Ok(None) | Err(_)) | Err(_) => None,
     }
@@ -1939,15 +1937,14 @@ fn save_kdbx_password_to_keyring(password: &str) {
 }
 
 /// Loads KDBX database password from system keyring
-fn get_kdbx_password_from_keyring() -> Option<String> {
+fn get_kdbx_password_from_keyring() -> Option<secrecy::SecretString> {
     let result = crate::async_utils::with_runtime(|rt| {
         rt.block_on(rustconn_core::secret::get_kdbx_password_from_keyring())
     });
     match result {
         Ok(Ok(Some(secret))) => {
-            use secrecy::ExposeSecret;
             tracing::debug!("KDBX password loaded from keyring");
-            Some(secret.expose_secret().to_string())
+            Some(secret)
         }
         Ok(Ok(None) | Err(_)) | Err(_) => None,
     }
@@ -2124,6 +2121,7 @@ pub fn load_secret_settings(widgets: &SecretsPageWidgets, settings: &SecretSetti
             async move {
                 let t_bw = std::time::Instant::now();
                 let result = glib::spawn_future(async move {
+                    use secrecy::ExposeSecret;
                     // Use the globally resolved bw command path (set by
                     // detect_secret_backends / resolve_bw_cmd at startup).
                     // The local Rc<RefCell<String>> may still hold the default
@@ -2148,7 +2146,7 @@ pub fn load_secret_settings(widgets: &SecretsPageWidgets, settings: &SecretSetti
                         .arg("unlock")
                         .arg("--passwordenv")
                         .arg("BW_PASSWORD")
-                        .env("BW_PASSWORD", &password)
+                        .env("BW_PASSWORD", password.expose_secret())
                         .output();
                     if let Ok(output) = unlock_result {
                         if output.status.success() {
@@ -2207,8 +2205,9 @@ pub fn load_secret_settings(widgets: &SecretsPageWidgets, settings: &SecretSetti
             );
 
             if let Some(token) = token {
+                use secrecy::ExposeSecret;
                 tracing::debug!("1Password token loaded from keyring");
-                token_entry.set_text(&token);
+                token_entry.set_text(token.expose_secret());
                 // Token is passed to `op` CLI via Command::env() in OnePasswordBackend,
                 // no need to set process-wide env var.
                 update_status_label(&status_label, &i18n("Token loaded from keyring"), "success");
@@ -2235,8 +2234,9 @@ pub fn load_secret_settings(widgets: &SecretsPageWidgets, settings: &SecretSetti
             );
 
             if let Some(passphrase) = passphrase {
+                use secrecy::ExposeSecret;
                 tracing::debug!("Passbolt passphrase loaded from keyring");
-                passphrase_entry.set_text(&passphrase);
+                passphrase_entry.set_text(passphrase.expose_secret());
                 tracing::info!("Passbolt passphrase restored from keyring");
             } else {
                 tracing::debug!("No Passbolt passphrase found in keyring");
@@ -2260,8 +2260,9 @@ pub fn load_secret_settings(widgets: &SecretsPageWidgets, settings: &SecretSetti
             );
 
             if let Some(password) = password {
+                use secrecy::ExposeSecret;
                 tracing::debug!("KDBX password loaded from keyring");
-                password_entry.set_text(&password);
+                password_entry.set_text(password.expose_secret());
                 tracing::info!("KDBX password restored from keyring");
             } else {
                 tracing::debug!("No KDBX password found in keyring");

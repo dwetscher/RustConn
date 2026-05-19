@@ -579,6 +579,9 @@ pub enum ExportFormatArg {
     MobaXterm,
     /// CSV format (.csv)
     Csv,
+    /// SecureCRT session format (.ini directory)
+    #[value(name = "secure-crt", alias = "securecrt")]
+    SecureCrt,
 }
 
 /// Import format options
@@ -612,6 +615,9 @@ pub enum ImportFormatArg {
     Libvirt,
     /// CSV format (.csv)
     Csv,
+    /// SecureCRT session format (.ini directory)
+    #[value(name = "secure-crt", alias = "securecrt")]
+    SecureCrt,
 }
 
 /// Snippet subcommands
