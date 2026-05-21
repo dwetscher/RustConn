@@ -445,16 +445,12 @@ fn add_key_with_passphrase_dialog(
         .unwrap_or("key")
         .to_string();
 
-    // Create passphrase dialog using adw::Window
-    let dialog = adw::Window::builder()
+    // Create passphrase dialog using adw::Dialog
+    let dialog = adw::Dialog::builder()
         .title(&i18n_f("Add Key: {}", &[&key_name]))
-        .transient_for(parent_window)
-        .modal(true)
-        .default_width(400)
-        .default_height(180)
+        .content_width(400)
+        .content_height(180)
         .build();
-
-    dialog.set_size_request(280, -1);
 
     let toolbar_view = adw::ToolbarView::new();
 
@@ -506,7 +502,7 @@ fn add_key_with_passphrase_dialog(
 
     toolbar_view.add_top_bar(&header);
     toolbar_view.set_content(Some(&content));
-    dialog.set_content(Some(&toolbar_view));
+    dialog.set_child(Some(&toolbar_view));
 
     // Connect cancel button
     let dialog_clone = dialog.clone();
@@ -553,7 +549,7 @@ fn add_key_with_passphrase_dialog(
         }
     });
 
-    dialog.present();
+    dialog.present(Some(parent_window));
 }
 
 /// Shows a file chooser dialog to add a key from any location

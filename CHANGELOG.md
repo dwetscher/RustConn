@@ -24,6 +24,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **UX-1: Sessions Manager migrated to `adw::Dialog`** — Active Sessions list
 - **UX-1: Move to Group dialog migrated to `adw::Dialog`** — move connections/groups
 - **UX-1: New Group dialog migrated to `adw::Dialog`** — create group with credentials
+- **UX-1: Edit dialogs migrated to `adw::Dialog`** — Rename, Edit Group, Quick Connect
+- **UX-1: SSH Agent passphrase dialog migrated to `adw::Dialog`** — Add Key with passphrase
+- **UX-1: Template dialogs migrated to `adw::Dialog`** — TemplateDialog + TemplateManagerDialog
+- **UX-1: ConnectionDialog migrated to `adw::Dialog`** — New/Edit Connection (largest dialog, 7000+ lines)
 
 ## [0.14.4] - 2026-05-20
 

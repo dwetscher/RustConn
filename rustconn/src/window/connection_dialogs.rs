@@ -124,8 +124,8 @@ pub fn show_new_connection_dialog_internal(
         let connection = tmpl.apply(None);
         dialog.set_connection(&connection);
         dialog
-            .window()
-            .set_title(Some(&i18n("New Connection from Template")));
+            .dialog()
+            .set_title(&i18n("New Connection from Template"));
     }
 
     // Pre-select group if specified (e.g. from "New Connection in Group" context menu)
@@ -265,7 +265,7 @@ fn show_new_connection_dialog_internal_prefilled(
 
     // Pre-fill dialog with the connection data from wizard
     dialog.set_connection(&connection);
-    dialog.window().set_title(Some(&i18n("New Connection")));
+    dialog.dialog().set_title(&i18n("New Connection"));
 
     let window_clone = window.clone();
     dialog.run(move |result| {

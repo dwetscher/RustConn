@@ -6,7 +6,7 @@
 //! - Listing templates by protocol
 //! - Protocol-specific configuration tabs
 //!
-//! Updated for GTK 4.10+ compatibility using Window instead of Dialog.
+//! Updated for GTK 4.10+ compatibility using `adw::Dialog` instead of Dialog.
 //! Uses `adw::ViewStack` with `adw::ViewSwitcher` for proper libadwaita theming.
 
 use adw::prelude::*;
@@ -36,7 +36,8 @@ pub type TemplateCallback = Rc<RefCell<Option<Box<dyn Fn(Option<ConnectionTempla
 /// Template dialog for creating/editing templates
 #[allow(clippy::similar_names)]
 pub struct TemplateDialog {
-    window: adw::Window,
+    dialog: adw::Dialog,
+    parent: Option<gtk4::Widget>,
     save_button: Button,
     // Basic fields
     name_entry: adw::EntryRow,
@@ -122,19 +123,15 @@ impl TemplateDialog {
     /// Creates a new template dialog
     #[must_use]
     #[allow(clippy::too_many_lines, clippy::similar_names)]
-    pub fn new(parent: Option<&gtk4::Window>) -> Self {
-        let window = adw::Window::builder()
+    pub fn new(parent: Option<&impl IsA<gtk4::Widget>>) -> Self {
+        let dialog = adw::Dialog::builder()
             .title(i18n("New Template"))
-            .modal(true)
-            .default_width(600)
-            .default_height(500)
+            .content_width(600)
+            .content_height(500)
             .build();
 
-        if let Some(p) = parent {
-            window.set_transient_for(Some(p));
-        }
-
-        window.set_size_request(350, 300);
+        let parent_widget: Option<gtk4::Widget> =
+            parent.map(|p| p.clone().upcast::<gtk4::Widget>());
 
         // Header bar with Create icon button (GNOME HIG)
         let header = adw::HeaderBar::new();
@@ -154,7 +151,7 @@ impl TemplateDialog {
             .reveal(true)
             .build();
 
-        // Use ToolbarView for adw::Window
+        // Use ToolbarView for adw::Dialog
         let main_box = GtkBox::new(Orientation::Vertical, 0);
         let content_box = GtkBox::new(Orientation::Vertical, 0);
         content_box.set_vexpand(true);
@@ -162,7 +159,7 @@ impl TemplateDialog {
         content_box.append(&view_switcher_bar);
         main_box.append(&header);
         main_box.append(&content_box);
-        window.set_content(Some(&main_box));
+        dialog.set_child(Some(&main_box));
 
         // === Basic Tab ===
         let (
@@ -326,7 +323,7 @@ impl TemplateDialog {
         // Connect save button
         Self::connect_save_button(
             &save_btn,
-            &window,
+            &dialog,
             &on_save,
             &editing_id,
             &name_entry,
@@ -397,7 +394,8 @@ impl TemplateDialog {
         );
 
         Self {
-            window,
+            dialog,
+            parent: parent_widget,
             save_button: save_btn,
             name_entry,
             description_entry,
@@ -1956,7 +1954,7 @@ impl TemplateDialog {
     )]
     fn connect_save_button(
         save_btn: &Button,
-        window: &adw::Window,
+        dialog: &adw::Dialog,
         on_save: &TemplateCallback,
         editing_id: &Rc<RefCell<Option<Uuid>>>,
         name_entry: &adw::EntryRow,
@@ -2025,7 +2023,7 @@ impl TemplateDialog {
         zt_generic_command: &Entry,
         zt_custom_args: &Entry,
     ) {
-        let window = window.clone();
+        let dialog = dialog.clone();
         let on_save = on_save.clone();
         let editing_id = editing_id.clone();
         let name_entry = name_entry.clone();
@@ -2211,7 +2209,7 @@ impl TemplateDialog {
             if let Some(ref cb) = *on_save.borrow() {
                 cb(Some(template));
             }
-            window.close();
+            dialog.close();
         });
     }
 
@@ -2736,7 +2734,7 @@ impl TemplateDialog {
 
     /// Populates the dialog with an existing template for editing
     pub fn set_template(&self, template: &ConnectionTemplate) {
-        self.window.set_title(Some(&i18n("Edit Template")));
+        self.dialog.set_title(&i18n("Edit Template"));
         self.save_button.set_label(&i18n("Save"));
         *self.editing_id.borrow_mut() = Some(template.id);
 
@@ -3024,19 +3022,20 @@ impl TemplateDialog {
     /// Runs the dialog and calls the callback with the result
     pub fn run<F: Fn(Option<ConnectionTemplate>) + 'static>(&self, cb: F) {
         *self.on_save.borrow_mut() = Some(Box::new(cb));
-        self.window.present();
+        self.dialog.present(self.parent.as_ref());
     }
 
-    /// Returns a reference to the underlying window
+    /// Returns a reference to the underlying dialog
     #[must_use]
-    pub const fn window(&self) -> &adw::Window {
-        &self.window
+    pub const fn dialog(&self) -> &adw::Dialog {
+        &self.dialog
     }
 }
 
 /// Template manager dialog for listing and managing templates
 pub struct TemplateManagerDialog {
-    window: adw::Window,
+    dialog: adw::Dialog,
+    parent: Option<gtk4::Widget>,
     templates_list: ListBox,
     state_templates: Rc<RefCell<Vec<ConnectionTemplate>>>,
     on_template_selected: Rc<RefCell<Option<Box<dyn Fn(Option<ConnectionTemplate>)>>>>,
@@ -3048,19 +3047,15 @@ pub struct TemplateManagerDialog {
 impl TemplateManagerDialog {
     /// Creates a new template manager dialog
     #[must_use]
-    pub fn new(parent: Option<&gtk4::Window>) -> Self {
-        let window = adw::Window::builder()
+    pub fn new(parent: Option<&impl IsA<gtk4::Widget>>) -> Self {
+        let dialog = adw::Dialog::builder()
             .title(i18n("Manage Templates"))
-            .modal(true)
-            .default_width(500)
-            .default_height(400)
+            .content_width(500)
+            .content_height(400)
             .build();
 
-        if let Some(p) = parent {
-            window.set_transient_for(Some(p));
-        }
-
-        window.set_size_request(320, 280);
+        let parent_widget: Option<gtk4::Widget> =
+            parent.map(|p| p.clone().upcast::<gtk4::Widget>());
 
         // Header bar with Add button and standard window buttons (GNOME HIG)
         let header = adw::HeaderBar::new();
@@ -3144,11 +3139,11 @@ impl TemplateManagerDialog {
         button_box.append(&create_conn_btn);
         content.append(&button_box);
 
-        // Use ToolbarView for adw::Window
+        // Use ToolbarView for adw::Dialog
         let main_box = GtkBox::new(Orientation::Vertical, 0);
         main_box.append(&header);
         main_box.append(&clamp);
-        window.set_content(Some(&main_box));
+        dialog.set_child(Some(&main_box));
 
         let state_templates: Rc<RefCell<Vec<ConnectionTemplate>>> =
             Rc::new(RefCell::new(Vec::new()));
@@ -3196,7 +3191,7 @@ impl TemplateManagerDialog {
 
         let on_delete_clone = on_delete.clone();
         let templates_list_delete = templates_list.clone();
-        let window_weak_delete = window.downgrade();
+        let window_weak_delete = dialog.downgrade();
         delete_btn.connect_clicked(move |_| {
             if let Some(row) = templates_list_delete.selected_row()
                 && let Some(id_str) = row.widget_name().as_str().strip_prefix("template-")
@@ -3228,7 +3223,7 @@ impl TemplateManagerDialog {
         let on_selected_clone = on_template_selected.clone();
         let state_templates_use = state_templates.clone();
         let templates_list_use = templates_list.clone();
-        let window_use = window.clone();
+        let window_use = dialog.clone();
         create_conn_btn.connect_clicked(move |_| {
             if let Some(row) = templates_list_use.selected_row()
                 && let Some(id_str) = row.widget_name().as_str().strip_prefix("template-")
@@ -3250,7 +3245,7 @@ impl TemplateManagerDialog {
         let on_selected_dblclick = on_template_selected.clone();
         let state_templates_dblclick = state_templates.clone();
         let templates_list_dblclick = templates_list.clone();
-        let window_dblclick = window.clone();
+        let window_dblclick = dialog.clone();
         gesture.connect_pressed(move |gesture, n_press, _x, y| {
             if n_press == 2 {
                 // Double-click
@@ -3290,7 +3285,8 @@ impl TemplateManagerDialog {
         });
 
         Self {
-            window,
+            dialog,
+            parent: parent_widget,
             templates_list,
             state_templates,
             on_template_selected,
@@ -3328,10 +3324,10 @@ impl TemplateManagerDialog {
         None
     }
 
-    /// Returns a reference to the underlying window
+    /// Returns a reference to the underlying dialog
     #[must_use]
-    pub const fn window(&self) -> &adw::Window {
-        &self.window
+    pub const fn dialog(&self) -> &adw::Dialog {
+        &self.dialog
     }
 
     /// Returns a reference to the templates list
@@ -3348,7 +3344,7 @@ impl TemplateManagerDialog {
 
     /// Presents the dialog
     pub fn present(&self) {
-        self.window.present();
+        self.dialog.present(self.parent.as_ref());
     }
 
     /// Sets the callback for creating a new template

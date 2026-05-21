@@ -228,17 +228,14 @@ pub fn rename_selected_item(
     let current_name = conn_item.name();
 
     // Create rename dialog with Adwaita
-    let rename_window = adw::Window::builder()
+    let rename_dialog = adw::Dialog::builder()
         .title(if is_group {
             i18n("Rename Group")
         } else {
             i18n("Rename Connection")
         })
-        .modal(true)
-        .default_width(450)
-        .resizable(false)
+        .content_width(450)
         .build();
-    rename_window.set_transient_for(Some(window));
 
     let header = adw::HeaderBar::new();
     let save_btn = gtk4::Button::builder()
@@ -266,12 +263,12 @@ pub fn rename_selected_item(
     let toolbar_view = adw::ToolbarView::new();
     toolbar_view.add_top_bar(&header);
     toolbar_view.set_content(Some(&content));
-    rename_window.set_content(Some(&toolbar_view));
+    rename_dialog.set_child(Some(&toolbar_view));
 
     // Save button
     let state_clone = state.clone();
     let sidebar_clone = sidebar.clone();
-    let window_clone = rename_window.clone();
+    let window_clone = rename_dialog.clone();
     let name_row_clone = name_row.clone();
     save_btn.connect_clicked(move |_| {
         let new_name = name_row_clone.text().trim().to_string();
@@ -421,7 +418,7 @@ pub fn rename_selected_item(
         save_btn_clone.emit_clicked();
     });
 
-    rename_window.present();
+    rename_dialog.present(Some(window));
     name_row.grab_focus();
 }
 
@@ -440,18 +437,15 @@ pub fn show_edit_group_dialog(
     drop(state_ref);
 
     // Create group window with Adwaita
-    let group_window = adw::Window::builder()
+    let group_dialog = adw::Dialog::builder()
         .title(i18n("Edit Group"))
-        .modal(true)
-        .default_width(600)
-        .default_height(750)
-        .resizable(true)
+        .content_width(600)
+        .content_height(750)
         .build();
     // Fix minimum width to prevent the window from resizing when content
     // changes (e.g., adding/removing expect rules). The minimum matches
     // the Clamp maximum_size so the layout is always stable.
-    group_window.set_size_request(600, -1);
-    group_window.set_transient_for(Some(window));
+    group_dialog.set_size_request(600, -1);
 
     let header = adw::HeaderBar::new();
     let save_btn = gtk4::Button::from_icon_name("media-floppy-symbolic");
@@ -489,7 +483,7 @@ pub fn show_edit_group_dialog(
     let toolbar_view = adw::ToolbarView::new();
     toolbar_view.add_top_bar(&header);
     toolbar_view.set_content(Some(&scrolled));
-    group_window.set_content(Some(&toolbar_view));
+    group_dialog.set_child(Some(&toolbar_view));
 
     // === Group Details ===
     let details_group = adw::PreferencesGroup::builder()
@@ -769,7 +763,7 @@ pub fn show_edit_group_dialog(
     let password_entry_for_load = password_entry.clone();
     let password_source_for_load = password_source_dropdown.clone();
     let state_for_load = state.clone();
-    let window_for_load = group_window.clone();
+    let window_for_load = group_dialog.clone();
     let group_name_for_load = group.name.clone();
     let group_id_for_load = group_id;
     password_load_btn.connect_clicked(move |btn| {
@@ -929,7 +923,7 @@ pub fn show_edit_group_dialog(
     // Per GNOME HIG, destructive actions should require confirmation.
     {
         let expander = ssh_expander.clone();
-        let window_for_confirm = group_window.clone();
+        let window_for_confirm = group_dialog.clone();
         // Guard flag to prevent recursive signal triggering when we
         // programmatically set_enable_expansion(false) from the response handler.
         let clearing_in_progress = Rc::new(std::cell::Cell::new(false));
@@ -1020,7 +1014,7 @@ pub fn show_edit_group_dialog(
 
     // Connect file chooser button
     let ssh_key_path_row_clone = ssh_key_path_row.clone();
-    let window_for_chooser = group_window.clone();
+    let window_for_chooser = group_dialog.clone();
     ssh_key_browse_btn.connect_clicked(move |_| {
         let file_dialog = gtk4::FileDialog::builder()
             .title(i18n("Select SSH Key"))
@@ -1037,8 +1031,11 @@ pub fn show_edit_group_dialog(
         }
 
         let entry = ssh_key_path_row_clone.clone();
-        let parent = window_for_chooser.clone();
-        file_dialog.open(Some(&parent), gtk4::gio::Cancellable::NONE, move |result| {
+        // Get the root gtk4::Window from the dialog widget for FileDialog
+        let root_window = window_for_chooser
+            .root()
+            .and_then(|r| r.downcast::<gtk4::Window>().ok());
+        file_dialog.open(root_window.as_ref(), gtk4::gio::Cancellable::NONE, move |result| {
             if let Ok(file) = result
                 && let Some(path) = file.path()
             {
@@ -1175,7 +1172,7 @@ pub fn show_edit_group_dialog(
         Rc::new(std::cell::Cell::new(initial_sync_idx));
     let prev_idx_for_signal = previous_sync_idx.clone();
     let state_for_sync = state.clone();
-    let group_window_for_sync = group_window.clone();
+    let group_dialog_for_sync = group_dialog.clone();
     sync_mode_row.connect_selected_notify(move |row| {
         let selected = row.selected();
         let prev = prev_idx_for_signal.get();
@@ -1190,7 +1187,7 @@ pub fn show_edit_group_dialog(
                 // sync_dir configured — show confirmation dialog
                 let sync_dir_display = dir.display().to_string();
                 show_enable_master_confirmation(
-                    &group_window_for_sync,
+                    &group_dialog_for_sync,
                     &sync_dir_display,
                     row,
                     &prev_idx_for_signal,
@@ -1198,7 +1195,7 @@ pub fn show_edit_group_dialog(
             } else {
                 // sync_dir not configured — show setup dialog with folder chooser
                 show_sync_setup_dialog(
-                    &group_window_for_sync,
+                    &group_dialog_for_sync,
                     &state_for_sync,
                     row,
                     &prev_idx_for_signal,
@@ -1346,7 +1343,7 @@ pub fn show_edit_group_dialog(
     // Confirm before clearing automation when the enable switch is toggled off
     {
         let expander = automation_expander.clone();
-        let window_for_confirm = group_window.clone();
+        let window_for_confirm = group_dialog.clone();
         let clearing_in_progress = Rc::new(std::cell::Cell::new(false));
         let clearing_flag = clearing_in_progress.clone();
         automation_expander.connect_enable_expansion_notify(move |row| {
@@ -1704,7 +1701,7 @@ pub fn show_edit_group_dialog(
     // Connect handlers
     let state_clone = state.clone();
     let sidebar_clone = sidebar;
-    let window_clone = group_window.clone();
+    let window_clone = group_dialog.clone();
     let name_row_clone = name_row;
     let username_row_clone = username_row;
     let password_entry_clone = password_entry.clone();
@@ -2033,12 +2030,12 @@ pub fn show_edit_group_dialog(
         }
     });
 
-    group_window.present();
+    group_dialog.present(Some(window));
 }
 
 /// Shows the Enable Master confirmation dialog when sync_dir is already configured.
 fn show_enable_master_confirmation(
-    parent: &adw::Window,
+    parent: &impl IsA<gtk4::Widget>,
     sync_dir_display: &str,
     row: &adw::ComboRow,
     prev_idx: &Rc<std::cell::Cell<u32>>,
@@ -2075,7 +2072,7 @@ fn show_enable_master_confirmation(
 /// it to `SyncSettings.sync_dir` and proceeds with the Enable Master
 /// confirmation flow.
 fn show_sync_setup_dialog(
-    parent: &adw::Window,
+    parent: &adw::Dialog,
     state: &SharedAppState,
     row: &adw::ComboRow,
     prev_idx: &Rc<std::cell::Cell<u32>>,
@@ -2125,8 +2122,12 @@ fn show_sync_setup_dialog(
         let row_inner = row_clone.clone();
         let prev_idx_inner = prev_idx_clone.clone();
         let dialog_inner = dialog_clone.clone();
+        // Get the root gtk4::Window from the dialog widget for FileDialog
+        let root_window = parent_clone
+            .root()
+            .and_then(|r| r.downcast::<gtk4::Window>().ok());
         file_dialog.select_folder(
-            Some(&parent_clone),
+            root_window.as_ref(),
             gtk4::gio::Cancellable::NONE,
             move |result| {
                 let Ok(folder) = result else {
@@ -2141,10 +2142,15 @@ fn show_sync_setup_dialog(
                     && rustconn_core::flatpak::is_portal_path(&path)
                 {
                     dialog_inner.force_close();
-                    crate::dialogs::settings::cloud_sync_tab::show_flatpak_sync_dir_portal_warning(
-                        parent_inner.upcast_ref(),
-                        &path,
-                    );
+                    if let Some(win) = parent_inner
+                        .root()
+                        .and_then(|r| r.downcast::<gtk4::Window>().ok())
+                    {
+                        crate::dialogs::settings::cloud_sync_tab::show_flatpak_sync_dir_portal_warning(
+                            &win,
+                            &path,
+                        );
+                    }
                     return;
                 }
 
@@ -2394,15 +2400,10 @@ pub fn show_quick_connect_dialog_with_state(
         .unwrap_or_default();
 
     // Create a quick connect window with Adwaita
-    let quick_window = adw::Window::builder()
+    let quick_dialog = adw::Dialog::builder()
         .title(i18n("Quick Connect"))
-        .modal(true)
-        .default_width(450)
+        .content_width(450)
         .build();
-
-    if let Some(gtk_win) = window.downcast_ref::<gtk4::Window>() {
-        quick_window.set_transient_for(Some(gtk_win));
-    }
 
     // Header bar with Connect icon and standard window buttons (GNOME HIG)
     let header = adw::HeaderBar::new();
@@ -2592,7 +2593,7 @@ pub fn show_quick_connect_dialog_with_state(
     let toolbar_view = adw::ToolbarView::new();
     toolbar_view.add_top_bar(&header);
     toolbar_view.set_content(Some(&content));
-    quick_window.set_content(Some(&toolbar_view));
+    quick_dialog.set_child(Some(&toolbar_view));
 
     // Track if port was manually changed
     let port_manually_changed = Rc::new(RefCell::new(false));
@@ -2667,7 +2668,7 @@ pub fn show_quick_connect_dialog_with_state(
     });
 
     // Connect quick connect button
-    let window_clone = quick_window.clone();
+    let window_clone = quick_dialog.clone();
     let host_clone = host_entry;
     let port_clone = port_spin;
     let user_clone = user_entry;
@@ -2739,7 +2740,7 @@ pub fn show_quick_connect_dialog_with_state(
         window_clone.close();
     });
 
-    quick_window.present();
+    quick_dialog.present(Some(window));
 }
 
 /// Adds an expect rule row to the group edit dialog's expect rules list.

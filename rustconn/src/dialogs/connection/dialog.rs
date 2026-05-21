@@ -97,7 +97,8 @@ fn klid_to_dropdown_index(klid: u32) -> u32 {
 /// Connection dialog for creating/editing connections
 #[allow(dead_code)] // Many fields kept for GTK widget lifecycle and signal handlers
 pub struct ConnectionDialog {
-    window: adw::Window,
+    dialog: adw::Dialog,
+    parent: Option<gtk4::Widget>,
     /// Header bar save button - stored for potential future use
     /// (e.g., enabling/disabling based on validation state)
     save_button: Button,
@@ -431,8 +432,8 @@ impl ConnectionDialog {
     #[must_use]
     #[allow(clippy::too_many_lines)]
     pub fn new(parent: Option<&gtk4::Window>, state: crate::state::SharedAppState) -> Self {
-        let (window, header, save_btn, test_btn) = Self::create_window_with_header(parent);
-        let view_stack = Self::create_view_stack(&window, &header);
+        let (dialog, header, save_btn, test_btn) = Self::create_window_with_header(parent);
+        let view_stack = Self::create_view_stack(&dialog, &header);
 
         // === Basic Tab ===
         let basic = super::general_tab::create_basic_tab();
@@ -829,7 +830,7 @@ impl ConnectionDialog {
         // Connect save button handler
         Self::connect_save_button(
             &save_btn,
-            &window,
+            &dialog,
             &on_save,
             &state,
             &editing_id,
@@ -1010,7 +1011,8 @@ impl ConnectionDialog {
         );
 
         let result = Self {
-            window,
+            dialog,
+            parent: parent.map(|p| p.clone().upcast::<gtk4::Widget>()),
             save_button: save_btn,
             test_button: test_btn,
             state,
@@ -1234,7 +1236,6 @@ impl ConnectionDialog {
             let domain_entry = result.domain_entry.clone();
             let groups_data = Rc::clone(&result.groups_data);
             let full_groups_data = Rc::clone(&result.full_groups_data);
-            let window = result.window.clone();
 
             // Helper to update button sensitivity
             let user_btn_for_update = username_load_button.clone();
@@ -1286,7 +1287,7 @@ impl ConnectionDialog {
             let groups_data_clone = groups_data.clone();
             let full_groups_data_clone = full_groups_data.clone();
             let username_entry_clone = username_entry.clone();
-            let window_clone = window.clone();
+            let dialog_clone = result.dialog.clone();
 
             username_load_button.connect_clicked(move |_| {
                 let idx = group_dropdown_clone.selected();
@@ -1299,17 +1300,17 @@ impl ConnectionDialog {
                             && !username.is_empty()
                         {
                             username_entry_clone.set_text(username);
-                            crate::toast::show_toast_on_window(
-                                &window_clone,
-                                "Username loaded from group",
-                                crate::toast::ToastType::Success,
+                            alert::show_alert(
+                                &dialog_clone,
+                                &i18n("Username Loaded"),
+                                &i18n("Username loaded from group"),
                             );
                             return;
                         }
-                        crate::toast::show_toast_on_window(
-                            &window_clone,
-                            "Group has no username defined",
-                            crate::toast::ToastType::Info,
+                        alert::show_alert(
+                            &dialog_clone,
+                            &i18n("No Username"),
+                            &i18n("Group has no username defined"),
                         );
                     }
                 }
@@ -1320,7 +1321,7 @@ impl ConnectionDialog {
             let groups_data_clone = groups_data.clone();
             let full_groups_data_clone = full_groups_data.clone();
             let domain_entry_clone = domain_entry.clone();
-            let window_clone = window.clone();
+            let dialog_clone = result.dialog.clone();
 
             domain_load_button.connect_clicked(move |_| {
                 let idx = group_dropdown_clone.selected();
@@ -1333,17 +1334,17 @@ impl ConnectionDialog {
                             && !domain.is_empty()
                         {
                             domain_entry_clone.set_text(domain);
-                            crate::toast::show_toast_on_window(
-                                &window_clone,
-                                "Domain loaded from group",
-                                crate::toast::ToastType::Success,
+                            alert::show_alert(
+                                &dialog_clone,
+                                &i18n("Domain Loaded"),
+                                &i18n("Domain loaded from group"),
                             );
                             return;
                         }
-                        crate::toast::show_toast_on_window(
-                            &window_clone,
-                            "Group has no domain defined",
-                            crate::toast::ToastType::Info,
+                        alert::show_alert(
+                            &dialog_clone,
+                            &i18n("No Domain"),
+                            &i18n("Group has no domain defined"),
                         );
                     }
                 }
@@ -1357,7 +1358,7 @@ impl ConnectionDialog {
         let port_spin = result.port_spin.clone();
         let protocol_dropdown = result.protocol_dropdown.clone();
         let _username_entry = result.username_entry.clone();
-        let window = result.window.clone();
+        let window = result.dialog.clone();
         let window_for_script = window.clone();
 
         test_button.connect_clicked(move |btn| {
@@ -1722,21 +1723,15 @@ impl ConnectionDialog {
             });
     }
 
-    /// Creates the main window with header bar containing Save button
+    /// Creates the main dialog with header bar containing Save button
     fn create_window_with_header(
-        parent: Option<&gtk4::Window>,
-    ) -> (adw::Window, adw::HeaderBar, Button, Button) {
-        let window = adw::Window::builder()
+        _parent: Option<&gtk4::Window>,
+    ) -> (adw::Dialog, adw::HeaderBar, Button, Button) {
+        let dialog = adw::Dialog::builder()
             .title(i18n("New Connection"))
-            .modal(true)
-            .default_width(600)
-            .default_height(730)
+            .content_width(600)
+            .content_height(730)
             .build();
-        window.set_size_request(350, 580);
-
-        if let Some(p) = parent {
-            window.set_transient_for(Some(p));
-        }
 
         // Header bar with Test icon and Create icon button (GNOME HIG)
         let header = adw::HeaderBar::new();
@@ -1750,14 +1745,14 @@ impl ConnectionDialog {
         header.pack_start(&test_btn);
         header.pack_start(&save_btn);
 
-        (window, header, save_btn, test_btn)
+        (dialog, header, save_btn, test_btn)
     }
 
-    /// Creates the view stack widget and adds it to the window with view switcher bar
-    fn create_view_stack(window: &adw::Window, header: &adw::HeaderBar) -> adw::ViewStack {
+    /// Creates the view stack widget and adds it to the dialog with view switcher bar
+    fn create_view_stack(dialog: &adw::Dialog, header: &adw::HeaderBar) -> adw::ViewStack {
         let view_stack = adw::ViewStack::new();
 
-        // Create view switcher bar for the bottom of the window
+        // Create view switcher bar for the bottom of the dialog
         let view_switcher_bar = adw::ViewSwitcherBar::builder()
             .stack(&view_stack)
             .reveal(true)
@@ -1771,7 +1766,7 @@ impl ConnectionDialog {
         view_stack.set_vexpand(true);
         main_box.append(&view_stack);
         main_box.append(&view_switcher_bar);
-        window.set_content(Some(&main_box));
+        dialog.set_child(Some(&main_box));
 
         view_stack
     }
@@ -1931,7 +1926,7 @@ impl ConnectionDialog {
     #[allow(clippy::too_many_arguments, clippy::too_many_lines)]
     fn connect_save_button(
         save_btn: &Button,
-        window: &adw::Window,
+        dialog: &adw::Dialog,
         on_save: &super::ConnectionCallback,
         state: &crate::state::SharedAppState,
         editing_id: &Rc<RefCell<Option<Uuid>>>,
@@ -2110,7 +2105,7 @@ impl ConnectionDialog {
         retry_max_delay_spin: &adw::SpinRow,
         skip_port_check_toggle: &adw::SwitchRow,
     ) {
-        let window = window.clone();
+        let dialog = dialog.clone();
         let on_save = on_save.clone();
         let _state = state.clone();
         let name_entry = name_entry.clone();
@@ -2491,7 +2486,7 @@ impl ConnectionDialog {
             };
 
             if let Err(err) = data.validate() {
-                crate::toast::show_toast_on_window(&window, &err, crate::toast::ToastType::Warning);
+                alert::show_error(&dialog, &i18n("Validation Error"), &err);
                 return;
             }
 
@@ -2503,7 +2498,7 @@ impl ConnectionDialog {
                 if let Some(ref cb) = *on_save.borrow() {
                     cb(Some(result));
                 }
-                window.close();
+                dialog.close();
             }
         });
     }
@@ -3644,7 +3639,7 @@ impl ConnectionDialog {
 
     /// Populates the dialog with an existing connection for editing
     pub fn set_connection(&self, conn: &Connection) {
-        self.window.set_title(Some(&i18n("Edit Connection")));
+        self.dialog.set_title(&i18n("Edit Connection"));
         // Switch from Create icon to Save icon for edit mode
         self.save_button.set_label("");
         self.save_button.set_icon_name("media-floppy-symbolic");
@@ -4984,13 +4979,13 @@ impl ConnectionDialog {
         // Refresh agent keys before showing the dialog
         self.refresh_agent_keys();
 
-        self.window.present();
+        self.dialog.present(self.parent.as_ref());
     }
 
-    /// Returns a reference to the underlying window
+    /// Returns a reference to the underlying dialog
     #[must_use]
-    pub const fn window(&self) -> &adw::Window {
-        &self.window
+    pub const fn dialog(&self) -> &adw::Dialog {
+        &self.dialog
     }
 
     /// Updates password row visibility based on password source
@@ -5104,7 +5099,7 @@ impl ConnectionDialog {
         let protocol_dropdown = self.protocol_dropdown.clone();
         let group_dropdown = self.group_dropdown.clone();
         let groups_data = self.groups_data.clone();
-        let window = self.window.clone();
+        let window = self.dialog.clone();
         let kdbx_password = kdbx_password.cloned();
 
         // Clone groups for use in closure
@@ -5408,7 +5403,7 @@ impl ConnectionDialog {
         let protocol_dropdown = self.protocol_dropdown.clone();
         let group_dropdown = self.group_dropdown.clone();
         let groups_data = self.groups_data.clone();
-        let window = self.window.clone();
+        let window = self.dialog.clone();
         let kdbx_password = kdbx_password.cloned();
         let groups = Rc::new(groups);
 
@@ -5823,8 +5818,8 @@ impl ConnectionDialog {
         // (these are already editable by default — no changes needed)
 
         // Update window title to indicate Import group mode
-        self.window
-            .set_title(Some(&i18n("Edit Connection (Synced)")));
+        self.dialog
+            .set_title(&i18n("Edit Connection (Synced)"));
     }
 }
 
