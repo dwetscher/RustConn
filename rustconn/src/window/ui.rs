@@ -16,9 +16,10 @@ use libadwaita as adw;
 /// - Center: Title + Spinner
 /// - Right side (pack_end): Menu, Settings, Split Vertical, Split Horizontal
 ///
-/// Returns the header bar and the busy spinner widget (initially hidden).
+/// Returns the header bar, the busy spinner widget (initially hidden),
+/// and the passthrough indicator button (initially hidden).
 #[must_use]
-pub fn create_header_bar() -> (adw::HeaderBar, gtk4::Spinner) {
+pub fn create_header_bar() -> (adw::HeaderBar, gtk4::Spinner, gtk4::Button) {
     let header_bar = adw::HeaderBar::new();
 
     // Title area: label + spinner in a horizontal box
@@ -130,7 +131,30 @@ pub fn create_header_bar() -> (adw::HeaderBar, gtk4::Spinner) {
     shell_button.update_property(&[gtk4::accessible::Property::Label(&i18n("Open Local Shell"))]);
     header_bar.pack_end(&shell_button);
 
-    (header_bar, busy_spinner)
+    // Keyboard passthrough indicator — visible only when passthrough mode is active
+    let passthrough_indicator = Button::new();
+    let pt_box = gtk4::Box::new(gtk4::Orientation::Horizontal, 4);
+    let pt_icon = gtk4::Image::from_icon_name("input-keyboard-symbolic");
+    pt_icon.set_pixel_size(16);
+    let pt_label = Label::new(Some(&i18n("Passthrough")));
+    pt_label.add_css_class("caption");
+    pt_box.append(&pt_icon);
+    pt_box.append(&pt_label);
+    passthrough_indicator.set_child(Some(&pt_box));
+    passthrough_indicator.set_tooltip_text(Some(&i18n(
+        "Keyboard passthrough active — click to disable",
+    )));
+    passthrough_indicator.update_property(&[gtk4::accessible::Property::Label(&i18n(
+        "Keyboard passthrough active — click to disable",
+    ))]);
+    passthrough_indicator.set_action_name(Some("win.toggle-passthrough"));
+    passthrough_indicator.add_css_class("warning");
+    passthrough_indicator.add_css_class("flat");
+    passthrough_indicator.add_css_class("pill");
+    passthrough_indicator.set_visible(false);
+    header_bar.pack_end(&passthrough_indicator);
+
+    (header_bar, busy_spinner, passthrough_indicator)
 }
 
 /// Creates the application menu
@@ -218,9 +242,13 @@ pub fn create_app_menu() -> gio::Menu {
     }
     menu.append_section(None, &settings_section);
 
-    // App meta section (GNOME HIG: Fullscreen, Shortcuts, About, Quit)
+    // App meta section (GNOME HIG: Fullscreen, Passthrough, Shortcuts, About, Quit)
     let app_section = gio::Menu::new();
     app_section.append(Some(&i18n("Fullscreen")), Some("win.toggle-fullscreen"));
+    app_section.append(
+        Some(&i18n("Keyboard Passthrough")),
+        Some("win.toggle-passthrough"),
+    );
     app_section.append(Some(&i18n("Keyboard Shortcuts...")), Some("app.shortcuts"));
     app_section.append(Some(&i18n("About RustConn")), Some("app.about"));
     app_section.append(Some(&i18n("Quit")), Some("app.quit"));

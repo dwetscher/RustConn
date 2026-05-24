@@ -115,6 +115,8 @@ pub struct MainWindow {
     busy_stack: rustconn_core::BusyStack,
     /// Runtime-only quick connect history (max 15 entries, LIFO, not persisted)
     quick_connect_history: types::SharedQuickConnectHistory,
+    /// Passthrough mode indicator button in header bar (visible when active)
+    passthrough_indicator: gtk4::Button,
 }
 
 impl MainWindow {
@@ -149,7 +151,7 @@ impl MainWindow {
         });
 
         // Create header bar with busy spinner
-        let (header_bar, busy_spinner) = ui::create_header_bar();
+        let (header_bar, busy_spinner, passthrough_indicator) = ui::create_header_bar();
 
         // Create BusyStack that shows/hides the header bar spinner.
         // GTK widgets are !Send, so we bridge via std::sync::mpsc channel.
@@ -482,6 +484,7 @@ impl MainWindow {
             tunnel_manager,
             busy_stack,
             quick_connect_history: types::load_quick_connect_history(&state),
+            passthrough_indicator,
         };
 
         // Set up window actions

@@ -140,6 +140,18 @@
     <control>touch</control>
   </supports>
   <releases>
+    <release version="0.14.7" date="2026-05-25">
+      <description>
+        <p>Version 0.14.7 - Visual Tunnel Builder and Keyboard Passthrough:</p>
+        <ul>
+          <li>Visual Tunnel Builder: 3-step wizard for creating and editing SSH tunnels with path diagram</li>
+          <li>Keyboard passthrough mode: disable shortcuts for remote sessions (Ctrl+Shift+Backspace)</li>
+          <li>VNC client: connection timeout now respects configured timeout_secs</li>
+          <li>Document encryption: derived keys wrapped in Zeroizing for defense-in-depth</li>
+          <li>Welcome screen: streamlined keyboard shortcuts section</li>
+        </ul>
+      </description>
+    </release>
     <release version="0.14.6" date="2026-05-23">
       <description>
         <p>Version 0.14.6 - RDP improvements and snippet delivery:</p>

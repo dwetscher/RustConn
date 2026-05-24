@@ -6,7 +6,7 @@
 #
 
 Name:           rustconn
-Version:        0.14.6
+Version:        0.14.7
 Release:        0
 Summary:        Modern connection manager for Linux (SSH, RDP, VNC, SPICE, MOSH, Telnet, Serial, Kubernetes, Zero Trust)
 License:        GPL-3.0-or-later
@@ -238,6 +238,11 @@ done
 %{_datadir}/locale/*/LC_MESSAGES/rustconn.mo
 
 %changelog
+* Sun May 25 2026 Anton Isaiev <totoshko88@gmail.com> - 0.14.7-0
+- Version bump to 0.14.7
+- Added Visual Tunnel Builder
+- Added Keyboard passthrough mode
+
 * Sat May 23 2026 Anton Isaiev <totoshko88@gmail.com> - 0.14.6-0
 - Version bump to 0.14.6
 - Variables dialog: collapsible rows, duplicate name validation

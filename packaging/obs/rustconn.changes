@@ -1,4 +1,13 @@
 -------------------------------------------------------------------
+Sun May 25 2026 Anton Isaiev <totoshko88@gmail.com> - 0.14.7
+
+- Version bump to 0.14.7
+  * Added Visual Tunnel Builder — 3-step wizard for SSH tunnels
+  * Added Keyboard passthrough mode (Ctrl+Shift+Backspace)
+  * Improved VNC client connection timeout
+  * Improved document encryption key zeroization
+
+-------------------------------------------------------------------
 Sat May 23 2026 Anton Isaiev <totoshko88@gmail.com> - 0.14.6
 
 - Version bump to 0.14.6
