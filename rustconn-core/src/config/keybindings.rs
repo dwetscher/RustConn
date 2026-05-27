@@ -257,7 +257,7 @@ pub fn default_keybindings() -> Vec<KeybindingDef> {
             "Find in Terminal",
             Terminal,
         ),
-        KeybindingDef::new("win.close-tab", "<Control><Shift>w", "Close Tab", Terminal),
+        KeybindingDef::new("win.close-tab", "<Control>w|<Control><Shift>w", "Close Tab", Terminal),
         KeybindingDef::new(
             "win.next-tab",
             "<Control>Tab|<Control>Page_Down",

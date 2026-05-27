@@ -1036,7 +1036,7 @@ The **Display Mode** setting in the connection dialog (Advanced tab → Window M
 ### Tab Management
 
 - **Switch** — Click tab or Ctrl+Tab / Ctrl+Shift+Tab
-- **Close** — Click X or Ctrl+Shift+W
+- **Close** — Click X or Ctrl+W / Ctrl+Shift+W
 - **Reorder** — Drag tabs
 - **Tab Overview** — Click the grid icon (▦) at the right end of the tab bar, or press **Ctrl+Shift+O**, to open a full-screen grid view of all open tabs. Useful when you have many tabs open and need to visually locate a session. Click any thumbnail to switch to it.
 - **Tab Switcher** — Press **Ctrl+%** (or open Command Palette with **Ctrl+P** and type `%`) to fuzzy-search across all open tabs by name. Results show protocol type and tab group. Select and press Enter to switch instantly.
@@ -1075,7 +1075,7 @@ When a terminal session disconnects (SSH, Telnet, Serial, Kubernetes), a "Reconn
 - The banner appears automatically when the VTE child process exits
 - Reconnect uses the same connection settings (host, credentials, protocol options)
 - If the connection fails again, the banner reappears
-- Close the tab normally with Ctrl+Shift+W to dismiss
+- Close the tab normally with Ctrl+W to dismiss
 
 ### Session Logging
 
@@ -1994,7 +1994,9 @@ The settings dialog uses `adw::PreferencesDialog` with built-in search. Settings
 
 ### Terminal page
 
-**Terminal group:** Font (family and size), Scrollback (history buffer lines), Color Theme (Dark, Light, Solarized, Monokai, Dracula, plus user-created custom themes), Cursor (shape and blink mode), Behavior (scroll on output/keystroke, hyperlinks, mouse autohide, bell, SFTP via mc, copy on select).
+**Terminal group:** Font (family and size), Scrollback (history buffer lines), Color Theme (Dark, Light, Solarized, Monokai, Dracula, plus user-created custom themes), Cursor (shape and blink mode), Behavior (scroll on output/keystroke, hyperlinks, mouse autohide, bell, SFTP via mc, copy on select, close tab on clean exit).
+
+**Close tab on clean exit:** When enabled, tabs are automatically closed when the remote session exits cleanly (exit code 0, e.g. user typed `exit` or `logout`) instead of showing the reconnect overlay. Disabled by default.
 
 **Local Shell group:** Command — custom command to run in Local Shell tabs instead of the default login shell (e.g. `fish`, `bash --norc`, `neofetch && bash`). Leave empty for system default.
 
@@ -2756,7 +2758,7 @@ Note: Sidebar-scoped shortcuts (F2, Delete, Ctrl+E, Ctrl+D, Ctrl+C, Ctrl+V, Ctrl
 | Ctrl+Shift+C | Copy |
 | Ctrl+Shift+V | Paste |
 | Ctrl+Shift+F | Terminal Search |
-| Ctrl+Shift+W | Close Tab |
+| Ctrl+W / Ctrl+Shift+W | Close Tab |
 | Ctrl+Tab / Ctrl+PageDown | Next Tab |
 | Ctrl+Shift+Tab / Ctrl+PageUp | Previous Tab |
 | Ctrl+Shift+T | Local Shell |

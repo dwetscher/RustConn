@@ -315,6 +315,12 @@ impl MainWindow {
             .map(|s| Arc::clone(s.folder_tracker()))
             .unwrap_or_default();
 
+        // Capture close-on-clean-exit setting before entering the closure
+        let close_on_clean_exit = state
+            .try_borrow()
+            .ok()
+            .is_some_and(|s| s.settings().terminal.close_on_clean_exit);
+
         notebook.connect_child_exited(session_id, move |exit_status| {
             // Execute post-disconnect task if configured
             if let Some(ref task) = post_disconnect_task {
@@ -453,6 +459,19 @@ impl MainWindow {
 
             // Stop recording if active before marking as disconnected
             notebook_clone.stop_recording(session_id);
+
+            // If the session exited cleanly and close-on-clean-exit is enabled,
+            // close the tab automatically instead of showing the reconnect overlay.
+            if !is_failure && close_on_clean_exit {
+                tracing::info!(
+                    %session_id,
+                    %connection_id,
+                    "Session exited cleanly, auto-closing tab (close_on_clean_exit=true)"
+                );
+                notebook_clone.close_tab(session_id);
+                sidebar_clone.decrement_session_count(&connection_id_str, false);
+                return;
+            }
 
             // Mark tab as disconnected and show reconnect overlay
             notebook_clone.mark_tab_disconnected(session_id);

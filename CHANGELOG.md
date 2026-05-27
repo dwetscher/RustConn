@@ -5,6 +5,17 @@ All notable changes to RustConn will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.14.10] - 2026-05-27
+
+### Added
+
+- **Close tab on clean session exit** — new setting in Settings → Terminal: when enabled, tabs are automatically closed when the remote session exits cleanly (exit code 0, e.g. user typed `exit` or `logout`) instead of showing the reconnect overlay. Disabled by default. ([#162](https://github.com/totoshko88/RustConn/issues/162))
+- **`Ctrl+W` closes the active tab** — added `Ctrl+W` as an alternative accelerator for Close Tab (alongside existing `Ctrl+Shift+W`). On macOS, this maps to `Cmd+W` via GTK4's native modifier translation. ([#162](https://github.com/totoshko88/RustConn/issues/162))
+
+### Fixed
+
+- **macOS: SSH fails with "ssh-askpass: No such file or directory"** — on macOS, SSH tried to invoke the XQuartz askpass binary at `/usr/X11R6/bin/ssh-askpass` even though RustConn handles password input natively via VTE injection. Now sets `SSH_ASKPASS_REQUIRE=never` in the terminal environment on macOS to suppress external askpass invocation. ([#161](https://github.com/totoshko88/RustConn/issues/161))
+
 ## [0.14.9] - 2026-05-26
 
 ### Added

@@ -128,6 +128,14 @@ pub struct TerminalSettings {
     /// Empty string means use the default shell.
     #[serde(default, skip_serializing_if = "String::is_empty")]
     pub local_shell_command: String,
+    /// Automatically close the tab when the session exits cleanly (exit code 0).
+    ///
+    /// When `true`, SSH/Telnet/Serial sessions that terminate with exit code 0
+    /// (e.g. user typed `exit` or `logout`) will close the tab automatically
+    /// instead of showing the reconnect overlay.
+    /// Defaults to `false` (show reconnect overlay).
+    #[serde(default)]
+    pub close_on_clean_exit: bool,
 }
 
 fn default_font_family() -> String {
@@ -206,6 +214,7 @@ impl Default for TerminalSettings {
             copy_on_select: false,
             show_scrollbar: default_show_scrollbar(),
             local_shell_command: String::new(),
+            close_on_clean_exit: false,
         }
     }
 }

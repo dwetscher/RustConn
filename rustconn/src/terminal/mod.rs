@@ -997,6 +997,16 @@ impl TerminalNotebook {
         // sandboxed environments like Flatpak (#48).
         env_vec.retain(|e| !e.starts_with("SSH_ASKPASS="));
 
+        // On macOS, SSH may still try the compiled-in default askpass path
+        // (e.g. /usr/X11R6/bin/ssh-askpass from XQuartz) even when SSH_ASKPASS
+        // is unset. Setting SSH_ASKPASS_REQUIRE=never tells OpenSSH ≥8.4 to
+        // never invoke an external askpass program. (#161)
+        #[cfg(target_os = "macos")]
+        {
+            env_vec.retain(|e| !e.starts_with("SSH_ASKPASS_REQUIRE="));
+            env_vec.push(glib::GString::from("SSH_ASKPASS_REQUIRE=never"));
+        }
+
         // In Flatpak, redirect CLI config directories to writable sandbox
         // locations. Host directories are either mounted read-only (gcloud,
         // Azure, kubectl) or not mounted at all (Teleport, Boundary, etc.).

@@ -31,6 +31,7 @@ pub fn create_terminal_page() -> (
     adw::SwitchRow, // copy_on_select
     adw::SwitchRow, // show_scrollbar
     Entry,          // local_shell_command
+    adw::SwitchRow, // close_on_clean_exit
 ) {
     let page = adw::PreferencesPage::builder()
         .title(i18n("Terminal"))
@@ -429,6 +430,13 @@ pub fn create_terminal_page() -> (
         .build();
     behavior_group.add(&copy_on_select_row);
 
+    // Close tab on clean exit
+    let close_on_clean_exit_row = adw::SwitchRow::builder()
+        .title(i18n("Close tab on clean exit"))
+        .subtitle(i18n("Automatically close the tab when the session exits normally"))
+        .build();
+    behavior_group.add(&close_on_clean_exit_row);
+
     page.add(&behavior_group);
 
     // === Local Shell Group ===
@@ -469,6 +477,7 @@ pub fn create_terminal_page() -> (
         copy_on_select_row,
         show_scrollbar_row,
         local_shell_command_entry,
+        close_on_clean_exit_row,
     )
 }
 
@@ -490,6 +499,7 @@ pub fn load_terminal_settings(
     copy_on_select_row: &adw::SwitchRow,
     show_scrollbar_row: &adw::SwitchRow,
     local_shell_command_entry: &Entry,
+    close_on_clean_exit_row: &adw::SwitchRow,
     settings: &TerminalSettings,
 ) {
     font_family_entry.set_text(&settings.font_family);
@@ -532,6 +542,7 @@ pub fn load_terminal_settings(
     copy_on_select_row.set_active(settings.copy_on_select);
     show_scrollbar_row.set_active(settings.show_scrollbar);
     local_shell_command_entry.set_text(&settings.local_shell_command);
+    close_on_clean_exit_row.set_active(settings.close_on_clean_exit);
 }
 
 /// Sets the active toggle index.
@@ -630,6 +641,7 @@ pub fn collect_terminal_settings(
     copy_on_select_row: &adw::SwitchRow,
     show_scrollbar_row: &adw::SwitchRow,
     local_shell_command_entry: &Entry,
+    close_on_clean_exit_row: &adw::SwitchRow,
     log_timestamps: bool,
 ) -> TerminalSettings {
     let theme_names = TerminalTheme::theme_names();
@@ -668,6 +680,7 @@ pub fn collect_terminal_settings(
         copy_on_select: copy_on_select_row.is_active(),
         show_scrollbar: show_scrollbar_row.is_active(),
         local_shell_command: local_shell_command_entry.text().trim().to_string(),
+        close_on_clean_exit: close_on_clean_exit_row.is_active(),
     }
 }
 
