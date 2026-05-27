@@ -19,7 +19,7 @@
 //! username in the name/description and password as the secret.
 
 use async_trait::async_trait;
-use secrecy::SecretString;
+use secrecy::{ExposeSecret, SecretString};
 use serde::Deserialize;
 use std::process::Stdio;
 use tokio::process::Command;
@@ -61,8 +61,13 @@ struct PassboltResourceDetail {
     _name: Option<String>,
     #[serde(rename = "username", alias = "Username", default)]
     username: Option<String>,
-    #[serde(rename = "password", alias = "Password", default)]
-    password: Option<String>,
+    #[serde(
+        rename = "password",
+        alias = "Password",
+        default,
+        deserialize_with = "super::serde_helpers::deserialize_optional_secret"
+    )]
+    password: Option<SecretString>,
     #[serde(rename = "uri", alias = "URI", default)]
     _uri: Option<String>,
     #[serde(rename = "description", alias = "Description", default)]
@@ -260,8 +265,7 @@ impl SecretBackend for PassboltBackend {
             username: detail.username.filter(|u| !u.is_empty()),
             password: detail
                 .password
-                .filter(|p| !p.is_empty())
-                .map(SecretString::from),
+                .filter(|p| !ExposeSecret::expose_secret(p).is_empty()),
             key_passphrase: None,
             domain: None,
         }))
@@ -429,8 +433,6 @@ pub async fn get_passbolt_status() -> PassboltStatus {
 // ============================================================================
 // Keyring storage for Passbolt credentials
 // ============================================================================
-
-use secrecy::ExposeSecret;
 
 const KEY_PB_PASSPHRASE: &str = "passbolt-passphrase";
 

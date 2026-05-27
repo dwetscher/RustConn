@@ -13,6 +13,7 @@ use super::{Protocol, ProtocolCapabilities, ProtocolResult};
 /// Implements the Protocol trait for SFTP file transfer connections.
 /// Uses SSH transport but opens a file manager (via `sftp://` URI)
 /// instead of a terminal session.
+#[derive(Debug)]
 pub struct SftpProtocol;
 
 impl SftpProtocol {

@@ -13,7 +13,6 @@ use std::path::{Path, PathBuf};
 
 use quick_xml::Reader;
 use quick_xml::events::Event;
-use secrecy::SecretString;
 
 use crate::error::ImportError;
 use crate::models::{
@@ -46,8 +45,9 @@ struct GraphicsEntry {
     tls_port: Option<i32>,
     /// Listen address (from attribute or nested `<listen>` element)
     listen_address: Option<String>,
-    /// Password (clear-text in XML, stored as `SecretString`)
-    password: Option<String>,
+    /// Password (clear-text in XML, wrapped in `SecretString` immediately
+    /// after parsing so the plaintext does not linger in a plain `String`).
+    password: Option<secrecy::SecretString>,
     /// Whether autoport is enabled
     autoport: bool,
 }
@@ -220,7 +220,9 @@ impl LibvirtXmlImporter {
                     entry.listen_address = Some(val);
                 }
                 "passwd" | "password" if !val.is_empty() => {
-                    entry.password = Some(val);
+                    // Wrap directly into SecretString — the XML attribute String
+                    // we just allocated must not outlive this block as plaintext.
+                    entry.password = Some(secrecy::SecretString::from(val));
                 }
                 _ => {}
             }
@@ -391,7 +393,7 @@ impl LibvirtXmlImporter {
             conn.password_source = PasswordSource::Vault;
             let creds = Credentials {
                 username: None,
-                password: Some(SecretString::from(pw.clone())),
+                password: Some(pw.clone()),
                 key_passphrase: None,
                 domain: None,
             };

@@ -9,6 +9,7 @@ use super::{Protocol, ProtocolCapabilities, ProtocolResult};
 ///
 /// Implements the Protocol trait for serial console connections.
 /// Serial sessions are spawned via VTE terminal using an external `picocom` client.
+#[derive(Debug)]
 pub struct SerialProtocol;
 
 impl SerialProtocol {

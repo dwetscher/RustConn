@@ -14,9 +14,21 @@ use gtk4::glib;
 use gtk4::prelude::*;
 use libadwaita as adw;
 use rustconn_core::models::PasswordSource;
-use secrecy::ExposeSecret;
 use std::rc::Rc;
+use std::time::Duration;
 use uuid::Uuid;
+
+/// How long to wait for a `Bitwarden` auto-unlock before reporting timeout.
+///
+/// 30 seconds covers the worst case where the user has to type the master
+/// password in an interactive prompt; below that, slow GPG/keyring backends
+/// would falsely time out.
+const BITWARDEN_UNLOCK_TIMEOUT: Duration = Duration::from_secs(30);
+
+/// How long to wait for a single vault retrieve before reporting timeout.
+///
+/// 10 seconds is the standard project-wide vault budget — see `secrets-guide.md`.
+const VAULT_RETRIEVE_TIMEOUT: Duration = Duration::from_secs(10);
 
 /// Type alias for shared sidebar reference
 pub type SharedSidebar = Rc<ConnectionSidebar>;
@@ -168,7 +180,7 @@ pub fn show_new_connection_dialog_internal(
                                 &conn_host,
                                 protocol,
                                 &username,
-                                pwd.expose_secret(),
+                                &pwd,
                                 conn_id,
                             );
                         }
@@ -287,7 +299,6 @@ fn show_new_connection_dialog_internal_prefilled(
                         if password_source == rustconn_core::models::PasswordSource::Vault
                             && let Some(pwd) = password
                         {
-                            use secrecy::ExposeSecret;
                             let settings = state_mut.settings().clone();
                             let groups: Vec<_> =
                                 state_mut.list_groups().into_iter().cloned().collect();
@@ -302,7 +313,7 @@ fn show_new_connection_dialog_internal_prefilled(
                                 &conn_host,
                                 protocol,
                                 &username,
-                                pwd.expose_secret(),
+                                &pwd,
                                 conn_id,
                             );
                         }
@@ -623,7 +634,7 @@ pub fn show_new_group_dialog_with_parent(
                                 crate::async_utils::with_runtime(|rt| {
                                     let backend = rt.block_on(async {
                                         tokio::time::timeout(
-                                            std::time::Duration::from_secs(30),
+                                            BITWARDEN_UNLOCK_TIMEOUT,
                                             rustconn_core::secret::auto_unlock(&secret_settings),
                                         )
                                         .await
@@ -632,7 +643,7 @@ pub fn show_new_group_dialog_with_parent(
                                     })?;
                                     rt.block_on(async {
                                         tokio::time::timeout(
-                                            std::time::Duration::from_secs(10),
+                                            VAULT_RETRIEVE_TIMEOUT,
                                             backend.retrieve(&lookup_key),
                                         )
                                         .await
@@ -646,7 +657,7 @@ pub fn show_new_group_dialog_with_parent(
                                 crate::async_utils::with_runtime(|rt| {
                                     rt.block_on(async {
                                         tokio::time::timeout(
-                                            std::time::Duration::from_secs(10),
+                                            VAULT_RETRIEVE_TIMEOUT,
                                             backend.retrieve(&lookup_key),
                                         )
                                         .await
@@ -660,7 +671,7 @@ pub fn show_new_group_dialog_with_parent(
                                 crate::async_utils::with_runtime(|rt| {
                                     rt.block_on(async {
                                         tokio::time::timeout(
-                                            std::time::Duration::from_secs(10),
+                                            VAULT_RETRIEVE_TIMEOUT,
                                             backend.retrieve(&lookup_key),
                                         )
                                         .await
@@ -677,7 +688,7 @@ pub fn show_new_group_dialog_with_parent(
                                 crate::async_utils::with_runtime(|rt| {
                                     rt.block_on(async {
                                         tokio::time::timeout(
-                                            std::time::Duration::from_secs(10),
+                                            VAULT_RETRIEVE_TIMEOUT,
                                             backend.retrieve(&lookup_key),
                                         )
                                         .await
@@ -695,7 +706,7 @@ pub fn show_new_group_dialog_with_parent(
                                 crate::async_utils::with_runtime(|rt| {
                                     rt.block_on(async {
                                         tokio::time::timeout(
-                                            std::time::Duration::from_secs(10),
+                                            VAULT_RETRIEVE_TIMEOUT,
                                             backend.retrieve(&lookup_key),
                                         )
                                         .await
@@ -802,7 +813,9 @@ pub fn show_new_group_dialog_with_parent(
 
         // Capture credential values
         let username = username_row_clone.text().to_string();
-        let password = password_entry_clone2.text().to_string();
+        // Capture password directly into SecretString — never let it live as
+        // a plain String in this closure (M-PUBLIC-DEBUG / SecretString rules).
+        let password = secrecy::SecretString::from(password_entry_clone2.text().to_string());
         let domain = domain_row_clone.text().to_string();
 
         // Capture description
@@ -825,7 +838,8 @@ pub fn show_new_group_dialog_with_parent(
 
         let has_username = !username.trim().is_empty();
         // Password is relevant for Vault only
-        let has_password = !password.is_empty() && password_source_idx == 1;
+        let has_password =
+            !secrecy::ExposeSecret::expose_secret(&password).is_empty() && password_source_idx == 1;
         let has_domain = !domain.trim().is_empty();
 
         // Capture icon

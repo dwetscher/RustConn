@@ -9,6 +9,7 @@ use super::{Protocol, ProtocolCapabilities, ProtocolResult};
 ///
 /// Implements the Protocol trait for SPICE connections.
 /// Native SPICE embedding is available via spice-client (`spice-embedded` feature flag, disabled by default).
+#[derive(Debug)]
 pub struct SpiceProtocol;
 
 impl SpiceProtocol {

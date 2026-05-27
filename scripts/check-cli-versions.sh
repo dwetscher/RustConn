@@ -22,7 +22,7 @@
 
 set -euo pipefail
 
-CLI_DOWNLOAD_RS="rustconn-core/src/cli_download.rs"
+CLI_DOWNLOAD_RS="rustconn-core/src/cli_download/components.rs"
 JSON_MODE=false
 ISSUES_FOUND=0
 

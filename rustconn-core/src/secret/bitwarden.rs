@@ -246,7 +246,11 @@ struct BitwardenItem {
 #[derive(Debug, Deserialize)]
 struct BitwardenLogin {
     username: Option<String>,
-    password: Option<String>,
+    #[serde(
+        default,
+        deserialize_with = "super::serde_helpers::deserialize_optional_secret"
+    )]
+    password: Option<SecretString>,
 }
 
 /// Bitwarden item template for creation
@@ -696,7 +700,7 @@ impl SecretBackend for BitwardenBackend {
 
         Ok(Some(Credentials {
             username: login.username,
-            password: login.password.map(SecretString::from),
+            password: login.password,
             key_passphrase: None,
             domain: item.notes,
         }))

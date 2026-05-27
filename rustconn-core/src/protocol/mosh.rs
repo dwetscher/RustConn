@@ -9,6 +9,7 @@ use super::{Protocol, ProtocolCapabilities, ProtocolResult};
 ///
 /// Implements the Protocol trait for MOSH (mobile shell) connections.
 /// MOSH sessions are spawned via VTE terminal using the external `mosh` client.
+#[derive(Debug)]
 pub struct MoshProtocol;
 
 impl MoshProtocol {

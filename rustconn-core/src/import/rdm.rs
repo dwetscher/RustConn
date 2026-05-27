@@ -7,7 +7,7 @@ use std::collections::HashMap;
 use std::fs;
 use std::path::{Path, PathBuf};
 
-use serde::{Deserialize, Serialize};
+use serde::Deserialize;
 use uuid::Uuid;
 
 use crate::error::ImportError;
@@ -22,39 +22,34 @@ use super::normalize::parse_host_port;
 use super::traits::{ImportResult, ImportSource, SkippedEntry};
 
 /// RDM JSON connection entry
-#[derive(Debug, Clone, Deserialize, Serialize)]
+#[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "PascalCase")]
 struct RdmConnection {
-    #[serde(rename = "ID")]
-    id: String,
     name: String,
     #[serde(rename = "ConnectionType")]
     connection_type: String,
     host: Option<String>,
     port: Option<u16>,
     username: Option<String>,
-    password: Option<String>,
+    #[serde(
+        default,
+        deserialize_with = "crate::secret::serde_helpers::deserialize_optional_secret"
+    )]
+    password: Option<secrecy::SecretString>,
     domain: Option<String>,
     description: Option<String>,
     #[serde(rename = "ParentID")]
     parent_id: Option<String>,
-    #[serde(rename = "GroupName")]
-    group_name: Option<String>,
     // SSH specific
     #[serde(rename = "PrivateKeyPath")]
     private_key_path: Option<String>,
-    // RDP specific
-    #[serde(rename = "ColorDepth")]
-    color_depth: Option<u16>,
-    #[serde(rename = "ScreenSize")]
-    screen_size: Option<String>,
     // VNC specific
     #[serde(rename = "ViewOnly")]
     view_only: Option<bool>,
 }
 
 /// RDM JSON folder entry
-#[derive(Debug, Clone, Deserialize, Serialize)]
+#[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "PascalCase")]
 struct RdmFolder {
     #[serde(rename = "ID")]
@@ -62,19 +57,14 @@ struct RdmFolder {
     name: String,
     #[serde(rename = "ParentID")]
     parent_id: Option<String>,
-    description: Option<String>,
 }
 
 /// RDM JSON export structure
-#[derive(Debug, Clone, Deserialize, Serialize)]
+#[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "PascalCase")]
 struct RdmExport {
     connections: Option<Vec<RdmConnection>>,
     folders: Option<Vec<RdmFolder>>,
-    #[serde(rename = "ExportVersion")]
-    export_version: Option<String>,
-    #[serde(rename = "ApplicationVersion")]
-    application_version: Option<String>,
 }
 
 /// Remote Desktop Manager JSON importer
@@ -325,7 +315,7 @@ impl RdmImporter {
         let port = parsed_port.or(conn.port).unwrap_or(default_port);
 
         let password_source = conn.password.as_ref().map_or(PasswordSource::None, |p| {
-            if p.is_empty() {
+            if secrecy::ExposeSecret::expose_secret(p).is_empty() {
                 PasswordSource::None
             } else {
                 // Password exists but we can't store it directly - prompt user

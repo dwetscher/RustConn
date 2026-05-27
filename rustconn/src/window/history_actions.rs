@@ -51,7 +51,9 @@ impl MainWindow {
                                 {
                                     continue;
                                 }
-                                let pwd = var.value.clone();
+                                // Wrap into SecretString immediately so plaintext
+                                // does not live in the closure as a plain String.
+                                let pwd = secrecy::SecretString::from(var.value.clone());
                                 let var_name = var.name.clone();
                                 let var_name_log = var_name.clone();
                                 let secrets_c = settings.secrets.clone();

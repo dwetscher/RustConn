@@ -49,12 +49,28 @@ struct BusyInner {
     on_change: Box<dyn Fn(bool) + Send + Sync>,
 }
 
+impl std::fmt::Debug for BusyStack {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("BusyStack")
+            .field("count", &self.inner.count.load(Ordering::Relaxed))
+            .finish_non_exhaustive()
+    }
+}
+
 /// RAII guard that decrements the busy counter on drop.
 ///
 /// Created by [`BusyStack::busy()`]. When the last guard is dropped,
 /// the "idle" callback fires.
 pub struct BusyGuard {
     inner: Arc<BusyInner>,
+}
+
+impl std::fmt::Debug for BusyGuard {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("BusyGuard")
+            .field("count", &self.inner.count.load(Ordering::Relaxed))
+            .finish_non_exhaustive()
+    }
 }
 
 impl BusyStack {

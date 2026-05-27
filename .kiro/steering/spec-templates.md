@@ -86,6 +86,8 @@ inclusion: manual
 
 Використовуй для критичних багів де потрібна трасовність.
 
+> **Tip:** для типового bugfix workflow див. `bugfix-workflow.md` (manual inclusion: `#bugfix-workflow`).
+
 ### .config.kiro
 
 ```json

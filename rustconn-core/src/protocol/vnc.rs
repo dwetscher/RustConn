@@ -9,6 +9,7 @@ use super::{Protocol, ProtocolCapabilities, ProtocolResult};
 ///
 /// Implements the Protocol trait for VNC connections.
 /// Native VNC embedding is available via vnc-rs (`vnc-embedded` feature flag).
+#[derive(Debug)]
 pub struct VncProtocol;
 
 impl VncProtocol {

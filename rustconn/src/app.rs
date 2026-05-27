@@ -360,7 +360,7 @@ fn build_ui(app: &adw::Application, tray_manager: SharedTrayManager) {
                 // Drain all pending group IDs from the channel
                 let mut pending = std::collections::HashSet::new();
                 if let Ok(mut state_mut) = state_poll.try_borrow_mut() {
-                    while let Ok(group_id) = state_mut.sync_manager_mut().try_recv_export() {
+                    while let Some(group_id) = state_mut.sync_manager_mut().try_recv_export() {
                         pending.insert(group_id);
                     }
                     for group_id in &pending {

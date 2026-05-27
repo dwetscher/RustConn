@@ -114,6 +114,7 @@ impl Drop for SshTunnel {
 }
 
 /// Parameters for creating an SSH tunnel.
+#[derive(Debug, Clone)]
 pub struct SshTunnelParams {
     /// Jump host address (e.g. `user@bastion.example.com`).
     pub jump_host: String,

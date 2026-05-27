@@ -1,5 +1,6 @@
 ---
-inclusion: manual
+inclusion: fileMatch
+fileMatchPattern: "**/*.rs"
 ---
 
 # Error Resolution Guide — RustConn

@@ -343,14 +343,17 @@ impl PasswordGenerator {
         let rng = SystemRandom::new();
 
         for _ in 0..MAX_ATTEMPTS {
-            let password: String = (0..self.config.length)
+            // Each iteration generates `length` chars; we collect into Result so
+            // a single RNG failure short-circuits this attempt.
+            let password = (0..self.config.length)
                 .map(|_| {
                     let mut buf = [0u8; 4];
-                    rng.fill(&mut buf).expect("RNG fill failed");
+                    rng.fill(&mut buf)
+                        .map_err(|_| PasswordGeneratorError::RngError)?;
                     let idx = u32::from_le_bytes(buf) as usize % pool_chars.len();
-                    pool_chars[idx]
+                    Ok::<char, PasswordGeneratorError>(pool_chars[idx])
                 })
-                .collect();
+                .collect::<Result<String, _>>()?;
 
             if !self.config.require_all_sets || self.meets_requirements(&password, &sets) {
                 return Ok(password);

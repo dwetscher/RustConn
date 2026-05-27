@@ -6,7 +6,7 @@
 #
 
 Name:           rustconn
-Version:        0.14.9
+Version:        0.14.10
 Release:        0
 Summary:        Modern connection manager for Linux (SSH, RDP, VNC, SPICE, MOSH, Telnet, Serial, Kubernetes, Zero Trust)
 License:        GPL-3.0-or-later
@@ -238,6 +238,16 @@ done
 %{_datadir}/locale/*/LC_MESSAGES/rustconn.mo
 
 %changelog
+* Wed May 27 2026 Anton Isaiev <totoshko88@gmail.com> - 0.14.10-0
+- Version bump to 0.14.10
+- Hardened secret handling: SecretString in vault save signatures
+- Backend deserializers wrap passwords in SecretString immediately
+- Removed password_len from Bitwarden unlock log
+- F10 opens primary menu (GNOME HIG)
+- Graceful exit on Tokio runtime failure
+- PasswordGenerator surfaces RNG errors as RngError
+- Named timeout constants for downloads and vault operations
+
 * Mon May 26 2026 Anton Isaiev <totoshko88@gmail.com> - 0.14.9-0
 - Version bump to 0.14.9
 - Added Server Manager quick action in RDP admin tools menu

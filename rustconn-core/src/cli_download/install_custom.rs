@@ -79,7 +79,7 @@ pub(super) async fn install_kubectl(
     }
 
     let client = reqwest::Client::builder()
-        .timeout(std::time::Duration::from_secs(15))
+        .timeout(super::HTTP_DOWNLOAD_TIMEOUT)
         .build()
         .map_err(|e| CliDownloadError::DownloadFailed(e.to_string()))?;
 
@@ -166,7 +166,7 @@ pub(super) async fn install_teleport(
     }
 
     let client = reqwest::Client::builder()
-        .timeout(std::time::Duration::from_secs(15))
+        .timeout(super::HTTP_DOWNLOAD_TIMEOUT)
         .user_agent("RustConn")
         .build()
         .map_err(|e| CliDownloadError::DownloadFailed(e.to_string()))?;
@@ -273,7 +273,7 @@ pub(super) async fn install_tailscale(
 
     let index_url = "https://pkgs.tailscale.com/stable/";
     let client = reqwest::Client::builder()
-        .timeout(std::time::Duration::from_secs(15))
+        .timeout(super::HTTP_DOWNLOAD_TIMEOUT)
         .build()
         .map_err(|e| CliDownloadError::DownloadFailed(e.to_string()))?;
 
@@ -379,7 +379,7 @@ pub(super) async fn install_boundary(
     }
 
     let client = reqwest::Client::builder()
-        .timeout(std::time::Duration::from_secs(15))
+        .timeout(super::HTTP_DOWNLOAD_TIMEOUT)
         .build()
         .map_err(|e| CliDownloadError::DownloadFailed(e.to_string()))?;
 
@@ -485,7 +485,7 @@ pub(super) async fn install_hoop(
     }
 
     let client = reqwest::Client::builder()
-        .timeout(std::time::Duration::from_secs(15))
+        .timeout(super::HTTP_DOWNLOAD_TIMEOUT)
         .build()
         .map_err(|e| CliDownloadError::DownloadFailed(e.to_string()))?;
 

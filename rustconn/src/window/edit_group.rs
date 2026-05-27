@@ -1424,7 +1424,9 @@ pub fn show_edit_group_dialog(
         };
 
         let username = username_row_clone.text().to_string();
-        let password = password_entry_clone.text().to_string();
+        // Capture password directly into SecretString — never let it live as
+        // a plain String in this closure (M-PUBLIC-DEBUG / SecretString rules).
+        let password = secrecy::SecretString::from(password_entry_clone.text().to_string());
         let domain = domain_row_clone.text().to_string();
 
         // Get selected password source
@@ -1454,7 +1456,7 @@ pub fn show_edit_group_dialog(
 
         // Password is relevant for Vault only, and only when credentials are enabled
         let has_new_password = credentials_expander_clone.enables_expansion()
-            && !password.is_empty()
+            && !secrecy::ExposeSecret::expose_secret(&password).is_empty()
             && password_source_idx == 1;
 
         // Check for duplicate name (but allow keeping same name)

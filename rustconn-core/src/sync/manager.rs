@@ -337,15 +337,13 @@ impl SyncManager {
 
     /// Tries to receive a pending export group ID from the channel.
     ///
-    /// Returns `Ok(group_id)` if a group ID is available, or `Err` if
-    /// the channel is empty or not created.
-    #[allow(clippy::missing_errors_doc, clippy::result_unit_err)]
-    pub fn try_recv_export(&mut self) -> Result<Uuid, ()> {
-        if let Some(ref mut rx) = self.export_rx {
-            rx.try_recv().map_err(|_| ())
-        } else {
-            Err(())
-        }
+    /// Returns `Some(group_id)` if a group ID is available, or `None` if
+    /// the channel is empty, disconnected, or never created. Mirrors
+    /// `tokio::sync::mpsc::Receiver::try_recv` semantics — the absence of
+    /// a value is normal control flow, not an error condition.
+    #[must_use]
+    pub fn try_recv_export(&mut self) -> Option<Uuid> {
+        self.export_rx.as_mut().and_then(|rx| rx.try_recv().ok())
     }
 
     /// Returns the configured export debounce interval in seconds.

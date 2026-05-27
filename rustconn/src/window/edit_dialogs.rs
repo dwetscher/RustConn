@@ -20,7 +20,6 @@ use gtk4::{Button, Label, Orientation};
 use libadwaita as adw;
 use rustconn_core::models::PasswordSource;
 use rustconn_core::sync::SyncMode;
-use secrecy::ExposeSecret;
 use std::cell::RefCell;
 use std::rc::Rc;
 use uuid::Uuid;
@@ -182,7 +181,7 @@ pub fn edit_selected_connection(
                                     &conn_host,
                                     protocol,
                                     &username,
-                                    pwd.expose_secret(),
+                                    &pwd,
                                     id,
                                 );
                             }

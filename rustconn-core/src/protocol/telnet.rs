@@ -9,6 +9,7 @@ use super::{Protocol, ProtocolCapabilities, ProtocolResult};
 ///
 /// Implements the Protocol trait for Telnet connections.
 /// Telnet sessions are spawned via VTE terminal using an external `telnet` client.
+#[derive(Debug)]
 pub struct TelnetProtocol;
 
 impl TelnetProtocol {

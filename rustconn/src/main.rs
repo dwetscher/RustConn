@@ -409,9 +409,23 @@ fn main() -> gtk4::glib::ExitCode {
         );
     }
 
-    // Initialize Tokio runtime for async operations
-    // Note: Runtime creation failure at startup is unrecoverable
-    let runtime = tokio::runtime::Runtime::new().expect("tokio runtime required for async ops");
+    // Initialize Tokio runtime for async operations.
+    // Runtime creation can fail in extremely constrained environments
+    // (no spare PIDs, ulimit reached, no /proc); exit gracefully with a clear
+    // user-facing message rather than panicking (M-PANIC-IS-STOP — runtime
+    // failure at startup is recoverable for the user, not a programming bug).
+    let runtime = match tokio::runtime::Runtime::new() {
+        Ok(rt) => rt,
+        Err(err) => {
+            eprintln!("RustConn: failed to start async runtime: {err}");
+            eprintln!(
+                "Hint: this can happen if the process is hitting ulimits \
+                 (file descriptors, threads) or if /proc is unavailable in \
+                 a sandbox. Check `ulimit -a` and try again."
+            );
+            std::process::exit(2);
+        }
+    };
     let _guard = runtime.enter();
 
     // Parse CLI arguments for startup overrides (--shell, --connect)

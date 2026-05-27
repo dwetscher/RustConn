@@ -15,7 +15,6 @@ use crate::dialogs::{ConnectionDialog, TemplateDialog, TemplateManagerDialog};
 use crate::sidebar::ConnectionSidebar;
 use crate::state::SharedAppState;
 use rustconn_core::models::PasswordSource;
-use secrecy::ExposeSecret;
 
 /// Type alias for shared sidebar
 pub type SharedSidebar = Rc<ConnectionSidebar>;
@@ -456,7 +455,7 @@ pub fn show_new_connection_from_template(
                                 &conn_host,
                                 protocol,
                                 &username,
-                                pwd.expose_secret(),
+                                &pwd,
                                 conn_id,
                             );
                         }

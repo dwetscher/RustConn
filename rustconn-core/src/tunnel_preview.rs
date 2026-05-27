@@ -7,6 +7,7 @@
 use crate::models::PortForward;
 
 /// Parameters for generating an SSH tunnel command preview.
+#[derive(Debug, Clone)]
 pub struct TunnelPreviewParams<'a> {
     /// Remote SSH host
     pub host: &'a str,

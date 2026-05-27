@@ -15,6 +15,7 @@ use super::{Protocol, ProtocolCapabilities, ProtocolResult};
 /// Implements the Protocol trait for web bookmark connections.
 /// These connections delegate to the system's default browser via
 /// UriLauncher (in the GUI crate) or xdg-open (in the CLI crate).
+#[derive(Debug)]
 pub struct WebProtocol;
 
 impl WebProtocol {

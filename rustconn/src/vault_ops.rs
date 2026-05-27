@@ -29,7 +29,9 @@ fn show_vault_save_error_toast() {
 /// Saves a connection password to the configured vault backend.
 ///
 /// Dispatches to KeePass (hierarchical) or generic backend (flat key)
-/// based on the current settings.
+/// based on the current settings. Password is taken as `&SecretString`
+/// so plaintext copies do not leak via call-site `String`s — see
+/// `secrets-guide.md`.
 #[allow(clippy::too_many_arguments)]
 pub fn save_password_to_vault(
     settings: &rustconn_core::config::AppSettings,
@@ -39,9 +41,10 @@ pub fn save_password_to_vault(
     conn_host: &str,
     protocol: rustconn_core::models::ProtocolType,
     username: &str,
-    password: &str,
+    password: &secrecy::SecretString,
     conn_id: uuid::Uuid,
 ) {
+    use secrecy::ExposeSecret;
     let protocol_str = protocol.as_str().to_lowercase();
 
     if settings.secrets.kdbx_enabled
@@ -65,7 +68,9 @@ pub fn save_password_to_vault(
             };
             let username = username.to_string();
             let url = format!("{}://{}", protocol_str, conn_host);
-            let pwd = password.to_string();
+            // Wrap intermediate plaintext copy in Zeroizing so it is
+            // wiped from memory on drop (M-PUBLIC-DEBUG / SecretString).
+            let pwd = zeroize::Zeroizing::new(password.expose_secret().to_string());
 
             crate::utils::spawn_blocking_with_callback(
                 move || {
@@ -77,7 +82,7 @@ pub fn save_password_to_vault(
                         key,
                         &entry_name,
                         &username,
-                        &pwd,
+                        pwd.as_str(),
                         Some(&url),
                     )
                 },
@@ -106,14 +111,15 @@ pub fn save_password_to_vault(
             "save_password_to_vault: storing with key"
         );
         let username = username.to_string();
-        let pwd = password.to_string();
+        // Re-wrap into a fresh SecretString for the spawn_blocking move closure.
+        let secret = password.clone();
         let secret_settings = settings.secrets.clone();
 
         crate::utils::spawn_blocking_with_callback(
             move || {
                 let creds = rustconn_core::models::Credentials {
                     username: Some(username),
-                    password: Some(secrecy::SecretString::from(pwd)),
+                    password: Some(secret),
                     key_passphrase: None,
                     domain: None,
                 };
@@ -133,13 +139,18 @@ pub fn save_password_to_vault(
 }
 
 /// Saves a group password to the configured vault backend.
+///
+/// Password is taken as `&SecretString` so plaintext copies do not leak
+/// via call-site `String`s.
 pub fn save_group_password_to_vault(
     settings: &rustconn_core::config::AppSettings,
     group_path: &str,
     lookup_key: &str,
     username: &str,
-    password: &str,
+    password: &secrecy::SecretString,
 ) {
+    use secrecy::ExposeSecret;
+
     if settings.secrets.kdbx_enabled
         && matches!(
             settings.secrets.preferred_backend,
@@ -155,7 +166,8 @@ pub fn save_group_password_to_vault(
                 .unwrap_or(group_path)
                 .to_string();
             let username_val = username.to_string();
-            let password_val = password.to_string();
+            // Wrap intermediate plaintext copy in Zeroizing.
+            let password_val = zeroize::Zeroizing::new(password.expose_secret().to_string());
 
             crate::utils::spawn_blocking_with_callback(
                 move || {
@@ -167,7 +179,7 @@ pub fn save_group_password_to_vault(
                         key,
                         &entry_name,
                         &username_val,
-                        &password_val,
+                        password_val.as_str(),
                         None,
                     )
                 },
@@ -184,14 +196,14 @@ pub fn save_group_password_to_vault(
     } else {
         let lookup_key = lookup_key.to_string();
         let username_val = username.to_string();
-        let password_val = password.to_string();
+        let secret = password.clone();
         let secret_settings = settings.secrets.clone();
 
         crate::utils::spawn_blocking_with_callback(
             move || {
                 let creds = rustconn_core::models::Credentials {
                     username: Some(username_val),
-                    password: Some(secrecy::SecretString::from(password_val)),
+                    password: Some(secret),
                     key_passphrase: None,
                     domain: None,
                 };
@@ -481,13 +493,22 @@ pub fn migrate_vault_entries_on_group_change(
 /// Saves a secret variable value to the configured vault backend.
 ///
 /// Respects `preferred_backend` from secret settings, using the same
-/// backend selection logic as connection passwords.
+/// backend selection logic as connection passwords. Password is taken
+/// as `&SecretString` so plaintext copies do not leak via call-site
+/// `String`s.
+///
+/// # Errors
+///
+/// Returns an error string if the configured backend is unreachable, the
+/// KeePass database cannot be written to, or no fallback backend is
+/// available when the primary backend fails.
 pub fn save_variable_to_vault(
     settings: &rustconn_core::config::SecretSettings,
     var_name: &str,
-    password: &str,
+    password: &secrecy::SecretString,
 ) -> Result<(), String> {
     use rustconn_core::config::SecretBackendType;
+    use secrecy::ExposeSecret;
 
     let lookup_key = rustconn_core::variable_secret_key(var_name);
     let backend_type = select_backend_for_load(settings);
@@ -496,7 +517,7 @@ pub fn save_variable_to_vault(
 
     let creds = rustconn_core::models::Credentials {
         username: None,
-        password: Some(secrecy::SecretString::from(password.to_string())),
+        password: Some(password.clone()),
         key_passphrase: None,
         domain: None,
     };
@@ -507,13 +528,15 @@ pub fn save_variable_to_vault(
                 let key_file = settings.kdbx_key_file.clone();
                 let kdbx = std::path::Path::new(kdbx_path);
                 let key = key_file.as_ref().map(|p| std::path::Path::new(p));
+                // Wrap intermediate plaintext copy in Zeroizing for the FFI call.
+                let pwd = zeroize::Zeroizing::new(password.expose_secret().to_string());
                 let result = rustconn_core::secret::KeePassStatus::save_password_to_kdbx(
                     kdbx,
                     settings.kdbx_password.as_ref(),
                     key,
                     &lookup_key,
                     "",
-                    password,
+                    pwd.as_str(),
                     None,
                 )
                 .map_err(|e| format!("{e}"));

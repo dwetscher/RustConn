@@ -24,7 +24,15 @@ mod update;
 use std::path::PathBuf;
 use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, Ordering};
+use std::time::Duration;
 use thiserror::Error;
+
+/// HTTP timeout for CLI download index/redirect lookups.
+///
+/// 15 seconds covers the worst-case latency for upstream metadata
+/// endpoints (GitHub releases, AWS S3, Tailscale package index) under
+/// modest network conditions while still failing fast in CI sandboxes.
+pub(crate) const HTTP_DOWNLOAD_TIMEOUT: Duration = Duration::from_secs(15);
 
 pub use self::components::{
     DOWNLOADABLE_COMPONENTS, get_available_components, get_component, get_components_by_category,

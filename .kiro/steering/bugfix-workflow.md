@@ -15,6 +15,16 @@ Use this workflow for fixing bugs.
 5. **Verify** — test passes, clippy clean, other tests not broken
 6. **Update CHANGELOG.md** — `### Fixed` section with bug description and issue link
 
+## Referencing existing specs
+
+When fixing a bug related to a documented feature, use `#spec:<name>` in chat to load the relevant spec context (requirements + design + tasks). Example:
+
+```
+#spec:terminal-activity-monitor the bell trigger fires on every output line — verify against the design
+```
+
+This loads all spec files into context so the fix aligns with documented decisions.
+
 ## When to Use Bugfix Spec
 
 - Bug in critical path (auth, credentials, protocol handshake)

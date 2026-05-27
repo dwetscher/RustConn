@@ -540,14 +540,16 @@ impl ConnectionDialogData<'_> {
             conn.id = id;
         }
 
-        // Extract password if user entered one (for Vault source only)
+        // Extract password if user entered one (for Vault source only).
+        // Capture directly into Zeroizing so the intermediate String is wiped
+        // on drop instead of leaking a plaintext copy on the heap.
         let password_source_idx = self.password_source_dropdown.selected();
         let password = if password_source_idx == 1 {
-            let pwd = self.password_entry.text().to_string();
+            let pwd = zeroize::Zeroizing::new(self.password_entry.text().to_string());
             if pwd.is_empty() {
                 None
             } else {
-                Some(secrecy::SecretString::from(pwd))
+                Some(secrecy::SecretString::from(pwd.as_str()))
             }
         } else {
             None

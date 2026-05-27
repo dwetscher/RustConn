@@ -71,3 +71,11 @@ After writing `.rs` files in `rustconn/src/`, verify:
 ## 16 Translation Languages
 
 be, cs, da, de, es, fr, it, kk, nl, pl, pt, sk, sv, uk, uz, zh-cn
+
+## External Standards
+
+Окрім локальних правил вище, RustConn слідує:
+
+- **[Microsoft Pragmatic Rust Guidelines](https://microsoft.github.io/rust-guidelines/)** — деталі та адаптація в `rust-pragmatic-guidelines.md` (auto-included для `*.rs`). Ключове: `#[expect]` замість `#[allow]`, M-PANIC-ON-BUG, `# Errors` / `# Panics` секції в публічних API, `mimalloc` як опція.
+- **[GNOME HIG](https://developer.gnome.org/hig/)** — деталі та адаптація в `gnome-hig.md` (auto-included для `rustconn/src/**/*.rs`). Ключове: `adw::AlertDialog` замість `gtk::MessageDialog`, CSS class `suggested-action` / `destructive-action`, обов'язкові keyboard shortcuts (Ctrl+W, Ctrl+Q, F10), Toast vs Banner vs Dialog.
+- **[Rust API Guidelines](https://rust-lang.github.io/api-guidelines/)** — стандартні Rust convensії (C-CONV, C-GETTER, C-COMMON-TRAITS).

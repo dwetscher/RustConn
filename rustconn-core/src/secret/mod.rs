@@ -27,6 +27,7 @@ mod pass;
 mod passbolt;
 mod resolver;
 pub mod script_resolver;
+pub mod serde_helpers;
 mod status;
 mod verification;
 

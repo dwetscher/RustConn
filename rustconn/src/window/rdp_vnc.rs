@@ -144,7 +144,7 @@ pub fn start_rdp_with_password_dialog(
                         &conn_host,
                         protocol,
                         &creds.username,
-                        creds.password.expose_secret(),
+                        &creds.password,
                         connection_id,
                     );
                 }
@@ -1040,7 +1040,7 @@ pub fn start_vnc_with_password_dialog(
                         &conn_host,
                         protocol,
                         "", // VNC doesn't use username
-                        creds.password.expose_secret(),
+                        &creds.password,
                         connection_id,
                     );
                 }

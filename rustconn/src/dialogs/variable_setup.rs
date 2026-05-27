@@ -12,14 +12,14 @@ use libadwaita as adw;
 use crate::i18n::{i18n, i18n_f};
 
 /// Response from the variable setup dialog.
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone)]
 pub enum VariableSetupResponse {
     /// User cancelled the dialog.
     Cancel,
     /// User entered a value and chose a backend.
     Save {
         /// The secret value entered by the user.
-        value: String,
+        value: secrecy::SecretString,
         /// Index of the selected backend in the combo row.
         backend_index: u32,
     },
@@ -94,7 +94,9 @@ pub fn show_variable_setup_dialog<F>(
 
     dialog.connect_response(None, move |_, response| {
         if response == "save" {
-            let value = value_row_ref.text().to_string();
+            // Capture directly into SecretString so plaintext does not live
+            // as a plain String in this closure (M-PUBLIC-DEBUG).
+            let value = secrecy::SecretString::from(value_row_ref.text().to_string());
             let backend_index = backend_row_ref.selected();
             callback(VariableSetupResponse::Save {
                 value,

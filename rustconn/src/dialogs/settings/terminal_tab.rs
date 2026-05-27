@@ -433,7 +433,9 @@ pub fn create_terminal_page() -> (
     // Close tab on clean exit
     let close_on_clean_exit_row = adw::SwitchRow::builder()
         .title(i18n("Close tab on clean exit"))
-        .subtitle(i18n("Automatically close the tab when the session exits normally"))
+        .subtitle(i18n(
+            "Automatically close the tab when the session exits normally",
+        ))
         .build();
     behavior_group.add(&close_on_clean_exit_row);
 

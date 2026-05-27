@@ -769,9 +769,15 @@ impl KeePassStatus {
     /// # Returns
     /// * `Ok(Some(String))` if the password is found
     /// * `Ok(None)` if the entry is not found
-    /// * `Err(String)` with error description if retrieval fails
     ///
     /// Note: Searches in order: `RustConn/{name}`, `RustConn/{base_name}` (without protocol suffix), `{name}`
+    ///
+    /// # Errors
+    ///
+    /// Returns [`SecretError::Backend`] if `keepassxc-cli` cannot be spawned,
+    /// the database cannot be unlocked (wrong password or key file), or the
+    /// CLI returns a non-zero exit code for any reason other than "entry not
+    /// found".
     pub fn get_password_from_kdbx_with_key(
         kdbx_path: &Path,
         db_password: Option<&SecretString>,
@@ -917,7 +923,13 @@ impl KeePassStatus {
     /// # Returns
     /// * `Ok(Some(SecretString))` if the password is found
     /// * `Ok(None)` if the entry is not found
-    /// * `Err(SecretError)` on credential or I/O errors
+    ///
+    /// # Errors
+    ///
+    /// Returns [`SecretError::Backend`] if `keepassxc-cli` cannot be spawned,
+    /// the database cannot be unlocked (wrong password or key file), or the
+    /// CLI returns a non-zero exit code for any reason other than "entry not
+    /// found".
     pub fn get_password_from_kdbx_exact(
         kdbx_path: &Path,
         db_password: Option<&SecretString>,
@@ -1269,7 +1281,12 @@ impl KeePassStatus {
     ///
     /// # Returns
     /// * `Ok(())` if the credentials are correct
-    /// * `Err(String)` with error description if verification fails
+    ///
+    /// # Errors
+    ///
+    /// Returns [`SecretError::KeePassXC`] if `keepassxc-cli` is not installed
+    /// or fails, or [`SecretError::Backend`] if the password / key file is
+    /// rejected by the database.
     pub fn verify_kdbx_credentials(
         kdbx_path: &Path,
         password: Option<&SecretString>,
@@ -1356,10 +1373,14 @@ impl KeePassStatus {
     ///
     /// # Returns
     /// * `Ok(())` if the path is valid
-    /// * `Err(SecretError)` with a description of the validation failure
     ///
     /// Note: `KeePassXC` creates key files without extension by default,
     /// so we don't require a specific extension.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`SecretError::Backend`] when the file does not exist, is not a
+    /// regular file, or is not readable.
     pub fn validate_key_file_path(path: &Path) -> SecretResult<()> {
         // Check if file exists
         if !path.exists() {

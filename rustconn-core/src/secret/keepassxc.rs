@@ -64,7 +64,11 @@ struct KeePassXcResponse {
 #[derive(Debug, Deserialize)]
 struct KeePassXcEntry {
     login: Option<String>,
-    password: Option<String>,
+    #[serde(
+        default,
+        deserialize_with = "super::serde_helpers::deserialize_optional_secret"
+    )]
+    password: Option<SecretString>,
     /// Entry name from `KeePassXC`
     ///
     /// Part of the `KeePassXC` response structure. Currently unused but
@@ -294,7 +298,7 @@ impl SecretBackend for KeePassXcBackend {
         {
             let credentials = Credentials {
                 username: entry.login,
-                password: entry.password.map(SecretString::from),
+                password: entry.password,
                 key_passphrase: None,
                 domain: None,
             };

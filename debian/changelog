@@ -1,3 +1,16 @@
+rustconn (0.14.10-1) unstable; urgency=medium
+
+  * Hardened secret handling: SecretString accepted directly in vault save signatures
+  * Backend deserializers (Bitwarden, KeePassXC, Passbolt, RDM, libvirt) now wrap passwords in SecretString immediately
+  * Removed password_len field from Bitwarden unlock log
+  * F10 now opens primary menu (set_primary on burger button)
+  * Graceful exit on Tokio runtime failure instead of panic
+  * PasswordGenerator surfaces RNG errors via PasswordGeneratorError::RngError
+  * Named timeout constants for HTTP downloads, Bitwarden unlock, vault retrieve
+  * Debug derived for protocol structs and small types
+
+ -- Anton Isaiev <totoshko88@gmail.com>  Wed, 27 May 2026 12:00:00 +0200
+
 rustconn (0.14.9-1) unstable; urgency=medium
 
   * Version bump to 0.14.9

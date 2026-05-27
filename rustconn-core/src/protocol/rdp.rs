@@ -9,6 +9,7 @@ use super::{Protocol, ProtocolCapabilities, ProtocolResult};
 ///
 /// Implements the Protocol trait for RDP connections.
 /// Native RDP embedding is available via IronRDP (`rdp-embedded` feature flag).
+#[derive(Debug)]
 pub struct RdpProtocol;
 
 impl RdpProtocol {

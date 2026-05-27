@@ -7,14 +7,46 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.14.10] - 2026-05-27
 
+This release focuses on hardening how passwords flow through the app, removing several places where plaintext credentials could linger on the heap longer than necessary, plus a few startup-robustness and HIG-compliance fixes.
+
+### Security
+
+- **Vault save paths now take `SecretString` directly.** `save_password_to_vault`, `save_group_password_to_vault` and `save_variable_to_vault` no longer accept `&str`. Callers in `edit_group.rs`, `connection_dialogs.rs`, `dialogs/connection/builders.rs` and the variable-setup dialog wrap the contents of password entries into `SecretString` (or `Zeroizing<String>`) immediately on capture, so plaintext is never stored in a long-lived `String`.
+- **Backend deserializers wrap secrets at parse time.** Bitwarden, KeePassXC, Passbolt, RDM and libvirt responses deserialize their password fields straight into `Option<SecretString>` via a shared helper. Previously the JSON/XML parser would allocate a plain `String` on the heap and that value lingered until the caller manually wrapped it.
+- **Bitwarden GUI unlock no longer logs `password_len`.** Logging the length of a master password narrows brute-force search space; replaced with a `has_password` boolean. The master password is held in `Zeroizing<String>` for the duration of the `bw unlock` invocation.
+
 ### Added
 
-- **Close tab on clean session exit** — new setting in Settings → Terminal: when enabled, tabs are automatically closed when the remote session exits cleanly (exit code 0, e.g. user typed `exit` or `logout`) instead of showing the reconnect overlay. Disabled by default. ([#162](https://github.com/totoshko88/RustConn/issues/162))
-- **`Ctrl+W` closes the active tab** — added `Ctrl+W` as an alternative accelerator for Close Tab (alongside existing `Ctrl+Shift+W`). On macOS, this maps to `Cmd+W` via GTK4's native modifier translation. ([#162](https://github.com/totoshko88/RustConn/issues/162))
+- **Close tab on clean session exit** — new switch in Settings → Terminal. When enabled, tabs auto-close after a clean shell exit (typing `exit` or `logout`, exit code 0) instead of showing the reconnect overlay. Disabled by default. ([#162](https://github.com/totoshko88/RustConn/issues/162))
+- **`Ctrl+W` closes the active tab** — alongside the existing `Ctrl+Shift+W`. On macOS this maps to `Cmd+W` via GTK4's modifier translation. ([#162](https://github.com/totoshko88/RustConn/issues/162))
+- **F10 opens the primary menu.** The header-bar burger button is now marked as the primary menu, so GTK4 binds F10 to it automatically — required by GNOME HIG.
+
+### Improved
+
+- **Graceful exit when Tokio runtime fails to start.** Instead of panicking, RustConn now prints a hint about ulimits / sandbox restrictions and exits with code 2.
+- **Password generator surfaces RNG failures.** A failure inside `ring::SystemRandom::fill` (rare; possible in heavily restricted sandboxes) now returns `PasswordGeneratorError::RngError` instead of panicking.
+- **`SyncManager::try_recv_export` returns `Option<Uuid>`** instead of `Result<Uuid, ()>` — the absence of a queued export is normal control flow, not an error.
+- **Named timeout constants** for HTTP downloads (`HTTP_DOWNLOAD_TIMEOUT`), Bitwarden unlock (`BITWARDEN_UNLOCK_TIMEOUT`), and vault retrieval (`VAULT_RETRIEVE_TIMEOUT`) replace eight scattered `Duration::from_secs(...)` literals.
+- **Doc comments**: added `# Errors` sections to the public KeePass helpers in `secret/status.rs` (`get_password_from_kdbx_with_key`, `get_password_from_kdbx_exact`, `verify_kdbx_credentials`, `validate_key_file_path`) and to `vault_ops::save_variable_to_vault`.
+- **`Debug` for protocol handlers and small types** — derived for the eleven zero-sized `*Protocol` handlers, `SshTunnelParams`, `TunnelPreviewParams`; manual implementation for `BusyStack` / `BusyGuard` that does not expose the internal callback.
 
 ### Fixed
 
-- **macOS: SSH fails with "ssh-askpass: No such file or directory"** — on macOS, SSH tried to invoke the XQuartz askpass binary at `/usr/X11R6/bin/ssh-askpass` even though RustConn handles password input natively via VTE injection. Now sets `SSH_ASKPASS_REQUIRE=never` in the terminal environment on macOS to suppress external askpass invocation. ([#161](https://github.com/totoshko88/RustConn/issues/161))
+- **macOS: SSH fails with `ssh-askpass: No such file or directory`.** SSH was trying to invoke the XQuartz askpass binary at `/usr/X11R6/bin/ssh-askpass` even though RustConn handles password input natively via VTE injection. The terminal environment now sets `SSH_ASKPASS_REQUIRE=never` on macOS to suppress external askpass invocation. ([#161](https://github.com/totoshko88/RustConn/issues/161))
+
+### Dependencies
+
+- `displaydoc` 0.2.5 → 0.2.6
+- `hyper` 1.9.0 → 1.10.0
+- `libredox` 0.1.16 → 0.1.17
+- `memchr` 2.8.0 → 2.8.1
+- `toml_edit` 0.25.11 → 0.25.12
+- `zerocopy` 0.8.48 → 0.8.49
+- `zerocopy-derive` 0.8.48 → 0.8.49
+
+### Known Issues
+
+- **RDP RemoteApp passes the password via the `/p:` cmdline argument**, which is visible in `/proc/PID/cmdline` to other processes of the same uid. A real fix needs a stdin-pipe path that survives FreeRDP 3.x RAIL initialisation; tracked in [#153](https://github.com/totoshko88/RustConn/issues/153). For now, prefer full-desktop RDP over RemoteApp where possible.
 
 ## [0.14.9] - 2026-05-26
 

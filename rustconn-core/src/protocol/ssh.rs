@@ -9,6 +9,7 @@ use super::{Protocol, ProtocolCapabilities, ProtocolResult};
 ///
 /// Implements the Protocol trait for SSH connections.
 /// SSH sessions are spawned via VTE4 terminal in the GUI layer.
+#[derive(Debug)]
 pub struct SshProtocol;
 
 impl SshProtocol {

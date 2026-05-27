@@ -95,6 +95,9 @@ pub fn create_header_bar() -> (
         .tooltip_text(i18n("Menu (F10)"))
         .build();
     menu_button.update_property(&[gtk4::accessible::Property::Label(&i18n("Menu"))]);
+    // Mark as primary menu so GTK auto-binds F10 (GNOME HIG: every app has F10
+    // for the primary menu).
+    menu_button.set_primary(true);
 
     let menu = create_app_menu();
     menu_button.set_menu_model(Some(&menu));

@@ -286,7 +286,7 @@ pub(super) async fn install_bitwarden(
     }
 
     let client = reqwest::Client::builder()
-        .timeout(std::time::Duration::from_secs(15))
+        .timeout(super::HTTP_DOWNLOAD_TIMEOUT)
         .user_agent("RustConn")
         .build()
         .map_err(|e| CliDownloadError::DownloadFailed(e.to_string()))?;
@@ -387,7 +387,7 @@ pub(super) async fn install_1password(
     }
 
     let client = reqwest::Client::builder()
-        .timeout(std::time::Duration::from_secs(15))
+        .timeout(super::HTTP_DOWNLOAD_TIMEOUT)
         .build()
         .map_err(|e| CliDownloadError::DownloadFailed(e.to_string()))?;
 

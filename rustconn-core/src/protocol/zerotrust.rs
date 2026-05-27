@@ -13,6 +13,7 @@ use super::{Protocol, ProtocolCapabilities, ProtocolResult};
 /// Zero Trust connections use cloud provider CLIs to establish secure connections
 /// through identity-aware proxies. The actual command is determined by the
 /// provider configuration (AWS SSM, GCP IAP, Azure Bastion, etc.).
+#[derive(Debug)]
 pub struct ZeroTrustProtocol;
 
 impl ZeroTrustProtocol {

@@ -9,7 +9,7 @@ author: "Anton Isaiev"
 # RustConn Development Power
 
 Linux connection manager for SSH, RDP, VNC, SPICE, Telnet, Serial, Kubernetes, Zero Trust.
-GTK4/libadwaita GUI, Wayland-first. Rust 2024 edition, MSRV 1.95, version 0.13.13, three-crate Cargo workspace.
+GTK4/libadwaita GUI, Wayland-first. Rust 2024 edition, MSRV 1.95, three-crate Cargo workspace.
 
 ## MCP Servers
 
@@ -19,7 +19,6 @@ GTK4/libadwaita GUI, Wayland-first. Rust 2024 edition, MSRV 1.95, version 0.13.1
 
 - **release.md** — Full release process: version bumps, dependencies, CLI updates, changelog, packaging, checklist
 - **github-workflow.md** — PR creation, issue templates, release workflow, useful GitHub MCP commands
-- **github-workflow.md** — PR templates, issue workflow, release via GitHub MCP
 
 ## Development Flow
 

@@ -397,11 +397,13 @@ pub fn create_secrets_page() -> SecretsPageWidgets {
             let save_to_keyring =
                 storage_combo_value(&storage_combo) == CredentialStorage::SystemKeyring;
 
-            // If password field is empty, try loading from keyring
+            // Resolve password from keyring or text field, wrapping intermediate
+            // plaintext copies in Zeroizing so they are wiped on drop
+            // (M-PUBLIC-DEBUG / SecretString patterns).
             let password = if password_text.is_empty() && save_to_keyring {
                 if let Some(val) = get_bw_password_from_keyring() {
                     use secrecy::ExposeSecret;
-                    val.expose_secret().to_string()
+                    zeroize::Zeroizing::new(val.expose_secret().to_string())
                 } else {
                     update_status_label(&status_label, &i18n("Enter password"), "warning");
                     return;
@@ -410,7 +412,7 @@ pub fn create_secrets_page() -> SecretsPageWidgets {
                 update_status_label(&status_label, &i18n("Enter password"), "warning");
                 return;
             } else {
-                password_text.to_string()
+                zeroize::Zeroizing::new(password_text.to_string())
             };
 
             button.set_sensitive(false);
@@ -418,10 +420,11 @@ pub fn create_secrets_page() -> SecretsPageWidgets {
 
             let bw_cmd_str = bw_cmd.borrow().clone();
 
+            // Note: do not log password length — it leaks bruteforce metadata.
             tracing::debug!(
                 bw_cmd = %bw_cmd_str,
-                password_len = password.len(),
                 password_source = if password_text.is_empty() { "keyring" } else { "manual" },
+                has_password = !password.is_empty(),
                 "Bitwarden GUI: unlock button clicked"
             );
 
@@ -432,7 +435,7 @@ pub fn create_secrets_page() -> SecretsPageWidgets {
                 .arg("--passwordenv")
                 .arg("BW_PASSWORD")
                 .arg("--raw")
-                .env("BW_PASSWORD", &password)
+                .env("BW_PASSWORD", password.as_str())
                 .output();
 
             let (session_result, raw_stderr) = match raw_result {
@@ -458,7 +461,7 @@ pub fn create_secrets_page() -> SecretsPageWidgets {
                     .arg("unlock")
                     .arg("--passwordenv")
                     .arg("BW_PASSWORD")
-                    .env("BW_PASSWORD", &password)
+                    .env("BW_PASSWORD", password.as_str())
                     .output();
                 match result {
                     Ok(output) if output.status.success() => {
@@ -482,7 +485,7 @@ pub fn create_secrets_page() -> SecretsPageWidgets {
 
                 // Save to keyring if checkbox is active
                 if save_to_keyring {
-                    save_bw_password_to_keyring(&password);
+                    save_bw_password_to_keyring(password.as_str());
                 }
             } else {
                 tracing::warn!(

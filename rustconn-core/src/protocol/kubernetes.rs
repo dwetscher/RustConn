@@ -9,6 +9,7 @@ use super::{Protocol, ProtocolCapabilities, ProtocolResult};
 ///
 /// Implements the Protocol trait for Kubernetes pod shell connections.
 /// Sessions are spawned via VTE terminal using `kubectl exec -it`.
+#[derive(Debug)]
 pub struct KubernetesProtocol;
 
 impl KubernetesProtocol {
