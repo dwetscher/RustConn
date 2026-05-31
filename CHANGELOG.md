@@ -5,6 +5,16 @@ All notable changes to RustConn will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.15.4] - 2026-05-31
+
+### Fixed
+
+- **macOS: UI hang when editing connection with broken ssh-agent** — when the system `ssh-agent` is unhealthy or launchd-throttled, opening the Edit Connection dialog no longer freezes the GTK main thread; `ConnectionDialog::refresh_agent_keys()` now probes the agent asynchronously on a background thread with a 5-second timeout, showing "Loading agent keys…" while the probe runs; if the agent does not respond in time the child process is killed and the dropdown shows "No keys loaded" without blocking the UI ([#163](https://github.com/totoshko88/RustConn/issues/163))
+
+### Dependencies
+
+- **Updated**: kqueue 1.1.1→1.2.0, libz-sys 1.1.28→1.1.29, rpassword 7.5.3→7.5.4
+
 ## [0.15.3] - 2026-05-30
 
 Snap packaging now reaches feature parity with the Flatpak build and is on a current GNOME runtime.
