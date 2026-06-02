@@ -106,6 +106,10 @@ impl std::fmt::Display for VncConnectionState {
 
 /// VNC connection configuration
 #[derive(Debug, Clone, Default)]
+#[expect(
+    clippy::struct_excessive_bools,
+    reason = "VNC protocol config has natural boolean flags"
+)]
 pub struct VncConfig {
     /// Target hostname or IP address
     pub host: String,

@@ -551,8 +551,9 @@ impl EmbeddedVncWidget {
                             );
                             *is_embedded.borrow_mut() = false;
 
-                            let no_support_msg =
-                                i18n("VNC encryption not supported. Install TigerVNC and enable 'Accept Certificate'.");
+                            let no_support_msg = i18n(
+                                "VNC encryption not supported. Install TigerVNC and enable 'Accept Certificate'.",
+                            );
 
                             // Try to launch external viewer with stored config
                             let fallback_ok = fallback_config

@@ -13,7 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- **Welcome screen: "Remote host monitoring" icon missing on macOS** — replaced `speedometer-symbolic` (not part of the standard Adwaita icon theme) with `utilities-system-monitor-symbolic` which is available across all platforms including macOS bundles
+- **Welcome screen: "Remote host monitoring" icon missing on macOS** — replaced `speedometer-symbolic` (not part of the standard Adwaita icon theme bundle) with `power-profile-performance-symbolic` (same icon used in Settings → Monitoring tab) which is available across all platforms
 - **Sidebar: right-click context menu not opening for nested items** — context menu gesture was attached to the `TreeExpander` widget, whose internal indent/arrow gesture silently swallowed right-click events for items at depth ≥ 1; moved the gesture controller to the content box inside the expander, bypassing the conflict ([#157](https://github.com/totoshko88/RustConn/issues/157))
 
 ### Dependencies
