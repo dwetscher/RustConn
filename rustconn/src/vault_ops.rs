@@ -716,7 +716,7 @@ fn retrieve_by_vault_entry_name(
     let backend_type = select_backend_for_load(settings);
 
     crate::async_utils::with_runtime(|rt| {
-        let result = rt.block_on(async {
+        rt.block_on(async {
             tokio::time::timeout(std::time::Duration::from_secs(10), async {
                 match backend_type {
                     SecretBackendType::Bitwarden => {
@@ -806,8 +806,7 @@ fn retrieve_by_vault_entry_name(
             })
             .await
             .map_err(|_| "Vault retrieve by entry name timed out after 10s".to_string())?
-        });
-        result
+        })
     })?
 }
 

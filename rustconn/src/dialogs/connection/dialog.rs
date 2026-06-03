@@ -5864,11 +5864,11 @@ impl ConnectionDialog {
                 }
             }
             // Show placeholder when no secret variables are defined
-            if !has_secrets {
+            if has_secrets {
+                self.variable_dropdown.set_sensitive(true);
+            } else {
                 sl.append(&i18n("(no secret variables)"));
                 self.variable_dropdown.set_sensitive(false);
-            } else {
-                self.variable_dropdown.set_sensitive(true);
             }
         }
     }
