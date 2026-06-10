@@ -77,6 +77,8 @@ msgstr "{} Anmeldedaten von Legacy-Verschlüsselung auf AES-256-GCM migriert"
 #: rustconn/src/app.rs:463
 msgid "KeePass password not loaded from keyring — re-enter it in Settings"
 msgstr ""
+"KeePass-Passwort wurde nicht aus dem Schlüsselbund geladen — geben Sie es in "
+"den Einstellungen erneut ein"
 
 #: rustconn/src/app.rs:468 rustconn/src/embedded_rdp/mod.rs:245
 #: rustconn/src/split_view/bridge.rs:1708 rustconn/src/window/ui.rs:110
@@ -193,9 +195,8 @@ msgid "Enter cluster name"
 msgstr "Clusternamen eingeben"
 
 #: rustconn/src/dialogs/cluster.rs:147
-#, fuzzy
 msgid "Select at least one connection"
-msgstr "Bitte wählen Sie mindestens eine Verbindung"
+msgstr "Wählen Sie mindestens eine Verbindung aus"
 
 #: rustconn/src/dialogs/cluster.rs:189 rustconn/src/dialogs/shortcuts.rs:606
 msgid "Connections"
@@ -913,9 +914,8 @@ msgid "Connection Test Failed"
 msgstr "Verbindungstest fehlgeschlagen"
 
 #: rustconn/src/dialogs/connection/dialog.rs:1399
-#, fuzzy
 msgid "Fill in the required fields (name and host)"
-msgstr "Bitte füllen Sie die Pflichtfelder aus (Name und Host)"
+msgstr "Füllen Sie die Pflichtfelder aus (Name und Host)"
 
 #: rustconn/src/dialogs/connection/dialog.rs:1441
 msgid "Testing..."
@@ -931,15 +931,16 @@ msgid "Connection Test Successful"
 msgstr "Verbindungstest erfolgreich"
 
 #: rustconn/src/dialogs/connection/dialog.rs:1549
-#, fuzzy
 msgid "Connection successful. Latency: {} ms"
-msgstr "Verbindung erfolgreich! Latenz: {} ms"
+msgstr "Verbindung erfolgreich. Latenz: {} ms"
 
 #: rustconn/src/dialogs/connection/dialog.rs:1558
 msgid ""
 "The test failed without a specific error. Check the host address and port, "
 "then try again."
 msgstr ""
+"Der Test ist ohne konkreten Fehler fehlgeschlagen. Prüfen Sie die "
+"Hostadresse und den Port und versuchen Sie es erneut."
 
 #: rustconn/src/dialogs/connection/dialog.rs:1566
 msgid "Test timed out"
@@ -1332,9 +1333,8 @@ msgstr "Passwort kann nicht geladen werden"
 
 #: rustconn/src/dialogs/connection/dialog.rs:5222
 #: rustconn/src/dialogs/connection/dialog.rs:5553
-#, fuzzy
 msgid "Enter a connection name or host first."
-msgstr "Bitte geben Sie zuerst einen Verbindungsnamen oder Host ein."
+msgstr "Geben Sie zuerst einen Verbindungsnamen oder Host ein."
 
 #: rustconn/src/dialogs/connection/dialog.rs:5337
 #: rustconn/src/dialogs/connection/dialog.rs:5459
@@ -1365,13 +1365,8 @@ msgstr "Tresor nicht konfiguriert"
 
 #: rustconn/src/dialogs/connection/dialog.rs:5360
 #: rustconn/src/dialogs/connection/dialog.rs:5682
-#, fuzzy
 msgid "Configure a secret backend in Settings → Secrets."
-msgstr ""
-"Bitte konfigurieren Sie ein Geheimnis-Backend unter Einstellungen → "
-"Geheimnisse.Bitte konfigurieren Sie ein Geheimnis-Backend unter "
-"Einstellungen → Geheimnisse.Bitte konfigurieren Sie ein Geheimnis-Backend "
-"unter Einstellungen → Geheimnisse."
+msgstr "Richten Sie ein Secret-Backend unter Einstellungen → Secrets ein."
 
 #: rustconn/src/dialogs/connection/dialog.rs:5489
 msgid "Password loading is only available for Vault source."
@@ -1465,7 +1460,7 @@ msgstr "Keine Schlüssel geladen"
 #: rustconn/src/dialogs/connection/dialog.rs:5891
 #: rustconn/src/window/edit_group.rs:363
 msgid "(no secret variables)"
-msgstr ""
+msgstr "(keine geheimen Variablen)"
 
 #: rustconn/src/dialogs/connection/dialog.rs:5944
 msgid "Managed by cloud sync"
@@ -3908,9 +3903,8 @@ msgid "Select output file..."
 msgstr "Ausgabedatei auswählen..."
 
 #: rustconn/src/dialogs/export.rs:1005
-#, fuzzy
 msgid "Select an output file or directory"
-msgstr "Ausgabedatei oder -verzeichnis auswählen..."
+msgstr "Wählen Sie eine Ausgabedatei oder einen Ordner aus"
 
 #: rustconn/src/dialogs/export.rs:1063
 msgid "Exporting to {}..."
@@ -3956,6 +3950,8 @@ msgid ""
 "Could not write the export file: {}. Check destination permissions and free "
 "disk space."
 msgstr ""
+"Die Exportdatei konnte nicht geschrieben werden: {}. Prüfen Sie die "
+"Zielberechtigungen und den freien Speicherplatz."
 
 #: rustconn/src/dialogs/export.rs:1176
 #: rustconn/src/dialogs/import/sources.rs:698
@@ -4601,6 +4597,8 @@ msgstr "Laden..."
 msgid ""
 "Could not read the log file: {}. The file may have been moved or deleted."
 msgstr ""
+"Die Protokolldatei konnte nicht gelesen werden: {}. Die Datei wurde "
+"möglicherweise verschoben oder gelöscht."
 
 #: rustconn/src/dialogs/password_generator.rs:22
 msgid "Password Generator"
@@ -7242,13 +7240,12 @@ msgid "Connection Not Found"
 msgstr "Verbindung nicht gefunden"
 
 #: rustconn/src/dialogs/tunnel_builder/mod.rs:581
-#, fuzzy
 msgid ""
 "The SSH connection referenced by this tunnel no longer exists. Select a "
 "different connection."
 msgstr ""
-"Die SSH-Verbindung, auf die dieser Tunnel verweist, existiert nicht mehr. "
-"Bitte wählen Sie eine andere Verbindung."
+"Die von diesem Tunnel referenzierte SSH-Verbindung existiert nicht mehr. "
+"Wählen Sie eine andere Verbindung aus."
 
 #: rustconn/src/dialogs/tunnel_builder/path_diagram.rs:135
 #: rustconn/src/dialogs/tunnel_builder/path_diagram.rs:202
@@ -7566,6 +7563,9 @@ msgid ""
 "this                  entry at connection time — no need to enter a password "
 "above.                  Nothing is written back to the vault."
 msgstr ""
+"Name eines vorhandenen Tresoreintrags. Wenn gesetzt, wird das Passwort beim "
+"Verbinden aus diesem Eintrag abgerufen — es muss oben kein Passwort "
+"eingegeben werden. Es wird nichts in den Tresor zurückgeschrieben."
 
 #: rustconn/src/dialogs/variables.rs:367 rustconn/src/dialogs/variables.rs:649
 msgid "New variable"
@@ -7581,7 +7581,7 @@ msgstr ""
 
 #: rustconn/src/dialogs/variables.rs:606
 msgid "Fetched from vault at connect time"
-msgstr ""
+msgstr "Beim Verbinden aus dem Tresor abgerufen"
 
 #: rustconn/src/dialogs/widgets.rs:468 rustconn/src/embedded_rdp/mod.rs:291
 #: rustconn/src/embedded_spice.rs:248 rustconn/src/embedded_trait.rs:203
@@ -8433,9 +8433,8 @@ msgid "Pinned"
 msgstr "Angeheftet"
 
 #: rustconn/src/sidebar/view.rs:136 rustconn/src/sidebar/view.rs:138
-#, fuzzy
 msgid "Recording session"
-msgstr "Sitzung aufzeichnen"
+msgstr "Sitzung wird aufgezeichnet"
 
 #: rustconn/src/sidebar/view.rs:415
 msgid "Master — synced to cloud"
@@ -8987,25 +8986,25 @@ msgid "Error Updating Group"
 msgstr "Fehler beim Aktualisieren der Gruppe"
 
 #: rustconn/src/window/connection_dialogs.rs:1006
-#, fuzzy
 msgid "Import Duplicates?"
-msgstr "Duplizieren"
+msgstr "Duplikate importieren?"
 
 #: rustconn/src/window/connection_dialogs.rs:1008
 msgid ""
 "{} of {} connections have the same name as existing ones. Imported copies "
 "are kept alongside the existing connections under a numbered name."
 msgstr ""
+"{} von {} Verbindungen haben denselben Namen wie vorhandene. Importierte "
+"Kopien werden zusammen mit den vorhandenen Verbindungen unter einem "
+"nummerierten Namen beibehalten."
 
 #: rustconn/src/window/connection_dialogs.rs:1016
-#, fuzzy
 msgid "Skip Duplicates"
-msgstr "Duplizieren"
+msgstr "Duplikate überspringen"
 
 #: rustconn/src/window/connection_dialogs.rs:1017
-#, fuzzy
 msgid "Import All"
-msgstr "Importieren"
+msgstr "Alle importieren"
 
 #: rustconn/src/window/connection_dialogs.rs:1083
 msgid "Imported {} connections and {} snippets to '{}' group"
@@ -9387,9 +9386,8 @@ msgid "Add Script"
 msgstr "Skript hinzufügen"
 
 #: rustconn/src/window/edit_group.rs:1469
-#, fuzzy
 msgid "Select a variable"
-msgstr "Variable löschen"
+msgstr "Wählen Sie eine Variable aus"
 
 #: rustconn/src/window/edit_group.rs:1614
 msgid "Dynamic Folder script cannot be empty"
@@ -9463,7 +9461,7 @@ msgstr "Fehler beim Verschieben des Elements"
 
 #: rustconn/src/window/mod.rs:443
 msgid "Dismiss"
-msgstr ""
+msgstr "Schließen"
 
 #: rustconn/src/window/mod.rs:1415
 msgid "Connection to \\u{2018}{}\\u{2019} failed"
@@ -9478,18 +9476,16 @@ msgid "Connection \\u{201c}{}\\u{201d} created"
 msgstr "Verbindung \\u{201c}{}\\u{201d} erstellt"
 
 #: rustconn/src/window/mod.rs:2275
-#, fuzzy
 msgid "Close RustConn?"
-msgstr "RustConn"
+msgstr "RustConn schließen?"
 
 #: rustconn/src/window/mod.rs:2277
 msgid "{} session tab(s) are open. Active connections will be disconnected."
-msgstr ""
+msgstr "{} Sitzungs-Tab(s) sind geöffnet. Aktive Verbindungen werden getrennt."
 
 #: rustconn/src/window/mod.rs:2304
-#, fuzzy
 msgid "Cloud sync failed for '{}': {}"
-msgstr "Synchronisierung fehlgeschlagen: {}"
+msgstr "Cloud-Synchronisierung für „{}“ fehlgeschlagen: {}"
 
 #: rustconn/src/window/mod.rs:2430
 msgid "Startup connection not found"
@@ -9643,9 +9639,8 @@ msgid "No Selection"
 msgstr "Keine Auswahl"
 
 #: rustconn/src/window/operations.rs:500
-#, fuzzy
 msgid "Select one or more items to delete."
-msgstr "Bitte wählen Sie ein oder mehrere Elemente zum Löschen."
+msgstr "Wählen Sie ein oder mehrere zu löschende Elemente aus."
 
 #: rustconn/src/window/operations.rs:512
 msgid "{} connection(s)"
@@ -9853,13 +9848,9 @@ msgid "No Active Terminal"
 msgstr "Kein aktives Terminal"
 
 #: rustconn/src/window/snippets.rs:573
-#, fuzzy
 msgid "Open a terminal session first before executing a snippet."
 msgstr ""
-"Bitte öffnen Sie zuerst eine Terminalsitzung bevor Sie ein Snippet ausführen."
-"Bitte öffnen Sie zuerst eine Terminal-Sitzung, bevor Sie ein Snippet "
-"ausführen.Bitte öffnen Sie zuerst eine Terminalsitzung, bevor Sie ein "
-"Snippet ausführen."
+"Öffnen Sie zuerst eine Terminalsitzung, bevor Sie einen Schnipsel ausführen."
 
 #: rustconn/src/window/snippets.rs:640
 msgid "Enter Variable Values"
@@ -10021,7 +10012,7 @@ msgstr "SSH-Tunnel..."
 
 #: rustconn/src/window/ui.rs:243
 msgid "Tools"
-msgstr ""
+msgstr "Werkzeuge"
 
 #: rustconn/src/window/ui.rs:248
 msgid "Active Sessions..."
@@ -10041,7 +10032,7 @@ msgstr "Aufnahmen..."
 
 #: rustconn/src/window/ui.rs:257
 msgid "Sessions"
-msgstr ""
+msgstr "Sitzungen"
 
 #: rustconn/src/window/ui.rs:262
 msgid "Import Connections..."

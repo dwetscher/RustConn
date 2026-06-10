@@ -78,6 +78,7 @@ msgstr "{} уліковых даных перанесена са старога 
 #: rustconn/src/app.rs:463
 msgid "KeePass password not loaded from keyring — re-enter it in Settings"
 msgstr ""
+"Пароль KeePass не загружаны з вязкі ключоў — увядзіце яго зноў у Наладах"
 
 #: rustconn/src/app.rs:468 rustconn/src/embedded_rdp/mod.rs:245
 #: rustconn/src/split_view/bridge.rs:1708 rustconn/src/window/ui.rs:110
@@ -194,9 +195,8 @@ msgid "Enter cluster name"
 msgstr "Увядзі назву кластара"
 
 #: rustconn/src/dialogs/cluster.rs:147
-#, fuzzy
 msgid "Select at least one connection"
-msgstr "Калі ласка, абярыце хаця б адно злучэнне"
+msgstr "Абярыце хаця б адно злучэнне"
 
 #: rustconn/src/dialogs/cluster.rs:189 rustconn/src/dialogs/shortcuts.rs:606
 msgid "Connections"
@@ -911,9 +911,8 @@ msgid "Connection Test Failed"
 msgstr "Тэст злучэння не ўдаўся"
 
 #: rustconn/src/dialogs/connection/dialog.rs:1399
-#, fuzzy
 msgid "Fill in the required fields (name and host)"
-msgstr "Калі ласка, запоўніце абавязковыя палі (імя і хост)"
+msgstr "Запоўніце абавязковыя палі (назва і хост)"
 
 #: rustconn/src/dialogs/connection/dialog.rs:1441
 msgid "Testing..."
@@ -929,15 +928,16 @@ msgid "Connection Test Successful"
 msgstr "Тэст злучэння паспяховы"
 
 #: rustconn/src/dialogs/connection/dialog.rs:1549
-#, fuzzy
 msgid "Connection successful. Latency: {} ms"
-msgstr "Злучэнне паспяховае! Затрымка: {}мс"
+msgstr "Злучэнне паспяховае. Затрымка: {} мс"
 
 #: rustconn/src/dialogs/connection/dialog.rs:1558
 msgid ""
 "The test failed without a specific error. Check the host address and port, "
 "then try again."
 msgstr ""
+"Тэст не ўдаўся без пэўнай памылкі. Праверце адрас хаста і порт, затым "
+"паспрабуйце зноў."
 
 #: rustconn/src/dialogs/connection/dialog.rs:1566
 msgid "Test timed out"
@@ -1330,9 +1330,8 @@ msgstr "Немагчыма загрузіць пароль"
 
 #: rustconn/src/dialogs/connection/dialog.rs:5222
 #: rustconn/src/dialogs/connection/dialog.rs:5553
-#, fuzzy
 msgid "Enter a connection name or host first."
-msgstr "Калі ласка, спачатку ўвядзіце назву злучэння або хост."
+msgstr "Спачатку ўвядзіце назву злучэння або хост."
 
 #: rustconn/src/dialogs/connection/dialog.rs:5337
 #: rustconn/src/dialogs/connection/dialog.rs:5459
@@ -1363,7 +1362,6 @@ msgstr "Сховішча не наладжана"
 
 #: rustconn/src/dialogs/connection/dialog.rs:5360
 #: rustconn/src/dialogs/connection/dialog.rs:5682
-#, fuzzy
 msgid "Configure a secret backend in Settings → Secrets."
 msgstr "Наладзьце бэкенд сакрэтаў у Налады → Сакрэты."
 
@@ -1458,7 +1456,7 @@ msgstr "Ключы не загружаны"
 #: rustconn/src/dialogs/connection/dialog.rs:5891
 #: rustconn/src/window/edit_group.rs:363
 msgid "(no secret variables)"
-msgstr ""
+msgstr "(няма сакрэтных зменных)"
 
 #: rustconn/src/dialogs/connection/dialog.rs:5944
 msgid "Managed by cloud sync"
@@ -3899,9 +3897,8 @@ msgid "Select output file..."
 msgstr "Абраць файл вываду..."
 
 #: rustconn/src/dialogs/export.rs:1005
-#, fuzzy
 msgid "Select an output file or directory"
-msgstr "Абраць файл або каталог вываду..."
+msgstr "Абярыце выходны файл або каталог"
 
 #: rustconn/src/dialogs/export.rs:1063
 msgid "Exporting to {}..."
@@ -3947,6 +3944,8 @@ msgid ""
 "Could not write the export file: {}. Check destination permissions and free "
 "disk space."
 msgstr ""
+"Не ўдалося запісаць файл экспарту: {}. Праверце правы доступу да месца "
+"прызначэння і наяўнасць свабоднага месца на дыску."
 
 #: rustconn/src/dialogs/export.rs:1176
 #: rustconn/src/dialogs/import/sources.rs:698
@@ -4591,6 +4590,8 @@ msgstr "Загрузка..."
 msgid ""
 "Could not read the log file: {}. The file may have been moved or deleted."
 msgstr ""
+"Не ўдалося прачытаць файл часопіса: {}. Магчыма, файл быў перамешчаны або "
+"выдалены."
 
 #: rustconn/src/dialogs/password_generator.rs:22
 msgid "Password Generator"
@@ -7222,13 +7223,12 @@ msgid "Connection Not Found"
 msgstr "Злучэнне не знойдзена"
 
 #: rustconn/src/dialogs/tunnel_builder/mod.rs:581
-#, fuzzy
 msgid ""
 "The SSH connection referenced by this tunnel no longer exists. Select a "
 "different connection."
 msgstr ""
-"SSH-злучэнне, на якое спасылаецца гэты тунель, больш не існуе. Калі ласка, "
-"абярыце іншае злучэнне."
+"SSH-злучэнне, на якое спасылаецца гэты тунель, больш не існуе. Абярыце іншае "
+"злучэнне."
 
 #: rustconn/src/dialogs/tunnel_builder/path_diagram.rs:135
 #: rustconn/src/dialogs/tunnel_builder/path_diagram.rs:202
@@ -7543,6 +7543,9 @@ msgid ""
 "this                  entry at connection time — no need to enter a password "
 "above.                  Nothing is written back to the vault."
 msgstr ""
+"Назва існуючага запісу ў сховішчы. Калі зададзена, пароль атрымліваецца з "
+"гэтага запісу падчас злучэння — не трэба ўводзіць пароль вышэй. Нічога не "
+"запісваецца назад у сховішча."
 
 #: rustconn/src/dialogs/variables.rs:367 rustconn/src/dialogs/variables.rs:649
 msgid "New variable"
@@ -7554,7 +7557,7 @@ msgstr "Не ўдалося загрузіць сакрэт. Праверце б
 
 #: rustconn/src/dialogs/variables.rs:606
 msgid "Fetched from vault at connect time"
-msgstr ""
+msgstr "Атрымліваецца са сховішча падчас злучэння"
 
 #: rustconn/src/dialogs/widgets.rs:468 rustconn/src/embedded_rdp/mod.rs:291
 #: rustconn/src/embedded_spice.rs:248 rustconn/src/embedded_trait.rs:203
@@ -8404,7 +8407,6 @@ msgid "Pinned"
 msgstr "Замацавана"
 
 #: rustconn/src/sidebar/view.rs:136 rustconn/src/sidebar/view.rs:138
-#, fuzzy
 msgid "Recording session"
 msgstr "Запіс сеансу"
 
@@ -8954,25 +8956,24 @@ msgid "Error Updating Group"
 msgstr "Памылка абнаўлення групы"
 
 #: rustconn/src/window/connection_dialogs.rs:1006
-#, fuzzy
 msgid "Import Duplicates?"
-msgstr "Дубляваць"
+msgstr "Імпартаваць дублікаты?"
 
 #: rustconn/src/window/connection_dialogs.rs:1008
 msgid ""
 "{} of {} connections have the same name as existing ones. Imported copies "
 "are kept alongside the existing connections under a numbered name."
 msgstr ""
+"{} з {} злучэнняў маюць такую ж назву, як існуючыя. Імпартаваныя копіі "
+"захоўваюцца побач з існуючымі злучэннямі пад нумараванай назвай."
 
 #: rustconn/src/window/connection_dialogs.rs:1016
-#, fuzzy
 msgid "Skip Duplicates"
-msgstr "Дубляваць"
+msgstr "Прапусціць дублікаты"
 
 #: rustconn/src/window/connection_dialogs.rs:1017
-#, fuzzy
 msgid "Import All"
-msgstr "Імпарт"
+msgstr "Імпартаваць усё"
 
 #: rustconn/src/window/connection_dialogs.rs:1083
 msgid "Imported {} connections and {} snippets to '{}' group"
@@ -9349,9 +9350,8 @@ msgid "Add Script"
 msgstr "Дадаць скрыпт"
 
 #: rustconn/src/window/edit_group.rs:1469
-#, fuzzy
 msgid "Select a variable"
-msgstr "Выдаліць зменную"
+msgstr "Абярыце зменную"
 
 #: rustconn/src/window/edit_group.rs:1614
 msgid "Dynamic Folder script cannot be empty"
@@ -9425,7 +9425,7 @@ msgstr "Памылка перамяшчэння элемента"
 
 #: rustconn/src/window/mod.rs:443
 msgid "Dismiss"
-msgstr ""
+msgstr "Адхіліць"
 
 #: rustconn/src/window/mod.rs:1415
 msgid "Connection to \\u{2018}{}\\u{2019} failed"
@@ -9440,18 +9440,16 @@ msgid "Connection \\u{201c}{}\\u{201d} created"
 msgstr "Злучэнне \\u{201c}{}\\u{201d} створана"
 
 #: rustconn/src/window/mod.rs:2275
-#, fuzzy
 msgid "Close RustConn?"
-msgstr "RustConn"
+msgstr "Закрыць RustConn?"
 
 #: rustconn/src/window/mod.rs:2277
 msgid "{} session tab(s) are open. Active connections will be disconnected."
-msgstr ""
+msgstr "Адкрыта ўкладак сеансаў: {}. Актыўныя злучэнні будуць разарваны."
 
 #: rustconn/src/window/mod.rs:2304
-#, fuzzy
 msgid "Cloud sync failed for '{}': {}"
-msgstr "Сінхранізацыя не ўдалася: {}"
+msgstr "Не ўдалося сінхранізаваць з воблакам для «{}»: {}"
 
 #: rustconn/src/window/mod.rs:2430
 msgid "Startup connection not found"
@@ -9604,9 +9602,8 @@ msgid "No Selection"
 msgstr "Няма выбару"
 
 #: rustconn/src/window/operations.rs:500
-#, fuzzy
 msgid "Select one or more items to delete."
-msgstr "Калі ласка, абярыце адзін або некалькі элементаў для выдалення."
+msgstr "Абярыце адзін або некалькі элементаў для выдалення."
 
 #: rustconn/src/window/operations.rs:512
 msgid "{} connection(s)"
@@ -9814,12 +9811,8 @@ msgid "No Active Terminal"
 msgstr "Няма актыўнага тэрмінала"
 
 #: rustconn/src/window/snippets.rs:573
-#, fuzzy
 msgid "Open a terminal session first before executing a snippet."
-msgstr ""
-"Калі ласка, спачатку адкрыйце тэрмінальную сесію перад выкананнем сніпета."
-"Спачатку адкрыйце сесію тэрмінала перад выкананнем сніпета.Калі ласка, "
-"спачатку адкрыйце сеанс тэрмінала перад выкананнем фрагмента."
+msgstr "Спачатку адкрыйце тэрмінальны сеанс перад выкананнем фрагмента."
 
 #: rustconn/src/window/snippets.rs:640
 msgid "Enter Variable Values"
@@ -9980,7 +9973,7 @@ msgstr "SSH-тунелі..."
 
 #: rustconn/src/window/ui.rs:243
 msgid "Tools"
-msgstr ""
+msgstr "Інструменты"
 
 #: rustconn/src/window/ui.rs:248
 msgid "Active Sessions..."
@@ -10000,7 +9993,7 @@ msgstr "Запісы..."
 
 #: rustconn/src/window/ui.rs:257
 msgid "Sessions"
-msgstr ""
+msgstr "Сеансы"
 
 #: rustconn/src/window/ui.rs:262
 msgid "Import Connections..."

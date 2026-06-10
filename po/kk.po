@@ -34,7 +34,8 @@ msgstr "OK"
 #: rustconn/src/dialogs/statistics.rs:84
 #: rustconn/src/dialogs/template_manager.rs:188
 #: rustconn/src/dialogs/tunnel_builder/mod.rs:526
-#: rustconn/src/dialogs/tunnel.rs:489 rustconn/src/dialogs/variable_setup.rs:85
+#: rustconn/src/dialogs/tunnel.rs:489
+#: rustconn/src/dialogs/variable_setup.rs:85
 #: rustconn/src/embedded_rdp/autotype.rs:206
 #: rustconn/src/terminal/tab_menu.rs:156 rustconn/src/terminal/tab_menu.rs:359
 #: rustconn/src/window/connection_dialogs.rs:1015
@@ -77,6 +78,8 @@ msgstr "{} тіркелгі деректері ескі шифрлаудан AES
 #: rustconn/src/app.rs:463
 msgid "KeePass password not loaded from keyring — re-enter it in Settings"
 msgstr ""
+"KeePass құпия сөзі кілттер тізбегінен жүктелмеді — оны Параметрлерде қайта "
+"енгізіңіз"
 
 #: rustconn/src/app.rs:468 rustconn/src/embedded_rdp/mod.rs:245
 #: rustconn/src/split_view/bridge.rs:1708 rustconn/src/window/ui.rs:110
@@ -93,11 +96,12 @@ msgid ""
 "Manage SSH, RDP, VNC, SPICE, Telnet, Serial, Kubernetes, and Zero Trust "
 "connections from a single application."
 msgstr ""
-"GTK4/Wayland интерфейсі бар Linux үшін заманауи қосылым менеджері. SSH, RDP, "
-"VNC, SPICE, Telnet, Serial, Kubernetes және Zero Trust қосылымдарын бір "
+"GTK4/Wayland интерфейсі бар Linux үшін заманауи қосылым менеджері. SSH, RDP,"
+" VNC, SPICE, Telnet, Serial, Kubernetes және Zero Trust қосылымдарын бір "
 "қолданбадан басқарыңыз."
 
-#. Translators: Replace this with your name and language, e.g. "John Doe (German)"
+#. Translators: Replace this with your name and language, e.g. "John Doe
+#. (German)"
 #: rustconn/src/app.rs:1020
 msgid "translator-credits"
 msgstr "RustConn командасы (Қазақша)"
@@ -178,9 +182,10 @@ msgstr "Кластер мәліметтері"
 #: rustconn/src/dialogs/connection/advanced_tab.rs:718
 #: rustconn/src/dialogs/connection/general_tab.rs:81
 #: rustconn/src/dialogs/connection_wizard/connection_page.rs:99
-#: rustconn/src/dialogs/export.rs:384 rustconn/src/dialogs/settings/mod.rs:1320
-#: rustconn/src/dialogs/smart_folder.rs:119 rustconn/src/dialogs/snippet.rs:176
-#: rustconn/src/dialogs/template.rs:514
+#: rustconn/src/dialogs/export.rs:384
+#: rustconn/src/dialogs/settings/mod.rs:1320
+#: rustconn/src/dialogs/smart_folder.rs:119
+#: rustconn/src/dialogs/snippet.rs:176 rustconn/src/dialogs/template.rs:514
 #: rustconn/src/dialogs/tunnel_builder/step_review.rs:77
 #: rustconn/src/window/connection_dialogs.rs:403
 #: rustconn/src/window/edit_dialogs.rs:256
@@ -193,9 +198,8 @@ msgid "Enter cluster name"
 msgstr "Кластер атауын енгізіңіз"
 
 #: rustconn/src/dialogs/cluster.rs:147
-#, fuzzy
 msgid "Select at least one connection"
-msgstr "Кем дегенде бір қосылымды таңдаңыз"
+msgstr "Кемінде бір қосылымды таңдаңыз"
 
 #: rustconn/src/dialogs/cluster.rs:189 rustconn/src/dialogs/shortcuts.rs:606
 msgid "Connections"
@@ -725,7 +729,8 @@ msgstr "Тек бірінші қосылу"
 
 #: rustconn/src/dialogs/connection/automation_tab.rs:311
 msgid ""
-"Only run when opening the first connection in a folder (useful for VPN setup)"
+"Only run when opening the first connection in a folder (useful for VPN "
+"setup)"
 msgstr "Қалтадағы бірінші қосылуды ашқанда ғана орындау (VPN үшін пайдалы)"
 
 #: rustconn/src/dialogs/connection/automation_tab.rs:315
@@ -906,9 +911,8 @@ msgid "Connection Test Failed"
 msgstr "Қосылым тесті сәтсіз"
 
 #: rustconn/src/dialogs/connection/dialog.rs:1399
-#, fuzzy
 msgid "Fill in the required fields (name and host)"
-msgstr "Міндетті өрістерді толтырыңыз (атау және хост)"
+msgstr "Міндетті өрістерді толтырыңыз (атауы және хост)"
 
 #: rustconn/src/dialogs/connection/dialog.rs:1441
 msgid "Testing..."
@@ -924,15 +928,16 @@ msgid "Connection Test Successful"
 msgstr "Қосылым тесті сәтті"
 
 #: rustconn/src/dialogs/connection/dialog.rs:1549
-#, fuzzy
 msgid "Connection successful. Latency: {} ms"
-msgstr "Қосылым сәтті! Кідіріс: {}мс"
+msgstr "Қосылым сәтті өтті. Кідіріс: {} мс"
 
 #: rustconn/src/dialogs/connection/dialog.rs:1558
 msgid ""
 "The test failed without a specific error. Check the host address and port, "
 "then try again."
 msgstr ""
+"Сынақ нақты қатесіз сәтсіз аяқталды. Хост мекенжайы мен портты тексеріп, "
+"қайта көріңіз."
 
 #: rustconn/src/dialogs/connection/dialog.rs:1566
 msgid "Test timed out"
@@ -1032,7 +1037,8 @@ msgstr "https://example.com"
 #: rustconn/src/dialogs/connection_wizard/connection_page.rs:721
 #: rustconn/src/dialogs/connection_wizard/connection_page.rs:727
 #: rustconn/src/dialogs/export.rs:390 rustconn/src/dialogs/template.rs:551
-#: rustconn/src/dialogs/template.rs:1787 rustconn/src/split_view/bridge.rs:1330
+#: rustconn/src/dialogs/template.rs:1787
+#: rustconn/src/split_view/bridge.rs:1330
 #: rustconn/src/window/edit_dialogs.rs:720
 msgid "Host"
 msgstr "Хост"
@@ -1319,8 +1325,8 @@ msgstr "Ата-аналық топтан мұраланған"
 #: rustconn/src/dialogs/connection/ssh.rs:236
 msgid "Default tries ~/.ssh/id_rsa, id_ed25519, id_ecdsa automatically"
 msgstr ""
-"Әдепкі бойынша ~/.ssh/id_rsa, id_ed25519, id_ecdsa автоматты тексередіӘдепкі "
-"бойынша ~/.ssh/id_rsa, id_ed25519, id_ecdsa автоматты түрде сынайды"
+"Әдепкі бойынша ~/.ssh/id_rsa, id_ed25519, id_ecdsa автоматты тексередіӘдепкі"
+" бойынша ~/.ssh/id_rsa, id_ed25519, id_ecdsa автоматты түрде сынайды"
 
 #: rustconn/src/dialogs/connection/dialog.rs:5221
 #: rustconn/src/dialogs/connection/dialog.rs:5488
@@ -1329,7 +1335,6 @@ msgstr "Құпия сөзді жүктеу мүмкін емес"
 
 #: rustconn/src/dialogs/connection/dialog.rs:5222
 #: rustconn/src/dialogs/connection/dialog.rs:5553
-#, fuzzy
 msgid "Enter a connection name or host first."
 msgstr "Алдымен қосылым атауын немесе хостты енгізіңіз."
 
@@ -1362,9 +1367,8 @@ msgstr "Қойма конфигурацияланбаған"
 
 #: rustconn/src/dialogs/connection/dialog.rs:5360
 #: rustconn/src/dialogs/connection/dialog.rs:5682
-#, fuzzy
 msgid "Configure a secret backend in Settings → Secrets."
-msgstr "Параметрлер → Құпиялар бөлімінде құпия бэкендін конфигурациялаңыз."
+msgstr "Параметрлер → Құпиялар бөлімінде құпия backend-ін конфигурациялаңыз."
 
 #: rustconn/src/dialogs/connection/dialog.rs:5489
 msgid "Password loading is only available for Vault source."
@@ -1375,7 +1379,8 @@ msgid "Test Not Available"
 msgstr "Тест қолжетімсіз"
 
 #: rustconn/src/dialogs/connection/dialog.rs:5534
-msgid "Credential test is only available when Password Source is set to Vault."
+msgid ""
+"Credential test is only available when Password Source is set to Vault."
 msgstr ""
 "Тіркелгі деректерін тексеру тек Құпия сөз көзі Қоймаға орнатылғанда "
 "қолжетімді."
@@ -1458,7 +1463,7 @@ msgstr "Жүктелген кілттер жоқ"
 #: rustconn/src/dialogs/connection/dialog.rs:5891
 #: rustconn/src/window/edit_group.rs:363
 msgid "(no secret variables)"
-msgstr ""
+msgstr "(құпия айнымалылар жоқ)"
 
 #: rustconn/src/dialogs/connection/dialog.rs:5944
 msgid "Managed by cloud sync"
@@ -2033,7 +2038,8 @@ msgstr "Кірістірілген режим терезе өлшеміне ав
 #: rustconn/src/dialogs/connection/spice.rs:130
 #: rustconn/src/dialogs/connection/vnc.rs:211
 #: rustconn/src/dialogs/template.rs:910 rustconn/src/dialogs/template.rs:1097
-#: rustconn/src/dialogs/template.rs:1236 rustconn/src/split_view/bridge.rs:1651
+#: rustconn/src/dialogs/template.rs:1236
+#: rustconn/src/split_view/bridge.rs:1651
 msgid "Features"
 msgstr "Мүмкіндіктер"
 
@@ -2125,7 +2131,8 @@ msgstr "NLA өшіру"
 
 #: rustconn/src/dialogs/connection/rdp.rs:329
 msgid "Skip Network Level Authentication (less secure)"
-msgstr "Желі деңгейіндегі аутентификацияны өткізіп жіберу (қауіпсіздігі төмен)"
+msgstr ""
+"Желі деңгейіндегі аутентификацияны өткізіп жіберу (қауіпсіздігі төмен)"
 
 #: rustconn/src/dialogs/connection/rdp.rs:345
 #: rustconn/src/dialogs/connection/rdp.rs:347
@@ -2251,7 +2258,8 @@ msgstr "RemoteApp"
 
 #: rustconn/src/dialogs/connection/rdp.rs:529
 msgid "Launch a single application instead of full desktop (requires FreeRDP)"
-msgstr "Толық жұмыс үстелінің орнына жеке қолданбаны іске қосу (FreeRDP қажет)"
+msgstr ""
+"Толық жұмыс үстелінің орнына жеке қолданбаны іске қосу (FreeRDP қажет)"
 
 #: rustconn/src/dialogs/connection/rdp.rs:535
 msgid "||notepad or C:\\Program Files\\app.exe"
@@ -2456,8 +2464,8 @@ msgstr "Құрылғы"
 
 #: rustconn/src/dialogs/connection/serial.rs:52
 msgid ""
-"Serial uses picocom as the terminal client.              Ensure your user is "
-"in the 'dialout' group for device access."
+"Serial uses picocom as the terminal client.              Ensure your user is"
+" in the 'dialout' group for device access."
 msgstr ""
 "Serial picocom терминал клиентін пайдаланады.              Құрылғыға қол "
 "жеткізу үшін пайдаланушыңыздың 'dialout' тобында екеніне көз жеткізіңіз."
@@ -2906,8 +2914,8 @@ msgstr "SSH агент сокеті"
 #: rustconn/src/dialogs/connection/ssh.rs:602
 msgid "Overrides global setting and auto-detected socket for this connection"
 msgstr ""
-"Осы қосылым үшін жаһандық параметрді және автоматты анықталған сокетті қайта "
-"анықтайдыОсы қосылым үшін глобал параметрді және автоанықталған сокетті "
+"Осы қосылым үшін жаһандық параметрді және автоматты анықталған сокетті қайта"
+" анықтайдыОсы қосылым үшін глобал параметрді және автоанықталған сокетті "
 "қайта анықтайды"
 
 #: rustconn/src/dialogs/connection/ssh.rs:650
@@ -3124,11 +3132,12 @@ msgid ""
 "clipboard via the sidebar context menu."
 msgstr ""
 "Кірістірілген шолғыш жоқ — RustConn GTK4 UriLauncher арқылы ОЖ-ге тапсырады "
-"(порталмен үйлесімді, Flatpak-та жұмыс істейді). Тіркелгі деректері бүйірлік "
-"панельдің контекстік мәзірі арқылы алмасу буферіне көшіру үшін сақталады."
-"Кірістірілген браузер жоқ — RustConn GTK4 UriLauncher арқылы ОЖ-ге тапсырады "
-"(порталды қолдайды, Flatpak-та жұмыс істейді). Тіркелгі деректері бүйір "
-"тақтаның контекстік мәзірі арқылы алмасу буферіне көшіру үшін сақталады."
+"(порталмен үйлесімді, Flatpak-та жұмыс істейді). Тіркелгі деректері бүйірлік"
+" панельдің контекстік мәзірі арқылы алмасу буферіне көшіру үшін "
+"сақталады.Кірістірілген браузер жоқ — RustConn GTK4 UriLauncher арқылы ОЖ-ге"
+" тапсырады (порталды қолдайды, Flatpak-та жұмыс істейді). Тіркелгі деректері"
+" бүйір тақтаның контекстік мәзірі арқылы алмасу буферіне көшіру үшін "
+"сақталады."
 
 #: rustconn/src/dialogs/connection_wizard/auth_page.rs:67
 #: rustconn/src/dialogs/export.rs:778
@@ -3618,8 +3627,7 @@ msgid "Save changes?"
 msgstr "Өзгерістерді сақтау керек пе?"
 
 #: rustconn/src/dialogs/document.rs:480
-msgid ""
-"Document \"{}\" has unsaved changes. Do you want to save before closing?"
+msgid "Document \"{}\" has unsaved changes. Do you want to save before closing?"
 msgstr "Құжат \"{}\" сақталмаған өзгерістер бар. Жабу алдында сақтау керек пе?"
 
 #: rustconn/src/dialogs/document.rs:532
@@ -3668,16 +3676,19 @@ msgstr "Экспорт пішімі"
 msgid "Select the format to export your connections to"
 msgstr "Қосылымдарды экспорттау пішімін таңдаңыз"
 
-#: rustconn/src/dialogs/export.rs:261 rustconn/src/dialogs/import/sources.rs:52
+#: rustconn/src/dialogs/export.rs:261
+#: rustconn/src/dialogs/import/sources.rs:52
 msgid "RustConn Native (.rcn)"
 msgstr "RustConn Native (.rcn)"
 
-#: rustconn/src/dialogs/export.rs:262 rustconn/src/dialogs/import/sources.rs:58
+#: rustconn/src/dialogs/export.rs:262
+#: rustconn/src/dialogs/import/sources.rs:58
 #: rustconn/src/dialogs/import/sources.rs:507
 msgid "Ansible Inventory"
 msgstr "Ansible Inventory"
 
-#: rustconn/src/dialogs/export.rs:263 rustconn/src/dialogs/import/sources.rs:70
+#: rustconn/src/dialogs/export.rs:263
+#: rustconn/src/dialogs/import/sources.rs:70
 #: rustconn/src/dialogs/import/sources.rs:239
 msgid "Asbru-CM"
 msgstr "Asbru-CM"
@@ -3901,9 +3912,8 @@ msgid "Select output file..."
 msgstr "Шығыс файлын таңдаңыз..."
 
 #: rustconn/src/dialogs/export.rs:1005
-#, fuzzy
 msgid "Select an output file or directory"
-msgstr "Шығыс файлын немесе каталогты таңдаңыз..."
+msgstr "Шығыс файлын немесе қалтаны таңдаңыз"
 
 #: rustconn/src/dialogs/export.rs:1063
 msgid "Exporting to {}..."
@@ -3949,6 +3959,8 @@ msgid ""
 "Could not write the export file: {}. Check destination permissions and free "
 "disk space."
 msgstr ""
+"Экспорт файлын жазу мүмкін болмады: {}. Тағайындалған орынның рұқсаттарын "
+"және бос диск кеңістігін тексеріңіз."
 
 #: rustconn/src/dialogs/export.rs:1176
 #: rustconn/src/dialogs/import/sources.rs:698
@@ -3986,8 +3998,8 @@ msgid ""
 "Optional for external RDP/VNC/SPICE connections.              Embedded "
 "clients (IronRDP, vnc-rs) are preferred."
 msgstr ""
-"Сыртқы RDP/VNC/SPICE қосылымдары үшін міндетті емес.              Ендірілген "
-"клиенттер (IronRDP, vnc-rs) артықшылықты."
+"Сыртқы RDP/VNC/SPICE қосылымдары үшін міндетті емес.              Ендірілген"
+" клиенттер (IronRDP, vnc-rs) артықшылықты."
 
 #: rustconn/src/dialogs/flatpak_components.rs:168
 msgid "Zero Trust CLIs"
@@ -3997,7 +4009,8 @@ msgstr "Zero Trust CLI құралдары"
 msgid ""
 "Required for Zero Trust connections (AWS SSM, GCP IAP, Azure Bastion, etc.)"
 msgstr ""
-"Zero Trust қосылымдары үшін қажет (AWS SSM, GCP IAP, Azure Bastion және т.б.)"
+"Zero Trust қосылымдары үшін қажет (AWS SSM, GCP IAP, Azure Bastion және "
+"т.б.)"
 
 #: rustconn/src/dialogs/flatpak_components.rs:179
 msgid "Password Manager CLIs"
@@ -4095,7 +4108,8 @@ msgid "All connection history entries will be permanently removed."
 msgstr "Барлық қосылым тарихы жазбалары біржола жойылады."
 
 #: rustconn/src/dialogs/history.rs:198 rustconn/src/terminal/playback.rs:266
-#: rustconn/src/window/edit_group.rs:604 rustconn/src/window/edit_group.rs:1038
+#: rustconn/src/window/edit_group.rs:604
+#: rustconn/src/window/edit_group.rs:1038
 msgid "Clear"
 msgstr "Тазалау"
 
@@ -4444,8 +4458,8 @@ msgstr "RustConn файлын таңдау"
 msgid ""
 "Imported as Cloud Sync group (Import mode). Use Sync Now to keep it updated."
 msgstr ""
-"Бұлттық синхрондау тобы ретінде импортталған (импорт режимі). Жаңартып отыру "
-"үшін Қазір синхрондау пайдаланыңыз."
+"Бұлттық синхрондау тобы ретінде импортталған (импорт режимі). Жаңартып отыру"
+" үшін Қазір синхрондау пайдаланыңыз."
 
 #: rustconn/src/dialogs/import/sources.rs:668
 #: rustconn/src/dialogs/settings/cloud_sync_tab.rs:38
@@ -4593,6 +4607,8 @@ msgstr "Жүктелуде..."
 msgid ""
 "Could not read the log file: {}. The file may have been moved or deleted."
 msgstr ""
+"Журнал файлын оқу мүмкін болмады: {}. Файл жылжытылған немесе жойылған болуы"
+" мүмкін."
 
 #: rustconn/src/dialogs/password_generator.rs:22
 msgid "Password Generator"
@@ -4753,7 +4769,8 @@ msgstr "Тіркелгі деректері анықталуда..."
 msgid "Domain:"
 msgstr "Домен:"
 
-#: rustconn/src/dialogs/password.rs:161 rustconn/src/window/edit_dialogs.rs:738
+#: rustconn/src/dialogs/password.rs:161
+#: rustconn/src/window/edit_dialogs.rs:738
 #: rustconn/src/window/edit_dialogs.rs:749
 msgid "(optional)"
 msgstr "(міндетті емес)"
@@ -4816,8 +4833,8 @@ msgstr "Жазбалар жоқ"
 
 #: rustconn/src/dialogs/recording.rs:139
 msgid ""
-"Session recordings will appear here. Use the context menu to start recording "
-"a session."
+"Session recordings will appear here. Use the context menu to start recording"
+" a session."
 msgstr ""
 "Сеанс жазбалары осында көрсетіледі. Сеансты жазуды бастау үшін контекстік "
 "мәзірді пайдаланыңыз."
@@ -5013,26 +5030,21 @@ msgstr "Синхрондау файлын импорттау"
 
 #: rustconn/src/dialogs/settings/cloud_sync_tab.rs:230
 msgid ""
-"The Flatpak sandbox cannot directly access this directory. File monitoring "
-"will not work through the document portal.\n"
+"The Flatpak sandbox cannot directly access this directory. File monitoring will not work through the document portal.\n"
 "\n"
 "To grant access, run in a terminal:\n"
 "\n"
 "flatpak override --user --filesystem={} {}\n"
 "\n"
-"Adjust the path if needed to match the actual location on your filesystem. "
-"Then restart RustConn and set the sync directory again."
+"Adjust the path if needed to match the actual location on your filesystem. Then restart RustConn and set the sync directory again."
 msgstr ""
-"Flatpak құмсалғышы бұл каталогқа тікелей қол жеткізе алмайды. Файлдарды "
-"бақылау құжат порталы арқылы жұмыс істемейді.\n"
+"Flatpak құмсалғышы бұл каталогқа тікелей қол жеткізе алмайды. Файлдарды бақылау құжат порталы арқылы жұмыс істемейді.\n"
 "\n"
 "Рұқсат беру үшін терминалда орындаңыз:\n"
 "\n"
 "flatpak override --user --filesystem={} {}\n"
 "\n"
-"Қажет болса, жолды файлдық жүйедегі нақты орынға сәйкестендіріңіз. Содан "
-"кейін RustConn-ды қайта іске қосыңыз және синхрондау каталогын қайта "
-"орнатыңыз."
+"Қажет болса, жолды файлдық жүйедегі нақты орынға сәйкестендіріңіз. Содан кейін RustConn-ды қайта іске қосыңыз және синхрондау каталогын қайта орнатыңыз."
 
 #: rustconn/src/dialogs/settings/cloud_sync_tab.rs:235
 msgid "Flatpak: filesystem access required"
@@ -5047,7 +5059,8 @@ msgid "Keybindings"
 msgstr "Пернетақта тіркесімдері"
 
 #: rustconn/src/dialogs/settings/keybindings_tab.rs:57
-#: rustconn/src/dialogs/shortcuts.rs:414 rustconn/src/split_view/bridge.rs:1696
+#: rustconn/src/dialogs/shortcuts.rs:414
+#: rustconn/src/split_view/bridge.rs:1696
 msgid "Keyboard Shortcuts"
 msgstr "Пернетақта тіркесімдері"
 
@@ -5193,7 +5206,8 @@ msgstr "Параметрлерді қалпына келтіру керек пе
 
 #: rustconn/src/dialogs/settings/mod.rs:494
 msgid ""
-"This will overwrite current settings. A restart is required to apply changes."
+"This will overwrite current settings. A restart is required to apply "
+"changes."
 msgstr ""
 "Бұл ағымдағы параметрлерді қайта жазады. Өзгерістерді қолдану үшін қайта "
 "іске қосу қажет."
@@ -6292,8 +6306,8 @@ msgstr "Ықшам интерфейс"
 #: rustconn/src/dialogs/settings/ui_tab.rs:176
 msgid "Reduce header bar and tab bar height (useful on small screens and KDE)"
 msgstr ""
-"Тақырып жолағы мен қойынды жолағының биіктігін азайту (кіші экрандар мен KDE "
-"үшін пайдалы)"
+"Тақырып жолағы мен қойынды жолағының биіктігін азайту (кіші экрандар мен KDE"
+" үшін пайдалы)"
 
 #: rustconn/src/dialogs/settings/ui_tab.rs:188
 msgid "Window"
@@ -6396,7 +6410,8 @@ msgstr "Навигация"
 msgid "Application"
 msgstr "Қолданба"
 
-#: rustconn/src/dialogs/shortcuts.rs:612 rustconn/src/split_view/bridge.rs:1700
+#: rustconn/src/dialogs/shortcuts.rs:612
+#: rustconn/src/split_view/bridge.rs:1700
 msgid "New connection"
 msgstr "Жаңа қосылым"
 
@@ -6408,11 +6423,13 @@ msgstr "Жаңа қосылым (кеңейтілген)"
 msgid "New group"
 msgstr "Жаңа топ"
 
-#: rustconn/src/dialogs/shortcuts.rs:615 rustconn/src/split_view/bridge.rs:1701
+#: rustconn/src/dialogs/shortcuts.rs:615
+#: rustconn/src/split_view/bridge.rs:1701
 msgid "Quick connect"
 msgstr "Жылдам қосылу"
 
-#: rustconn/src/dialogs/shortcuts.rs:616 rustconn/src/split_view/bridge.rs:1707
+#: rustconn/src/dialogs/shortcuts.rs:616
+#: rustconn/src/split_view/bridge.rs:1707
 msgid "Import connections"
 msgstr "Қосылымдарды импорттау"
 
@@ -6516,7 +6533,8 @@ msgstr "Панельді жабу"
 msgid "Focus next pane"
 msgstr "Келесі панельге фокус"
 
-#: rustconn/src/dialogs/shortcuts.rs:642 rustconn/src/split_view/bridge.rs:1704
+#: rustconn/src/dialogs/shortcuts.rs:642
+#: rustconn/src/split_view/bridge.rs:1704
 msgid "Search"
 msgstr "Іздеу"
 
@@ -6528,7 +6546,8 @@ msgstr "Бүйір панеліне фокус"
 msgid "Focus terminal"
 msgstr "Терминалға фокус"
 
-#: rustconn/src/dialogs/shortcuts.rs:645 rustconn/src/split_view/bridge.rs:1702
+#: rustconn/src/dialogs/shortcuts.rs:645
+#: rustconn/src/split_view/bridge.rs:1702
 msgid "Command palette"
 msgstr "Команда палитрасы"
 
@@ -6607,7 +6626,8 @@ msgstr "Қосылымдар БАРЛЫҚ белсенді сүзгілерге 
 
 #: rustconn/src/dialogs/smart_folder.rs:141
 #: rustconn/src/dialogs/smart_folder.rs:181
-#: rustconn/src/dialogs/smart_folder.rs:251 rustconn/src/dialogs/snippet.rs:208
+#: rustconn/src/dialogs/smart_folder.rs:251
+#: rustconn/src/dialogs/snippet.rs:208
 msgid "Any"
 msgstr "Кез келген"
 
@@ -6726,7 +6746,8 @@ msgstr "Фрагмент атауы міндетті"
 msgid "Command is required"
 msgstr "Команда міндетті"
 
-#: rustconn/src/dialogs/statistics.rs:30 rustconn/src/dialogs/statistics.rs:144
+#: rustconn/src/dialogs/statistics.rs:30
+#: rustconn/src/dialogs/statistics.rs:144
 msgid "Connection Statistics"
 msgstr "Қосылым статистикасы"
 
@@ -6858,7 +6879,8 @@ msgstr "Үлгілер жоқ"
 
 #: rustconn/src/dialogs/template_manager.rs:95
 msgid ""
-"Create a template to quickly set up new connections with predefined settings."
+"Create a template to quickly set up new connections with predefined "
+"settings."
 msgstr ""
 "Алдын ала анықталған параметрлермен жаңа қосылымдарды жылдам орнату үшін "
 "үлгі жасаңыз."
@@ -7228,12 +7250,11 @@ msgid "Connection Not Found"
 msgstr "Қосылым табылмады"
 
 #: rustconn/src/dialogs/tunnel_builder/mod.rs:581
-#, fuzzy
 msgid ""
 "The SSH connection referenced by this tunnel no longer exists. Select a "
 "different connection."
 msgstr ""
-"Бұл туннель сілтеме жасайтын SSH қосылымы енді жоқ. Басқа қосылымды таңдаңыз."
+"Осы туннель сілтейтін SSH қосылымы енді жоқ. Басқа қосылымды таңдаңыз."
 
 #: rustconn/src/dialogs/tunnel_builder/path_diagram.rs:135
 #: rustconn/src/dialogs/tunnel_builder/path_diagram.rs:202
@@ -7530,9 +7551,9 @@ msgstr "мыс. Internet/MyRouter (міндетті емес)"
 
 #: rustconn/src/dialogs/variables.rs:300
 msgid ""
-"Custom KeePass entry path. If set, the password is read from "
-"this                  existing entry instead of the default RustConn/"
-"rustconn/var/ path."
+"Custom KeePass entry path. If set, the password is read from this"
+"                  existing entry instead of the default "
+"RustConn/rustconn/var/ path."
 msgstr ""
 "KeePass жазбасының реттелетін жолы. Орнатылған болса, құпиясөз әдепкі "
 "RustConn/rustconn/var/ жолының орнына осы бар жазбадан оқылады."
@@ -7547,10 +7568,13 @@ msgstr "мыс. AD Credentials (міндетті емес)"
 
 #: rustconn/src/dialogs/variables.rs:319
 msgid ""
-"Existing vault entry name. If set, the password is fetched from "
-"this                  entry at connection time — no need to enter a password "
+"Existing vault entry name. If set, the password is fetched from this"
+"                  entry at connection time — no need to enter a password "
 "above.                  Nothing is written back to the vault."
 msgstr ""
+"Бар қойма жазбасының атауы. Орнатылса, құпия сөз қосылу кезінде осы жазбадан"
+" алынады — жоғарыда құпия сөз енгізудің қажеті жоқ. Қоймаға ештеңе кері "
+"жазылмайды."
 
 #: rustconn/src/dialogs/variables.rs:367 rustconn/src/dialogs/variables.rs:649
 msgid "New variable"
@@ -7562,7 +7586,7 @@ msgstr "Құпияны жүктеу сәтсіз. Параметрлерде б�
 
 #: rustconn/src/dialogs/variables.rs:606
 msgid "Fetched from vault at connect time"
-msgstr ""
+msgstr "Қосылу кезінде қоймадан алынды"
 
 #: rustconn/src/dialogs/widgets.rs:468 rustconn/src/embedded_rdp/mod.rs:291
 #: rustconn/src/embedded_spice.rs:248 rustconn/src/embedded_trait.rs:203
@@ -7732,7 +7756,8 @@ msgstr ""
 
 #: rustconn/src/embedded_rdp/connection.rs:1307
 msgid "TLS connection failed. The server may not support this security level."
-msgstr "TLS қосылымы сәтсіз. Сервер бұл қауіпсіздік деңгейін қолдамауы мүмкін."
+msgstr ""
+"TLS қосылымы сәтсіз. Сервер бұл қауіпсіздік деңгейін қолдамауы мүмкін."
 
 #: rustconn/src/embedded_rdp/connection.rs:1311
 msgid "Connection refused. Check host and port."
@@ -8412,9 +8437,8 @@ msgid "Pinned"
 msgstr "Бекітілген"
 
 #: rustconn/src/sidebar/view.rs:136 rustconn/src/sidebar/view.rs:138
-#, fuzzy
 msgid "Recording session"
-msgstr "Сеансты жазу"
+msgstr "Сессия жазылып жатыр"
 
 #: rustconn/src/sidebar/view.rs:415
 msgid "Master — synced to cloud"
@@ -8847,18 +8871,18 @@ msgstr "Синхрондалған '{}': +{} қосылым, ~{} жаңарты�
 
 #: rustconn/src/window/connection_actions.rs:194
 msgid ""
-"Sync directory is not configured. In Flatpak, grant filesystem access first: "
-"flatpak override --user --filesystem=/path/to/sync io.github.totoshko88."
-"RustConn"
+"Sync directory is not configured. In Flatpak, grant filesystem access first:"
+" flatpak override --user --filesystem=/path/to/sync "
+"io.github.totoshko88.RustConn"
 msgstr ""
 "Синхрондау каталогы конфигурацияланбаған. Flatpak-та алдымен файлдық жүйеге "
-"рұқсат беріңіз: flatpak override --user --filesystem=/жол/синхрондау io."
-"github.totoshko88.RustConn"
+"рұқсат беріңіз: flatpak override --user --filesystem=/жол/синхрондау "
+"io.github.totoshko88.RustConn"
 
 #: rustconn/src/window/connection_actions.rs:200
 msgid ""
-"Sync directory is not accessible from Flatpak sandbox. Run: flatpak override "
-"--user --filesystem={} io.github.totoshko88.RustConn"
+"Sync directory is not accessible from Flatpak sandbox. Run: flatpak override"
+" --user --filesystem={} io.github.totoshko88.RustConn"
 msgstr ""
 "Синхрондау каталогы Flatpak құмсалғышынан қолжетімсіз. Орындаңыз: flatpak "
 "override --user --filesystem={} io.github.totoshko88.RustConn"
@@ -8962,25 +8986,25 @@ msgid "Error Updating Group"
 msgstr "Топты жаңарту қатесі"
 
 #: rustconn/src/window/connection_dialogs.rs:1006
-#, fuzzy
 msgid "Import Duplicates?"
-msgstr "Көшірмелеу"
+msgstr "Қайталанатындарды импорттау керек пе?"
 
 #: rustconn/src/window/connection_dialogs.rs:1008
 msgid ""
 "{} of {} connections have the same name as existing ones. Imported copies "
 "are kept alongside the existing connections under a numbered name."
 msgstr ""
+"{} қосылым (барлығы {} ішінен) бұрыннан бар қосылымдармен бірдей атауға ие. "
+"Импортталған көшірмелер нөмірленген атаумен бар қосылымдардың қасында "
+"сақталады."
 
 #: rustconn/src/window/connection_dialogs.rs:1016
-#, fuzzy
 msgid "Skip Duplicates"
-msgstr "Көшірмелеу"
+msgstr "Қайталанатындарды өткізіп жіберу"
 
 #: rustconn/src/window/connection_dialogs.rs:1017
-#, fuzzy
 msgid "Import All"
-msgstr "Импорт"
+msgstr "Барлығын импорттау"
 
 #: rustconn/src/window/connection_dialogs.rs:1083
 msgid "Imported {} connections and {} snippets to '{}' group"
@@ -9130,13 +9154,13 @@ msgstr "mc SFTP ашылуда..."
 
 #: rustconn/src/window/edit_actions.rs:801
 msgid ""
-"External file managers cannot access SSH agent in "
-"Flatpak.                          Enable \"SFTP via mc\" in Settings for "
-"reliable access."
+"External file managers cannot access SSH agent in Flatpak."
+"                          Enable \"SFTP via mc\" in Settings for reliable "
+"access."
 msgstr ""
-"Сыртқы файл менеджерлері Flatpak ішіндегі SSH агентіне қол жеткізе "
-"алмайды.                          Сенімді қол жеткізу үшін Параметрлерде "
-"\"SFTP via mc\" қосыңыз."
+"Сыртқы файл менеджерлері Flatpak ішіндегі SSH агентіне қол жеткізе алмайды."
+"                          Сенімді қол жеткізу үшін Параметрлерде \"SFTP via "
+"mc\" қосыңыз."
 
 #: rustconn/src/window/edit_actions.rs:807
 msgid "Opening SFTP..."
@@ -9154,13 +9178,13 @@ msgstr "URL ашу сәтсіз: {}"
 
 #: rustconn/src/window/edit_actions.rs:1260
 msgid ""
-"External file managers cannot access SSH agent in "
-"Flatpak.                              Enable \"SFTP via mc\" in Settings for "
+"External file managers cannot access SSH agent in Flatpak."
+"                              Enable \"SFTP via mc\" in Settings for "
 "reliable access."
 msgstr ""
-"Сыртқы файл менеджерлері Flatpak ішіндегі SSH агентіне қол жеткізе "
-"алмайды.                              Сенімді қол жеткізу үшін Параметрлерде "
-"\"SFTP mc арқылы\" мүмкіндігін қосыңыз."
+"Сыртқы файл менеджерлері Flatpak ішіндегі SSH агентіне қол жеткізе алмайды."
+"                              Сенімді қол жеткізу үшін Параметрлерде \"SFTP "
+"mc арқылы\" мүмкіндігін қосыңыз."
 
 #: rustconn/src/window/edit_dialogs.rs:200
 msgid "Error Updating Connection"
@@ -9226,7 +9250,8 @@ msgstr ""
 "Өшіру осы топтың барлық SSH параметрлерін тазалайды. Бұл әрекетті қайтару "
 "мүмкін емес."
 
-#: rustconn/src/window/edit_group.rs:603 rustconn/src/window/edit_group.rs:1037
+#: rustconn/src/window/edit_group.rs:603
+#: rustconn/src/window/edit_group.rs:1037
 msgid "Keep"
 msgstr "Сақтау"
 
@@ -9308,8 +9333,8 @@ msgstr "Автоматтандыруды тазалау керек пе?"
 
 #: rustconn/src/window/edit_group.rs:1032
 msgid ""
-"Disabling will clear all expect rules and post-login scripts for this group. "
-"This cannot be undone."
+"Disabling will clear all expect rules and post-login scripts for this group."
+" This cannot be undone."
 msgstr ""
 "Өшіру осы топтың барлық күту ережелері мен кіру кейінгі скрипттерін "
 "тазалайды. Бұл әрекетті қайтару мүмкін емес."
@@ -9355,9 +9380,8 @@ msgid "Add Script"
 msgstr "Скрипт қосу"
 
 #: rustconn/src/window/edit_group.rs:1469
-#, fuzzy
 msgid "Select a variable"
-msgstr "Айнымалыны жою"
+msgstr "Айнымалыны таңдаңыз"
 
 #: rustconn/src/window/edit_group.rs:1614
 msgid "Dynamic Folder script cannot be empty"
@@ -9431,7 +9455,7 @@ msgstr "Элементті жылжыту қатесі"
 
 #: rustconn/src/window/mod.rs:443
 msgid "Dismiss"
-msgstr ""
+msgstr "Елемеу"
 
 #: rustconn/src/window/mod.rs:1415
 msgid "Connection to \\u{2018}{}\\u{2019} failed"
@@ -9446,18 +9470,16 @@ msgid "Connection \\u{201c}{}\\u{201d} created"
 msgstr "\\u{201c}{}\\u{201d} қосылымы жасалды"
 
 #: rustconn/src/window/mod.rs:2275
-#, fuzzy
 msgid "Close RustConn?"
-msgstr "RustConn"
+msgstr "RustConn жабылсын ба?"
 
 #: rustconn/src/window/mod.rs:2277
 msgid "{} session tab(s) are open. Active connections will be disconnected."
-msgstr ""
+msgstr "{} сессия қойындысы ашық. Белсенді қосылымдар ажыратылады."
 
 #: rustconn/src/window/mod.rs:2304
-#, fuzzy
 msgid "Cloud sync failed for '{}': {}"
-msgstr "Синхрондау сәтсіз: {}"
+msgstr "«{}» үшін бұлтпен синхрондау сәтсіз аяқталды: {}"
 
 #: rustconn/src/window/mod.rs:2430
 msgid "Startup connection not found"
@@ -9608,7 +9630,6 @@ msgid "No Selection"
 msgstr "Таңдау жоқ"
 
 #: rustconn/src/window/operations.rs:500
-#, fuzzy
 msgid "Select one or more items to delete."
 msgstr "Жою үшін бір немесе бірнеше элементті таңдаңыз."
 
@@ -9818,9 +9839,8 @@ msgid "No Active Terminal"
 msgstr "Белсенді терминал жоқ"
 
 #: rustconn/src/window/snippets.rs:573
-#, fuzzy
 msgid "Open a terminal session first before executing a snippet."
-msgstr "Үзіндіні орындау алдында алдымен терминал сеансын ашыңыз."
+msgstr "Сниппетті орындамас бұрын алдымен терминал сессиясын ашыңыз."
 
 #: rustconn/src/window/snippets.rs:640
 msgid "Enter Variable Values"
@@ -9835,8 +9855,8 @@ msgid ""
 "Tip: press Ctrl+Shift+B or use the Broadcast button to mirror keystrokes "
 "across split panels"
 msgstr ""
-"Кеңес: пернелер басуды барлық бөлінген тақталарға қайталау үшін Ctrl+Shift+B "
-"басыңыз немесе «Тарату» түймесін қолданыңыз"
+"Кеңес: пернелер басуды барлық бөлінген тақталарға қайталау үшін Ctrl+Shift+B"
+" басыңыз немесе «Тарату» түймесін қолданыңыз"
 
 #: rustconn/src/window/split_view_actions.rs:120
 #: rustconn/src/window/split_view_actions.rs:423
@@ -9981,7 +10001,7 @@ msgstr "SSH туннельдері..."
 
 #: rustconn/src/window/ui.rs:243
 msgid "Tools"
-msgstr ""
+msgstr "Құралдар"
 
 #: rustconn/src/window/ui.rs:248
 msgid "Active Sessions..."
@@ -10001,7 +10021,7 @@ msgstr "Жазбалар..."
 
 #: rustconn/src/window/ui.rs:257
 msgid "Sessions"
-msgstr ""
+msgstr "Сессиялар"
 
 #: rustconn/src/window/ui.rs:262
 msgid "Import Connections..."
@@ -10045,11 +10065,9 @@ msgstr "RustConn"
 
 #: rustconn/assets/io.github.totoshko88.RustConn.desktop:16
 msgid ""
-"ssh;rdp;vnc;spice;mosh;telnet;zerotrust;connection;terminal;remote;"
-"kubernetes;k8s;serial;sftp;"
+"ssh;rdp;vnc;spice;mosh;telnet;zerotrust;connection;terminal;remote;kubernetes;k8s;serial;sftp;"
 msgstr ""
-"ssh;rdp;vnc;spice;mosh;telnet;zerotrust;connection;terminal;remote;"
-"kubernetes;k8s;serial;sftp;"
+"ssh;rdp;vnc;spice;mosh;telnet;zerotrust;connection;terminal;remote;kubernetes;k8s;serial;sftp;"
 
 #~ msgid "Unknown error"
 #~ msgstr "Белгісіз қате"
@@ -10064,12 +10082,12 @@ msgstr ""
 #~ msgstr "Пернелерді басыңыз..."
 
 #~ msgid ""
-#~ "Existing vault entry name. If set, the password is read from "
-#~ "this                  entry by exact name instead of the default rustconn/"
-#~ "var/ key."
+#~ "Existing vault entry name. If set, the password is read from this"
+#~ "                  entry by exact name instead of the default rustconn/var/ "
+#~ "key."
 #~ msgstr ""
-#~ "Қоймадағы бар жазба атауы. Орнатылған болса, құпиясөз стандартты rustconn/"
-#~ "var/ кілті орнына осы жазбадан оқылады."
+#~ "Қоймадағы бар жазба атауы. Орнатылған болса, құпиясөз стандартты "
+#~ "rustconn/var/ кілті орнына осы жазбадан оқылады."
 
 #~ msgid "VNC encryption not supported. Install TigerVNC."
 #~ msgstr "VNC шифрлауы қолдау көрсетілмейді. TigerVNC орнатыңыз."
@@ -10087,8 +10105,8 @@ msgstr ""
 #~ "Clusters allow you to connect to multiple servers simultaneously and "
 #~ "optionally broadcast input to all sessions."
 #~ msgstr ""
-#~ "Кластерлер бірнеше серверге бір уақытта қосылуға және қажет болса "
-#~ "енгізуді барлық сеанстарға таратуға мүмкіндік береді."
+#~ "Кластерлер бірнеше серверге бір уақытта қосылуға және қажет болса енгізуді "
+#~ "барлық сеанстарға таратуға мүмкіндік береді."
 
 #~ msgid " (broadcast enabled)"
 #~ msgstr " (тарату қосылған)"
@@ -10125,8 +10143,7 @@ msgstr ""
 
 #~ msgid "Send clipboard contents as keystrokes (bypasses paste restrictions)"
 #~ msgstr ""
-#~ "Буфер мазмұнын перне басулары ретінде жіберу (қою шектеулерін айналып "
-#~ "өтеді)"
+#~ "Буфер мазмұнын перне басулары ретінде жіберу (қою шектеулерін айналып өтеді)"
 
 #~ msgid "Type custom text as keystrokes into remote session"
 #~ msgstr "Қашықтағы сеансқа таңдаулы мәтінді перне басулары ретінде теру"
