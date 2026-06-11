@@ -120,9 +120,24 @@ like a native Windows app (Alt-Tab, taskbar pinning, clipboard sharing).
 
 - **No system tray.** WSLg has no StatusNotifier host, so the tray icon and
   minimize-to-tray are unavailable; the window close button quits the app.
+- **Emoji icons may not render** — WSLg ships a limited set of fonts and may
+  lack full color emoji coverage. Smart Folder and connection icons set to
+  emoji may appear as blank boxes. Use GTK icon names (e.g.
+  `network-server-symbolic`) as an alternative, or install a Noto Color Emoji
+  font: `sudo apt install fonts-noto-color-emoji && fc-cache -f`.
+- **Embedded RDP may fail with "decode error"** — the built-in IronRDP
+  client does not yet support all RDP extensions. If the embedded client
+  fails, RustConn automatically falls back to FreeRDP. Install it:
+  `sudo apt install freerdp3-x11` (or `freerdp2-x11` on older distros).
+  Alternatively, use an external RDP session (right-click → Connect External).
 - **Embedded RDP/VNC rendering is slower than on native Linux** — WSLg adds
   a compositing hop (RDP-over-vsock). For heavy remote-desktop work prefer
   the Windows native clients, or accept the overhead.
+- **libEGL / MESA warnings in the log** — WSLg uses software rendering via
+  `d3d12` or `llvmpipe` when no vGPU driver is installed. These warnings are
+  cosmetic and do not affect functionality; install a
+  [vGPU driver](https://learn.microsoft.com/en-us/windows/wsl/tutorials/gui-apps#install-support-for-linux-gui-apps)
+  to silence them and get hardware acceleration.
 - **Audio** (RDP/SPICE audio redirection) goes through WSLg's PulseAudio
   server; it works but adds latency.
 - **Serial ports** require attaching USB devices to WSL via
