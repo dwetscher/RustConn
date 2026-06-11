@@ -310,6 +310,7 @@ jobs:
   build-snap:
     name: Build Snap Package
     runs-on: ubuntu-latest
+    timeout-minutes: 60
     steps:
       - name: Checkout
         uses: actions/checkout@v6
@@ -353,6 +354,7 @@ jobs:
         #   stable    — manual promote of a tested candidate revision;
         #               "Update metadata on release" then syncs the store
         #               listing from that revision's snapcraft.yaml
+        timeout-minutes: 10
         run: snapcraft upload ${{ steps.build.outputs.snap }} --release candidate
 
   build-flatpak:
