@@ -314,12 +314,11 @@ cargo build --release -p rustconn -p rustconn-cli
 ./install-desktop.sh
 ```
 
-Installs the icon, `.desktop` file, and locales to `~/.local/`. Binaries must be copied manually:
+Installs the binaries (to `~/.local/bin`), icon, `.desktop` file, MIME types, and
+locales to `~/.local/`. Ensure `~/.local/bin` is on your `PATH`.
 
-```bash
-install -Dm755 target/release/rustconn ~/.local/bin/rustconn
-install -Dm755 target/release/rustconn-cli ~/.local/bin/rustconn-cli
-```
+> The script installs `target/release/rustconn` and `rustconn-cli` if present. To
+> use a custom prefix: `PREFIX=/usr/local sudo ./install-desktop.sh`.
 
 ---
 

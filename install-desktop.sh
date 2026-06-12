@@ -6,6 +6,21 @@ set -e
 # Determine install prefix
 PREFIX="${PREFIX:-$HOME/.local}"
 
+# Install binaries (built by `cargo build --release -p rustconn -p rustconn-cli`)
+BIN_DIR="$PREFIX/bin"
+installed_bin=false
+for bin in rustconn rustconn-cli; do
+    if [ -f "target/release/$bin" ]; then
+        install -Dm755 "target/release/$bin" "$BIN_DIR/$bin"
+        echo "Installed binary: $bin -> $BIN_DIR/$bin"
+        installed_bin=true
+    fi
+done
+if [ "$installed_bin" = false ]; then
+    echo "Note: no release binaries found in target/release/."
+    echo "      Build them first: cargo build --release -p rustconn -p rustconn-cli"
+fi
+
 # Install icon
 ICON_DIR="$PREFIX/share/icons/hicolor/scalable/apps"
 mkdir -p "$ICON_DIR"
@@ -47,4 +62,7 @@ if command -v update-mime-database &> /dev/null; then
 fi
 
 echo "Desktop entry, icon, and locales installed to $PREFIX"
+if [ "$installed_bin" = true ]; then
+    echo "Binaries installed to $BIN_DIR — ensure it is on your PATH."
+fi
 echo "You may need to log out and log back in for changes to take effect."

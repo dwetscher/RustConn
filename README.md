@@ -7,7 +7,7 @@
 </p>
 <p align="center">
   <a href="https://flathub.org/apps/io.github.totoshko88.RustConn"><img src="https://img.shields.io/flathub/v/io.github.totoshko88.RustConn" alt="Flathub"></a>
-  <a href="https://snapcraft.io/rustconn"><img src="https://img.shields.io/snapcraft/v/rustconn/latest/edge" alt="Snap"></a>
+  <a href="https://snapcraft.io/rustconn"><img src="https://img.shields.io/snapcraft/v/rustconn/latest/stable" alt="Snap"></a>
   <a href="https://aur.archlinux.org/packages/rustconn"><img src="https://img.shields.io/aur/version/rustconn" alt="AUR"></a>
   <a href="https://build.opensuse.org/package/show/home:totoshko88:rustconn/rustconn"><img src="https://img.shields.io/badge/OBS-rustconn-green" alt="OBS"></a>
   <a href="https://www.freshports.org/net/rustconn/"><img src="https://img.shields.io/badge/FreeBSD-ports-red" alt="FreeBSD"></a>
@@ -19,6 +19,7 @@
 
 RustConn is a cross-platform connection orchestrator with a GTK4/libadwaita interface.
 It brings SSH, RDP, VNC, SPICE, MOSH, Telnet, Serial, Kubernetes, and Zero Trust connections under one roof — with embedded Rust clients where possible and seamless integration with external tools where needed.
+Runs on Linux (GTK4/libadwaita), macOS, FreeBSD, and Windows via WSLg.
 
 [![Demo](https://img.youtube.com/vi/SwVtKzZwKAU/maxresdefault.jpg)](https://youtu.be/SwVtKzZwKAU)
 
@@ -33,18 +34,23 @@ More screenshots on the [Flathub listing](https://flathub.org/apps/io.github.tot
 
 ## Features
 
+### Capabilities
+
 | Category | Details |
 |----------|---------|
-| **Protocols** | SSH, RDP, VNC, SPICE, MOSH, Telnet, Serial, Kubernetes, Zero Trust, Web Bookmarks |
 | **File Transfer** | SFTP file browser via system file manager (sftp:// URI, D-Bus portal) |
 | **Organization** | Groups, tags, templates, custom icons (emoji/GTK), connection history & statistics |
 | **Monitoring** | Remote host metrics bar (CPU, RAM, disk, network, load, system info) — agentless, per-connection toggle |
 | **Import/Export** | Asbru-CM, Remmina, SSH config, Ansible inventory, Royal TS, MobaXterm, SecureCRT, Remote Desktop Manager, RDP files (.rdp), virt-viewer (.vv), libvirt XML, CSV, native (.rcn) |
 | **Security** | KeePassXC (KDBX), libsecret, Bitwarden CLI, 1Password CLI, Passbolt CLI, Pass (passwordstore.org), script credentials |
-| **Productivity** | Split terminals, command snippets, cluster broadcast, ad-hoc broadcast, smart folders, session recording, text highlighting rules, Wake-on-LAN, SSH port forwarding, visual SSH tunnel builder (3-step wizard with path diagram), automation (expect rules, key sequences, pre/post-connect tasks), session reconnect, settings backup/restore, .rdp file association, tab overview, tab pinning, custom terminal themes |
+| **Terminal** | Split terminals, command snippets, text highlighting rules, session recording, custom terminal themes, tab overview, tab pinning |
+| **Automation** | Expect rules, key sequences, pre/post-connect tasks, cluster & ad-hoc broadcast, session reconnect, Wake-on-LAN |
+| **Workflow** | Smart folders, SSH port forwarding, visual SSH tunnel builder, settings backup/restore, .rdp file association |
 | **Cloud Sync** | Synchronize connections via shared cloud directory (Google Drive, Syncthing, Nextcloud, Dropbox); group sync with Master/Import access model; simple sync with UUID-based merge |
 | **CLI** | `rustconn-cli` — headless management: list/add/update/delete connections, import/export, snippets, groups, templates, clusters, secrets, WoL, shell completions |
 | **Languages** | English + 16 translations (Belarusian, Czech, Danish, German, Spanish, French, Italian, Kazakh, Dutch, Polish, Portuguese, Slovak, Swedish, Ukrainian, Uzbek, Chinese) |
+
+### Protocol support
 
 | Protocol | Client | Type |
 |----------|--------|------|
@@ -61,8 +67,6 @@ More screenshots on the [Flathub listing](https://flathub.org/apps/io.github.tot
 
 ## Installation
 
-<!-- Both badges are height-aligned (56px) and theme-adaptive: dark badge
-     on the light GitHub theme, light badge on the dark theme. -->
 <p>
   <a href="https://flathub.org/apps/io.github.totoshko88.RustConn">
     <picture>
@@ -79,10 +83,6 @@ More screenshots on the [Flathub listing](https://flathub.org/apps/io.github.tot
   </a>
 </p>
 
-```bash
-flatpak install flathub io.github.totoshko88.RustConn
-```
-
 | Method | Command / Link |
 |--------|---------------|
 | **Flatpak** (recommended) | `flatpak install flathub io.github.totoshko88.RustConn` |
@@ -97,14 +97,8 @@ flatpak install flathub io.github.totoshko88.RustConn
 | **Windows (WSL2)** | Runs under WSLg ([guide](docs/WSL.md)) |
 | **From source** | Rust 1.95+, GTK4 4.14+ ([build guide](docs/BUILD.md)) |
 
-## Quick Start
-
-| Shortcut | Action |
-|----------|--------|
-| `Ctrl+N` | New connection |
-| `Ctrl+I` | Import |
-| `Ctrl+,` | Settings |
-| `Ctrl+Shift+S/H` | Split vertical/horizontal |
+Keyboard shortcuts are customizable in Settings → Keybindings; press `Ctrl+?`
+in the app for the complete, always-current list.
 
 ## Documentation
 
@@ -118,8 +112,18 @@ flatpak install flathub io.github.totoshko88.RustConn
 | [CLI Reference](docs/CLI_REFERENCE.md) | `rustconn-cli` commands and examples |
 | [Architecture](docs/ARCHITECTURE.md) | Crate structure and design decisions |
 | [CI & Build Flow](docs/CI_BUILD_FLOW.md) | CI pipelines, OBS packaging, Flathub release process |
-| [Zero Trust](docs/ZERO_TRUST.md) | AWS SSM, GCP IAP, Azure, OCI, Cloudflare, Teleport, Tailscale, Boundary |
+| [Zero Trust](docs/ZERO_TRUST.md) | Setup guides for each supported Zero Trust provider |
 | [Changelog](CHANGELOG.md) | Release history and notable changes |
+
+## Contributing
+
+Bug reports and feature requests are welcome on the
+[issue tracker](https://github.com/totoshko88/RustConn/issues).
+
+- **Code** — see the [Build Guide](docs/BUILD.md) and
+  [Architecture](docs/ARCHITECTURE.md) to get started.
+- **Translations** — RustConn ships 16 languages; `.po` files live in
+  [`po/`](po/). New languages and corrections are appreciated.
 
 ## Support
 
