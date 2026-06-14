@@ -7,7 +7,7 @@ msgstr ""
 "Project-Id-Version: rustconn 0.12.0\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-06-13 17:41+0300\n"
-"PO-Revision-Date: 2026-04-25 10:46+0000\n"
+"PO-Revision-Date: 2026-06-14 09:46+0000\n"
 "Last-Translator: Albano Battistella\n"
 "Language-Team: Italian\n"
 "Language: it\n"
@@ -4117,12 +4117,11 @@ msgstr "Connessione fallita"
 
 #: rustconn/src/dialogs/history.rs:325 rustconn/src/dialogs/history.rs:328
 msgid "Show error details"
-msgstr ""
+msgstr "Mostra i dettagli dell'errore"
 
 #: rustconn/src/dialogs/history.rs:335
-#, fuzzy
 msgid "Could not connect to {}"
-msgstr "Connetti a {}"
+msgstr "Impossibile connettersi a {}"
 
 #: rustconn/src/dialogs/history.rs:353
 msgid "Remove from history"
@@ -7861,9 +7860,8 @@ msgid "CMD (Admin)"
 msgstr "CMD (Admin)"
 
 #: rustconn/src/embedded_rdp/mod.rs:292 rustconn/src/embedded_rdp/mod.rs:295
-#, fuzzy
 msgid "Fit resolution to window"
-msgstr "Adattare il desktop remoto alla dimensione della finestra"
+msgstr "Adatta la risoluzione alla finestra"
 
 #: rustconn/src/embedded_rdp/mod.rs:314
 msgid "Copy remote clipboard to local (waiting for remote data...)"
@@ -8643,7 +8641,7 @@ msgstr "Accesso rapido"
 
 #: rustconn/src/split_view/bridge.rs:1735
 msgid "Fuzzy search & command palette"
-msgstr "Ricerca fuzzy e tavolozza comandi"
+msgstr "Ricerca fuzzy & tavolozza comandi"
 
 #: rustconn/src/split_view/bridge.rs:1736
 msgid "Pin favorites to sidebar"
