@@ -123,22 +123,40 @@ pub static QUICK_ACTIONS: &[QuickAction] = &[
     },
 ];
 
-/// Builds the key sequence for a given quick action ID.
+/// Builds the hotkey scancode sequence for actions that do not use the Run dialog.
 ///
-/// Returns `None` if the action ID is unknown.
+/// Returns `None` for Run-dialog actions (use [`run_command_for`] together with
+/// [`build_open_run_dialog`] and Unicode autotype instead) and for unknown IDs.
+///
+/// These two actions are pure modifier hotkeys (Ctrl+Shift+Esc, Win+I) which
+/// Windows resolves by virtual-key, so they are unaffected by the remote
+/// keyboard layout.
 #[must_use]
-pub fn build_key_sequence(action_id: &str) -> Option<Vec<(u16, bool, bool)>> {
+pub fn build_hotkey_sequence(action_id: &str) -> Option<Vec<(u16, bool, bool)>> {
     match action_id {
         "task-manager" => Some(build_ctrl_shift_esc()),
         "settings" => Some(build_win_i()),
-        "registry-editor" => Some(build_run_command("regedit")),
-        "device-manager" => Some(build_run_command("devmgmt.msc")),
-        "event-viewer" => Some(build_run_command("eventvwr.msc")),
-        "services" => Some(build_run_command("services.msc")),
-        "disk-management" => Some(build_run_command("diskmgmt.msc")),
-        "resource-monitor" => Some(build_run_command("resmon")),
-        "computer-management" => Some(build_run_command("compmgmt.msc")),
-        "server-manager" => Some(build_run_command("servermanager")),
+        _ => None,
+    }
+}
+
+/// Returns the Run-dialog command string for an action ID.
+///
+/// Returns `None` for hotkey actions (see [`build_hotkey_sequence`]) and unknown
+/// IDs. The caller opens the Run dialog with [`build_open_run_dialog`], types
+/// the returned string via Unicode autotype (layout-independent), then presses
+/// Enter with [`build_enter_sequence`].
+#[must_use]
+pub fn run_command_for(action_id: &str) -> Option<&'static str> {
+    match action_id {
+        "registry-editor" => Some("regedit"),
+        "device-manager" => Some("devmgmt.msc"),
+        "event-viewer" => Some("eventvwr.msc"),
+        "services" => Some("services.msc"),
+        "disk-management" => Some("diskmgmt.msc"),
+        "resource-monitor" => Some("resmon"),
+        "computer-management" => Some("compmgmt.msc"),
+        "server-manager" => Some("servermanager"),
         _ => None,
     }
 }
@@ -165,114 +183,24 @@ fn build_win_i() -> Vec<(u16, bool, bool)> {
     ]
 }
 
-/// Win+R → type command → Enter
+/// Builds the Win+R sequence that opens the Run dialog.
 ///
-/// Inserts a pause marker (scancode 0, not pressed, not extended) between
-/// Win+R release and the first typed character. The command processor
-/// interprets the 30ms inter-key delay, but the Run dialog needs ~200ms
-/// to appear. The GUI layer should handle this by splitting the sequence
-/// or the command processor delay is sufficient for most servers.
-pub fn build_run_command(command: &str) -> Vec<(u16, bool, bool)> {
-    let mut keys = Vec::with_capacity(4 + command.len() * 2 + 2);
-
-    // Win+R to open Run dialog
-    keys.push((scancodes::WIN, true, true));
-    keys.push((scancodes::R, true, false));
-    keys.push((scancodes::R, false, false));
-    keys.push((scancodes::WIN, false, true));
-
-    // Pause: repeat a harmless release to give the Run dialog time to open.
-    // The 30ms × 8 = ~240ms delay is enough for the dialog to appear.
-    for _ in 0..8 {
-        keys.push((0, false, false));
-    }
-
-    // Type the command using Unicode events — we encode these as scancode=0
-    // with the character packed into a special marker. The command processor
-    // will detect scancode=0 + extended=true as a Unicode character request.
-    // Actually, we use the existing UnicodeEvent path instead.
-    // For simplicity, we encode each character as its scancode equivalent
-    // where possible, but for arbitrary commands we need Unicode input.
-    //
-    // Since SendKeySequence only supports scancodes, we'll use a different
-    // approach: encode characters via their keyboard scancodes for ASCII.
-    for ch in command.chars() {
-        if let Some((sc, needs_shift)) = char_to_scancode(ch) {
-            if needs_shift {
-                keys.push((0x2A, true, false)); // Shift down
-            }
-            keys.push((sc, true, false));
-            keys.push((sc, false, false));
-            if needs_shift {
-                keys.push((0x2A, false, false)); // Shift up
-            }
-        }
-    }
-
-    // Enter to execute
-    keys.push((scancodes::ENTER, true, false));
-    keys.push((scancodes::ENTER, false, false));
-
-    keys
+/// Layout-independent: `Win` and `R` are resolved by Windows as a registered
+/// system hotkey (virtual-key based), and the `R` physical key sits in the same
+/// position on QWERTY, AZERTY and QWERTZ. The command text itself must NOT be
+/// typed via scancodes — it is sent separately as Unicode autotype events so it
+/// is correct regardless of the remote keyboard layout (see issue #184).
+#[must_use]
+pub fn build_open_run_dialog() -> Vec<(u16, bool, bool)> {
+    vec![
+        (scancodes::WIN, true, true),
+        (scancodes::R, true, false),
+        (scancodes::R, false, false),
+        (scancodes::WIN, false, true),
+    ]
 }
 
-/// Maps an ASCII character to its keyboard scancode and shift state.
-///
-/// Returns `(scancode, needs_shift)`. Covers characters needed for
-/// Windows admin commands and shell launcher commands (letters, digits,
-/// punctuation used in PowerShell commands).
-const fn char_to_scancode(ch: char) -> Option<(u16, bool)> {
-    // US keyboard layout scancodes
-    match ch {
-        'a' | 'A' => Some((0x1E, ch.is_ascii_uppercase())),
-        'b' | 'B' => Some((0x30, ch.is_ascii_uppercase())),
-        'c' | 'C' => Some((0x2E, ch.is_ascii_uppercase())),
-        'd' | 'D' => Some((0x20, ch.is_ascii_uppercase())),
-        'e' | 'E' => Some((0x12, ch.is_ascii_uppercase())),
-        'f' | 'F' => Some((0x21, ch.is_ascii_uppercase())),
-        'g' | 'G' => Some((0x22, ch.is_ascii_uppercase())),
-        'h' | 'H' => Some((0x23, ch.is_ascii_uppercase())),
-        'i' | 'I' => Some((0x17, ch.is_ascii_uppercase())),
-        'j' | 'J' => Some((0x24, ch.is_ascii_uppercase())),
-        'k' | 'K' => Some((0x25, ch.is_ascii_uppercase())),
-        'l' | 'L' => Some((0x26, ch.is_ascii_uppercase())),
-        'm' | 'M' => Some((0x32, ch.is_ascii_uppercase())),
-        'n' | 'N' => Some((0x31, ch.is_ascii_uppercase())),
-        'o' | 'O' => Some((0x18, ch.is_ascii_uppercase())),
-        'p' | 'P' => Some((0x19, ch.is_ascii_uppercase())),
-        'q' | 'Q' => Some((0x10, ch.is_ascii_uppercase())),
-        'r' | 'R' => Some((0x13, ch.is_ascii_uppercase())),
-        's' | 'S' => Some((0x1F, ch.is_ascii_uppercase())),
-        't' | 'T' => Some((0x14, ch.is_ascii_uppercase())),
-        'u' | 'U' => Some((0x16, ch.is_ascii_uppercase())),
-        'v' | 'V' => Some((0x2F, ch.is_ascii_uppercase())),
-        'w' | 'W' => Some((0x11, ch.is_ascii_uppercase())),
-        'x' | 'X' => Some((0x2D, ch.is_ascii_uppercase())),
-        'y' | 'Y' => Some((0x15, ch.is_ascii_uppercase())),
-        'z' | 'Z' => Some((0x2C, ch.is_ascii_uppercase())),
-        '.' => Some((0x34, false)),
-        '\\' => Some((0x2B, false)),
-        '/' => Some((0x35, false)),
-        '-' => Some((0x0C, false)),
-        '_' => Some((0x0C, true)), // Shift + -
-        ' ' => Some((0x39, false)),
-        '"' => Some((0x28, true)), // Shift + ' (apostrophe key)
-        '\'' => Some((0x28, false)),
-        '0' => Some((0x0B, false)),
-        '1' => Some((0x02, false)),
-        '2' => Some((0x03, false)),
-        '3' => Some((0x04, false)),
-        '4' => Some((0x05, false)),
-        '5' => Some((0x06, false)),
-        '6' => Some((0x07, false)),
-        '7' => Some((0x08, false)),
-        '8' => Some((0x09, false)),
-        '9' => Some((0x0A, false)),
-        _ => None,
-    }
-}
-
-/// Builds the Enter key sequence for executing pasted content.
+/// Builds the Enter key sequence that executes the typed command or pasted content.
 #[must_use]
 pub fn build_enter_sequence() -> Vec<(u16, bool, bool)> {
     vec![
@@ -288,9 +216,11 @@ mod tests {
     #[test]
     fn all_quick_actions_have_sequences() {
         for action in QUICK_ACTIONS {
+            let has_hotkey = build_hotkey_sequence(action.id).is_some();
+            let has_run = run_command_for(action.id).is_some();
             assert!(
-                build_key_sequence(action.id).is_some(),
-                "Missing key sequence for action '{}'",
+                has_hotkey ^ has_run,
+                "Action '{}' must be exactly one of hotkey or run-command",
                 action.id
             );
         }
@@ -314,54 +244,31 @@ mod tests {
     }
 
     #[test]
-    fn run_command_ends_with_enter() {
-        let keys = build_run_command("cmd");
-        let last_two: Vec<_> = keys.iter().rev().take(2).collect();
-        // Last event should be Enter release
-        assert_eq!(last_two[0].0, scancodes::ENTER);
-        assert!(!last_two[0].1); // released
-        // Second to last should be Enter press
-        assert_eq!(last_two[1].0, scancodes::ENTER);
-        assert!(last_two[1].1); // pressed
-    }
-
-    #[test]
-    fn char_to_scancode_covers_admin_commands() {
-        // All characters used in our admin commands must be mappable
-        for cmd in [
-            "regedit",
-            "devmgmt.msc",
-            "eventvwr.msc",
-            "services.msc",
-            "diskmgmt.msc",
-            "resmon",
-            "compmgmt.msc",
-            "servermanager",
-        ] {
-            for ch in cmd.chars() {
-                assert!(
-                    char_to_scancode(ch).is_some(),
-                    "Unmapped character '{}' in command '{}'",
-                    ch,
-                    cmd
-                );
-            }
+    fn open_run_dialog_is_balanced_and_layout_safe() {
+        let keys = build_open_run_dialog();
+        let presses = keys.iter().filter(|(_, pressed, _)| *pressed).count();
+        let releases = keys.iter().filter(|(_, pressed, _)| !*pressed).count();
+        assert_eq!(presses, releases, "Unbalanced Win+R press/release");
+        // Only Win and R scancodes — the command itself is typed via Unicode.
+        for (sc, _, _) in &keys {
+            assert!(
+                *sc == scancodes::WIN || *sc == scancodes::R,
+                "Unexpected scancode {sc:#x} in Run-dialog opener"
+            );
         }
     }
 
     #[test]
-    fn char_to_scancode_covers_shell_launcher_commands() {
-        // Shell launcher commands use uppercase letters and quotes
-        for cmd in [
-            "powershell -Command \"Start-Process powershell -Verb RunAs\"",
-            "powershell -Command \"Start-Process cmd -Verb RunAs\"",
-        ] {
-            for ch in cmd.chars() {
+    fn run_commands_are_ascii_and_nonempty() {
+        // Sanity: every run action maps to a plausible command. Unicode autotype
+        // handles any characters, but admin commands should stay simple ASCII.
+        for action in QUICK_ACTIONS {
+            if let Some(cmd) = run_command_for(action.id) {
+                assert!(!cmd.is_empty(), "Empty command for '{}'", action.id);
                 assert!(
-                    char_to_scancode(ch).is_some(),
-                    "Unmapped character '{}' in shell launcher command '{}'",
-                    ch,
-                    cmd
+                    cmd.is_ascii(),
+                    "Non-ASCII command '{cmd}' for '{}'",
+                    action.id
                 );
             }
         }

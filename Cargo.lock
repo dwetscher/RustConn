@@ -475,9 +475,9 @@ dependencies = [
 
 [[package]]
 name = "bitvec"
-version = "1.0.1"
+version = "1.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1bc2832c24239b0141d5674bb9174f9d68a8b5b3f2753311927c172ca46f7e9c"
+checksum = "ddcec3d12c579d40898fe0a9a358a803c23e9c52ca3c425707f81c9436211837"
 dependencies = [
  "funty",
  "radium",
@@ -5100,7 +5100,7 @@ dependencies = [
 
 [[package]]
 name = "rustconn"
-version = "0.16.8"
+version = "0.16.9"
 dependencies = [
  "async-channel",
  "chrono",
@@ -5135,7 +5135,7 @@ dependencies = [
 
 [[package]]
 name = "rustconn-cli"
-version = "0.16.8"
+version = "0.16.9"
 dependencies = [
  "chrono",
  "clap",
@@ -5157,7 +5157,7 @@ dependencies = [
 
 [[package]]
 name = "rustconn-core"
-version = "0.16.8"
+version = "0.16.9"
 dependencies = [
  "ar",
  "argon2",
@@ -5209,7 +5209,7 @@ dependencies = [
 
 [[package]]
 name = "rustconn-pty-sys"
-version = "0.16.8"
+version = "0.16.9"
 dependencies = [
  "libc",
 ]

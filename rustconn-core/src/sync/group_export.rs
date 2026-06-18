@@ -514,9 +514,8 @@ impl GroupSyncExport {
 
     /// Builds a `GroupSyncExport` from pre-collected data.
     ///
-    /// This is a convenience constructor; the actual tree-walking logic that
-    /// collects groups, connections, and variable templates from
-    /// `ConnectionManager` will be implemented in tasks 2.9–2.11.
+    /// The caller (`SyncManager`) walks the group tree and collects the
+    /// groups, connections, and variable templates passed in here.
     #[must_use]
     pub fn from_group_tree(
         app_version: String,

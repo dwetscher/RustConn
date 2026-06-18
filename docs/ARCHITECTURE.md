@@ -1,6 +1,6 @@
 # RustConn Architecture Guide
 
-**Version 0.16.8** | Last updated: June 2026
+**Version 0.16.9** | Last updated: June 2026
 
 This document describes the internal architecture of RustConn for contributors and maintainers.
 
@@ -872,15 +872,15 @@ rustconn/src/embedded_rdp/
 ```
 
 **Data Flow:**
-1. `QUICK_ACTIONS` static array defines 6 actions with id, label, tooltip, icon
-2. `build_key_sequence(id)` returns `Vec<(scancode, pressed, extended)>` tuples
+1. `QUICK_ACTIONS` static array defines the actions with id, label, tooltip, icon
+2. Hotkey actions → `build_hotkey_sequence(id)` returns `Vec<(scancode, pressed, extended)>`; Run-dialog actions → `run_command_for(id)` returns the command string
 3. GUI creates a `MenuButton` with `gio::Menu` items, each mapped to a GIO action
-4. Action handler sends `RdpClientCommand::SendKeySequence(keys)` via channel
-5. Command handler iterates scancodes with `tokio::time::sleep(30ms)` between each
+4. Hotkey actions send `RdpClientCommand::SendKeySequence`; Run-dialog actions send Win+R (`build_open_run_dialog`) → `AutotypeText` (Unicode, layout-independent) → Enter (`build_enter_sequence`)
+5. The command loop drains these in FIFO order, awaiting each before the next
 
 **Key Sequence Patterns:**
-- Direct hotkey: Task Manager (`Ctrl+Shift+Esc`), Settings (`Win+I`)
-- Win+R launch: PowerShell, CMD, Event Viewer, Services — opens Run dialog, types command, presses Enter
+- Direct hotkey: Task Manager (`Ctrl+Shift+Esc`), Settings (`Win+I`) — scancodes (virtual-key resolved, layout-safe)
+- Win+R launch: Event Viewer, Services, etc. — opens Run dialog with a scancode hotkey, types the command via Unicode keyboard events so it is correct on any remote keyboard layout (issue #184), then presses Enter
 
 ## GTK4/Libadwaita Patterns
 

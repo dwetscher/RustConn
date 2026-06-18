@@ -89,7 +89,8 @@ pub use multimonitor::{MonitorArrangement, MonitorDefinition, MonitorLayout};
 pub use reconnect::{ConnectionQuality, DisconnectReason, ReconnectPolicy, ReconnectState};
 
 pub use quick_actions::{
-    QUICK_ACTIONS, QuickAction, build_enter_sequence, build_key_sequence, build_run_command,
+    QUICK_ACTIONS, QuickAction, build_enter_sequence, build_hotkey_sequence, build_open_run_dialog,
+    run_command_for,
 };
 
 pub use keyboard_layout::{LAYOUT_US_ENGLISH, detect_keyboard_layout, xkb_name_to_klid};
