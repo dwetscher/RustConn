@@ -57,9 +57,8 @@ struct ConnectionCommand {
 /// Builds the command arguments for a connection based on its protocol.
 ///
 /// Uses the core `ProtocolRegistry` to delegate command building to each
-/// protocol handler's `build_command()` implementation. Falls back to
-/// protocol-specific handling for `ZeroTrust` and `Sftp` which require
-/// special treatment.
+/// protocol handler's `build_command()` implementation. `Sftp` is handled
+/// specially because it opens a file manager rather than a CLI command.
 fn build_connection_command(connection: &Connection) -> ConnectionCommand {
     // Sftp opens a file manager, not a CLI command
     if connection.protocol == ProtocolType::Sftp {

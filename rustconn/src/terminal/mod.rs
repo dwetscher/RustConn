@@ -44,7 +44,6 @@ const PCRE2_MULTILINE: u32 = 0x0000_0400;
 
 use crate::activity_coordinator::ActivityCoordinator;
 use crate::automation::{AutomationSession, prepare_rules_from_config};
-use crate::broadcast::BroadcastController;
 use crate::embedded_rdp::EmbeddedRdpWidget;
 use crate::embedded_spice::EmbeddedSpiceWidget;
 use crate::i18n::{i18n, i18n_f};
@@ -160,8 +159,6 @@ pub struct TerminalNotebook {
     highlight_overlays: Rc<RefCell<HashMap<Uuid, HighlightOverlay>>>,
     /// GTK Overlay widgets per session for layering highlight DrawingArea
     terminal_overlays: Rc<RefCell<HashMap<Uuid, gtk4::Overlay>>>,
-    /// Ad-hoc broadcast controller for sending input to multiple terminals
-    broadcast_controller: Rc<RefCell<BroadcastController>>,
     /// Cancel tokens for background polling tasks (host check, auto-reconnect, WoL)
     /// Keyed by session_id or connection_id depending on context
     poll_cancel_tokens: Rc<RefCell<HashMap<Uuid, std::sync::Arc<std::sync::atomic::AtomicBool>>>>,
@@ -264,7 +261,6 @@ impl TerminalNotebook {
             terminal_overlays: Rc::new(RefCell::new(HashMap::new())),
             active_recordings: Rc::new(RefCell::new(HashSet::new())),
             remote_recordings: RefCell::new(HashMap::new()),
-            broadcast_controller: Rc::new(RefCell::new(BroadcastController::new())),
             poll_cancel_tokens: Rc::new(RefCell::new(HashMap::new())),
             ssh_tunnels: Rc::new(RefCell::new(HashMap::new())),
             activity_coordinator: Rc::new(RefCell::new(None)),
@@ -295,7 +291,6 @@ impl TerminalNotebook {
         let session_highlight_rules = self.session_highlight_rules.clone();
         let highlight_overlays = self.highlight_overlays.clone();
         let terminal_overlays = self.terminal_overlays.clone();
-        let broadcast_controller = self.broadcast_controller.clone();
         let ssh_tunnels = self.ssh_tunnels.clone();
         let tab_containers = self.tab_containers.clone();
         let vte_child_pids = self.vte_child_pids.clone();
@@ -364,11 +359,6 @@ impl TerminalNotebook {
 
                 // Remove terminal overlay widget for this session
                 terminal_overlays.borrow_mut().remove(&session_id);
-
-                // Remove terminal from broadcast selection if active
-                broadcast_controller
-                    .borrow_mut()
-                    .remove_terminal(&session_id);
 
                 // Disconnect embedded widgets before removing
                 if let Some(widget_storage) = session_widgets.borrow_mut().remove(&session_id) {
@@ -3090,64 +3080,7 @@ impl TerminalNotebook {
     }
 
     // ── Ad-hoc Broadcast ──────────────────────────────────────────────
-
-    /// Toggles ad-hoc broadcast mode on/off.
-    ///
-    /// When activated, the app layer can show checkboxes on terminal tabs.
-    /// When deactivated, all selections are cleared.
-    #[allow(dead_code, reason = "Public API — wired by app layer")]
-    pub fn toggle_broadcast(&self) {
-        let mut bc = self.broadcast_controller.borrow_mut();
-        if bc.is_active() {
-            bc.deactivate();
-        } else {
-            bc.activate();
-        }
-    }
-
-    /// Returns whether ad-hoc broadcast mode is currently active.
-    #[must_use]
-    #[allow(dead_code, reason = "Public API — wired by app layer")]
-    pub fn is_broadcast_active(&self) -> bool {
-        self.broadcast_controller.borrow().is_active()
-    }
-
-    /// Toggles a terminal's selection for ad-hoc broadcast.
-    #[allow(dead_code, reason = "Public API — wired by app layer")]
-    pub fn toggle_broadcast_terminal(&self, session_id: Uuid) {
-        self.broadcast_controller
-            .borrow_mut()
-            .toggle_terminal(session_id);
-    }
-
-    /// Returns whether a terminal is selected for ad-hoc broadcast.
-    #[must_use]
-    #[allow(dead_code, reason = "Public API — wired by app layer")]
-    pub fn is_broadcast_terminal_selected(&self, session_id: &Uuid) -> bool {
-        self.broadcast_controller.borrow().is_selected(session_id)
-    }
-
-    /// Sends text to all terminals selected for ad-hoc broadcast.
-    ///
-    /// Uses `send_text_to_session` for each selected terminal.
-    /// Returns the number of terminals that received the input.
-    #[allow(dead_code, reason = "Public API — wired by app layer")]
-    pub fn broadcast_text(&self, text: &str) -> usize {
-        let targets = self.broadcast_controller.borrow().broadcast_targets();
-        let mut count = 0;
-        for session_id in targets {
-            self.send_text_to_session(session_id, text);
-            count += 1;
-        }
-        count
-    }
-
-    /// Returns a clone of the broadcast controller for external wiring.
-    #[must_use]
-    #[allow(dead_code, reason = "Public API — wired by app layer")]
-    pub fn broadcast_controller(&self) -> Rc<RefCell<BroadcastController>> {
-        self.broadcast_controller.clone()
-    }
+    // (removed: superseded by the split-view broadcast toggle in the header bar)
 
     /// Sets the activity coordinator for tab context menu integration.
     ///

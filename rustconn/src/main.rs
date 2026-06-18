@@ -59,7 +59,6 @@ pub mod async_utils;
 #[cfg(feature = "rdp-audio")]
 pub mod audio;
 pub mod automation;
-pub mod broadcast;
 pub mod cairo_buffer;
 pub mod dialogs;
 pub mod display;

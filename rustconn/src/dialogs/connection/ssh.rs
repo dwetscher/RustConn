@@ -6,12 +6,6 @@
 //! - Connection options (Jump Host, ProxyJump, IdentitiesOnly, ControlMaster)
 //! - Session options (Agent Forwarding, X11 Forwarding, Compression, Startup Command)
 
-// These functions are prepared for future refactoring when dialog.rs is further modularized
-#![allow(
-    dead_code,
-    reason = "module-wide override for legacy code; refactored case by case"
-)]
-
 use super::protocol_layout::ProtocolLayoutBuilder;
 use super::widgets::{CheckboxRowBuilder, EntryRowBuilder};
 use adw::prelude::*;

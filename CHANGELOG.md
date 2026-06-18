@@ -7,6 +7,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.16.9] - 2026-06-19
+
+### Removed
+
+- **Dead ad-hoc broadcast controller** — the `BroadcastController` (`rustconn/src/broadcast.rs`) and its `TerminalNotebook` wrappers (`toggle_broadcast`, `is_broadcast_active`, `toggle_broadcast_terminal`, `is_broadcast_terminal_selected`, `broadcast_text`, `broadcast_controller`) implemented an ad-hoc "send keystrokes to several selected terminals" mode that was never wired to any action, menu, or shortcut. It was superseded by the split-view Broadcast toggle in the header bar (`win.toggle-broadcast`). The fields carried false `#[allow(dead_code, reason = "Public API — wired by app layer")]` annotations; the app layer never wired them. Deleted in full (YAGNI)
+- **Unused virtual-scroll tuning API** — `VirtualScrollConfig` (`rustconn-core/src/connection/virtual_scroll.rs`) was exercised only by its own unit tests and never wired into the sidebar. Removed; the still-used `SelectionState` from the same module is kept
+- **Unused protocol-layout builder setters** — `ProtocolLayoutBuilder::{max_size, tightening_threshold, spacing, margin}` were never called outside tests (all protocol panels use `new().build()` with defaults). Removed along with the module-wide `#![allow(dead_code)]`
+
+### Changed
+
+- **Removed stale `dead_code` overrides** — dropped the module-wide `#![allow(dead_code)]` from `dialogs/connection/ssh.rs`; all its functions (`create_ssh_options`, `create_port_forwarding_group`, `add_port_forward_row_to_list`) are in active use, so the override was masking nothing
+
+### Documentation
+
+- **Corrected stale doc comments** — `cmd_connect`'s `build_connection_command` no longer claims special `ZeroTrust` handling (it now goes through `ProtocolRegistry` like every other protocol; only `Sftp` is special-cased), and `GroupSyncExport::from_group_tree` no longer references unfinished "tasks 2.9–2.11" (the constructor is implemented and used by `SyncManager`)
+
+### Fixed
+
+- **RDP Quick Actions / Shell launchers typed wrong characters on non-QWERTY remote layouts** ([#184](https://github.com/totoshko88/RustConn/issues/184)) — the Run-dialog commands (Computer Management, Device Manager, Disk Management, Event Viewer, Registry Editor, Resource Monitor, Server Manager, Services) and the PowerShell/CMD shell launchers were typed character-by-character using hard-coded **US-QWERTY scancodes**. On a remote Windows session with a different keyboard layout (e.g. French AZERTY) the same physical scancodes produced different characters, so `compmgmt.msc` arrived as `co,p,g,t:,sc`. The command text is now sent via Unicode keyboard events (`TS_UNICODE_KEYBOARD_EVENT`, the same layout-independent autotype path already used for snippets), while only the layout-safe Win+R and Enter keys remain scancodes. Removes the entire `char_to_scancode` US-layout table
+
+### Dependencies
+
+- **Updated**: bitvec 1.0.1→1.1.1
+
+
 ## [0.16.8] - 2026-06-18
 
 ### Fixed

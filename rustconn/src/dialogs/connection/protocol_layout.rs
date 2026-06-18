@@ -3,12 +3,6 @@
 //! This module provides a reusable builder for the standard protocol options
 //! layout pattern: ScrolledWindow → Clamp → Box with consistent margins.
 
-// Builder methods are available for future customization needs
-#![allow(
-    dead_code,
-    reason = "module-wide override for legacy code; refactored case by case"
-)]
-
 use gtk4::prelude::*;
 use gtk4::{Box as GtkBox, Orientation, ScrolledWindow};
 use libadwaita as adw;
@@ -52,34 +46,6 @@ impl ProtocolLayoutBuilder {
     #[must_use]
     pub fn new() -> Self {
         Self::default()
-    }
-
-    /// Sets the maximum width for the clamp.
-    #[must_use]
-    pub fn max_size(mut self, size: i32) -> Self {
-        self.max_size = size;
-        self
-    }
-
-    /// Sets the tightening threshold for the clamp.
-    #[must_use]
-    pub fn tightening_threshold(mut self, threshold: i32) -> Self {
-        self.tightening_threshold = threshold;
-        self
-    }
-
-    /// Sets the spacing between child widgets.
-    #[must_use]
-    pub fn spacing(mut self, spacing: i32) -> Self {
-        self.spacing = spacing;
-        self
-    }
-
-    /// Sets the margin around the content.
-    #[must_use]
-    pub fn margin(mut self, margin: i32) -> Self {
-        self.margin = margin;
-        self
     }
 
     /// Builds the layout and returns the container and content box.
@@ -127,19 +93,5 @@ mod tests {
         assert_eq!(builder.tightening_threshold, 400);
         assert_eq!(builder.spacing, 12);
         assert_eq!(builder.margin, 12);
-    }
-
-    #[test]
-    fn test_builder_chaining() {
-        let builder = ProtocolLayoutBuilder::new()
-            .max_size(800)
-            .tightening_threshold(500)
-            .spacing(16)
-            .margin(8);
-
-        assert_eq!(builder.max_size, 800);
-        assert_eq!(builder.tightening_threshold, 500);
-        assert_eq!(builder.spacing, 16);
-        assert_eq!(builder.margin, 8);
     }
 }

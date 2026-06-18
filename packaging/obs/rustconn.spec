@@ -6,7 +6,7 @@
 #
 
 Name:           rustconn
-Version:        0.16.8
+Version:        0.16.9
 Release:        0
 Summary:        Modern connection manager for Linux (SSH, RDP, VNC, SPICE, MOSH, Telnet, Serial, Kubernetes, Zero Trust)
 License:        GPL-3.0-or-later
@@ -242,6 +242,11 @@ done
 %{_datadir}/locale/*/LC_MESSAGES/rustconn.mo
 
 %changelog
+* Fri Jun 19 2026 Anton Isaiev <totoshko88@gmail.com> - 0.16.9-0
+- Fixed RDP Quick Actions and shell launchers typing wrong characters on non-QWERTY remote keyboard layouts (#184) — Run-dialog commands and the PowerShell/CMD launchers are now sent via layout-independent Unicode keyboard events instead of hard-coded US-QWERTY scancodes
+- Internal cleanup — removed the dead ad-hoc broadcast controller, the unused virtual-scroll tuning API and protocol-layout builder setters, and stale dead_code overrides; corrected stale doc comments
+- Updated bitvec 1.0.1->1.1.1
+
 * Thu Jun 18 2026 Anton Isaiev <totoshko88@gmail.com> - 0.16.8-0
 - Fixed KeePassXC not being detected in Flatpak ("keepassxc-cli not found") (#182) — detection and all KDBX operations now resolve and run the host binary via flatpak-spawn --host, so the host's KeePassXC is found and piped database/entry passwords reach it
 - Fixed KDBX status text overflowing the row (#182) — the status label now ellipsizes at a capped width and shows the full text as a tooltip on hover

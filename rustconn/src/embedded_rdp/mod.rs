@@ -82,6 +82,47 @@ use crate::i18n::i18n;
 #[cfg(feature = "rdp-embedded")]
 use rustconn_core::rdp_client::RdpClientCommand;
 
+/// Inter-character delay when autotyping a command into the Windows Run dialog.
+///
+/// Matches the previous scancode path (~30 ms/key) — slow enough that the
+/// remote Run dialog registers every character reliably over a busy session.
+#[cfg(feature = "rdp-embedded")]
+const RUN_DIALOG_AUTOTYPE_DELAY_MS: u32 = 30;
+
+/// Delay before the first character is autotyped into the Run dialog.
+///
+/// Win+R needs time to open the dialog before input is accepted; 300 ms is
+/// comfortably above the ~200 ms a typical server takes to show it.
+#[cfg(feature = "rdp-embedded")]
+const RUN_DIALOG_OPEN_DELAY_MS: u32 = 300;
+
+/// Launches `command` through the Windows Run dialog, layout-independently.
+///
+/// Opens Run with the Win+R scancode hotkey, types `command` via Unicode
+/// autotype (`TS_UNICODE_KEYBOARD_EVENT`, immune to the remote keyboard layout
+/// — issue #184), then presses Enter. The three commands are processed in order
+/// by the client's single command loop.
+///
+/// # Errors
+/// Returns `SendError` if the IronRDP command channel is closed.
+#[cfg(feature = "rdp-embedded")]
+fn send_run_dialog_command(
+    sender: &std::sync::mpsc::Sender<RdpClientCommand>,
+    command: &str,
+) -> Result<(), std::sync::mpsc::SendError<RdpClientCommand>> {
+    sender.send(RdpClientCommand::SendKeySequence {
+        keys: rustconn_core::build_open_run_dialog(),
+    })?;
+    sender.send(RdpClientCommand::AutotypeText {
+        text: command.to_string(),
+        inter_char_delay_ms: RUN_DIALOG_AUTOTYPE_DELAY_MS,
+        initial_delay_ms: RUN_DIALOG_OPEN_DELAY_MS,
+    })?;
+    sender.send(RdpClientCommand::SendKeySequence {
+        keys: rustconn_core::build_enter_sequence(),
+    })
+}
+
 /// Invokes a callback stored in a `RefCell<Option<T>>` using the take-invoke-restore
 /// pattern. This prevents `BorrowMutError` panics when the callback re-enters and
 /// borrows the same cell.
@@ -947,11 +988,23 @@ impl EmbeddedRdpWidget {
                 let tx = self.ironrdp_command_tx.clone();
                 let action_id = action_def.id;
                 action.connect_activate(move |_, _| {
-                    if let Some(keys) = rustconn_core::build_rdp_quick_action(action_id)
-                        && let Some(ref sender) = *tx.borrow()
-                    {
-                        let _ =
-                            sender.send(rustconn_core::RdpClientCommand::SendKeySequence { keys });
+                    let Some(ref sender) = *tx.borrow() else {
+                        return;
+                    };
+                    // Hotkey actions (Task Manager, Settings) are pure modifier
+                    // combos — sent as scancodes. Run-dialog actions type their
+                    // command via Unicode autotype so they are correct on any
+                    // remote keyboard layout (issue #184).
+                    let sent = if let Some(keys) = rustconn_core::build_hotkey_sequence(action_id) {
+                        sender
+                            .send(RdpClientCommand::SendKeySequence { keys })
+                            .is_ok()
+                    } else if let Some(cmd) = rustconn_core::run_command_for(action_id) {
+                        send_run_dialog_command(sender, cmd).is_ok()
+                    } else {
+                        false
+                    };
+                    if sent {
                         tracing::info!(
                             protocol = "rdp",
                             action = action_id,
@@ -1005,10 +1058,9 @@ impl EmbeddedRdpWidget {
                         return;
                     };
 
-                    let keys = rustconn_core::build_run_command(&cmd);
-                    if let Err(e) =
-                        sender.send(rustconn_core::RdpClientCommand::SendKeySequence { keys })
-                    {
+                    // Open Run, type the command via Unicode autotype (layout
+                    // independent — issue #184), then press Enter.
+                    if let Err(e) = send_run_dialog_command(sender, &cmd) {
                         tracing::warn!(
                             protocol = "rdp",
                             launcher = cmd.as_str(),

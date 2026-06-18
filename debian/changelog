@@ -1,3 +1,16 @@
+rustconn (0.16.9-1) unstable; urgency=medium
+
+  * Fixed RDP Quick Actions and shell launchers typing wrong characters on
+    non-QWERTY remote keyboard layouts (#184) — Run-dialog commands and the
+    PowerShell/CMD launchers are now sent via layout-independent Unicode
+    keyboard events instead of hard-coded US-QWERTY scancodes
+  * Internal cleanup — removed the dead ad-hoc broadcast controller, the unused
+    virtual-scroll tuning API and protocol-layout builder setters, and stale
+    dead_code overrides; corrected stale doc comments
+  * Updated bitvec 1.0.1->1.1.1
+
+ -- Anton Isaiev <totoshko88@gmail.com>  Fri, 19 Jun 2026 12:00:00 +0300
+
 rustconn (0.16.8-1) unstable; urgency=medium
 
   * Fixed KeePassXC not being detected in Flatpak ("keepassxc-cli not found")
