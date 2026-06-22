@@ -6,7 +6,7 @@
 #
 
 Name:           rustconn
-Version:        0.16.13
+Version:        0.17.0
 Release:        0
 Summary:        Modern connection manager for Linux (SSH, RDP, VNC, SPICE, MOSH, Telnet, Serial, Kubernetes, Zero Trust)
 License:        GPL-3.0-or-later
@@ -48,11 +48,6 @@ BuildRequires:  gcc
 BuildRequires:  make
 %if 0%{?suse_version}
 BuildRequires:  gettext-tools
-# openSUSE's Rust packaging macros (%%cargo_build) link via clang+lld by
-# default; the build root only pulls the versioned clang-NN, so the
-# unversioned `clang` linker driver must be requested explicitly or the
-# build fails with "linker `clang` not found".
-BuildRequires:  clang
 %endif
 %if 0%{?fedora} || 0%{?rhel}
 BuildRequires:  gettext-devel
@@ -158,6 +153,23 @@ replace-with = "vendored-sources"
 directory = "vendor"
 EOF
 
+# openSUSE's Rust toolchain defaults the gnu-target linker to clang, but the
+# bare `/usr/bin/clang` symlink is not reliably present in the OBS build root
+# (only the versioned clang-NN binary is installed), so cargo fails with
+# "linker `clang` not found". Pin the linker to gcc, which is always present
+# via the `gcc` BuildRequires. The `-Wl,-z,relro,-z,now` hardening link-args in
+# RUSTFLAGS are forwarded by gcc exactly as by clang, so no hardening is lost.
+%if 0%{?suse_version}
+cat >> .cargo/config.toml <<EOF
+
+[target.x86_64-unknown-linux-gnu]
+linker = "gcc"
+
+[target.aarch64-unknown-linux-gnu]
+linker = "gcc"
+EOF
+%endif
+
 %build
 # Use bundled Rust toolchain for Fedora/RHEL
 %if 0%{?fedora} || 0%{?rhel}
@@ -247,6 +259,18 @@ done
 %{_datadir}/locale/*/LC_MESSAGES/rustconn.mo
 
 %changelog
+* Tue Jun 23 2026 Anton Isaiev <totoshko88@gmail.com> - 0.17.0-0
+- Packaging (openSUSE): pin the cargo linker to gcc in %prep to fix "linker `clang` not found" — the bare /usr/bin/clang symlink is not reliably present in the OBS build root
+- Security: kubectl and Zero Trust Generic sessions now spawn argv directly instead of via sh -c, preventing shell-metacharacter command injection from imported/untrusted configs
+- Security: removed the obsolete legacy XOR credential fallback (only AES-256-GCM credentials are read)
+- Security: documented the machine-key threat model and the Passbolt passphrase Known Issue in SECURITY.md
+- Security: wrap transient Bitwarden/KeePassXC serialized buffers in Zeroizing
+- Added workspace split-layout restore on Open
+- Improved terminal highlight rendering (pre-parsed colours, allocation-free hot path) and connection sort (cached lowercase keys)
+- Converted the embedded-RDP autotype dialog to adw::Dialog; header-bar icon buttons now meet the 44x44 minimum tap target
+- Build: narrowed the tokio feature set from "full" to the features used
+- Updated rustls 0.23.40->0.23.41
+
 * Mon Jun 22 2026 Anton Isaiev <totoshko88@gmail.com> - 0.16.13-0
 - Added RDP round-trip time (latency) display — embedded IronRDP sessions show RTT in the toolbar when the server reports network characteristics via the Auto-Detect PDU; the Echo virtual channel is also registered
 - Dynamic RDP resolution change now works in embedded mode — the Display Control channel is now registered, so window resizes no longer force a full reconnect on servers that support it

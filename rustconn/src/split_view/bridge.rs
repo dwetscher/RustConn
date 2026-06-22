@@ -1,8 +1,7 @@
 //! Bridge module providing legacy-compatible API over new split view system
 //!
 //! This module provides `SplitViewBridge` which implements the same API as the
-//! legacy `SplitTerminalView` but uses the new `SplitViewAdapter` and
-//! `TabSplitManager` internally.
+//! legacy `SplitTerminalView` but uses the new `SplitViewAdapter` internally.
 //!
 //! It also contains `SplitDirection` and `TerminalPane` types that were previously
 //! in the legacy module, kept here for backward compatibility with existing code.
@@ -216,10 +215,6 @@ impl TerminalPane {
 
     /// Returns the currently displayed session ID
     #[must_use]
-    #[allow(
-        dead_code,
-        reason = "kept alive for GTK widget lifecycle / future API exposure"
-    )]
     pub const fn current_session(&self) -> Option<Uuid> {
         self.current_session
     }
@@ -459,6 +454,16 @@ impl SplitViewBridge {
     #[must_use]
     pub fn pane_count(&self) -> usize {
         self.adapter.borrow().panel_count()
+    }
+
+    /// Returns the top-level split direction and position, if this bridge is
+    /// currently split.
+    ///
+    /// Used to persist the layout in a workspace profile. Returns `None` for a
+    /// single (unsplit) pane.
+    #[must_use]
+    pub fn root_split(&self) -> Option<(rustconn_core::split::SplitDirection, f64)> {
+        self.adapter.borrow().root_split()
     }
 
     /// Returns all pane UUIDs (legacy compatibility)
@@ -1816,10 +1821,6 @@ impl SplitViewBridge {
     ///
     /// * `on_session_selected` - Callback invoked when a session is selected.
     ///   Receives (panel_uuid, session_id) and should move the session to the panel.
-    #[allow(
-        dead_code,
-        reason = "kept alive for GTK widget lifecycle / future API exposure"
-    )]
     pub fn setup_select_tab_callback<F>(&self, on_session_selected: F)
     where
         F: Fn(Uuid, Uuid) + Clone + 'static,
