@@ -46,7 +46,7 @@ libadwaita = { version = "0.9", features = ["v1_5"] }
 
 # Utilities
 async-channel = "2.5"
-uuid = { version = "1.22", features = ["v4", "serde"] }
+uuid = { version = "1.22", features = ["v4", "v5", "serde"] }
 chrono = { version = "0.4", features = ["serde"] }
 thiserror = "2.0"
 async-trait = "0.1"

@@ -16,6 +16,321 @@ use secrecy::SecretString;
 use std::rc::Rc;
 use uuid::Uuid;
 
+/// Returns `true` if `text` ends with an SSH password prompt, in any of the
+/// supported UI languages.
+///
+/// Returns `false` for key-passphrase prompts: those require `key_passphrase`,
+/// not the account password. Shared by initial connect and in-place reconnect so
+/// multilingual auto-login behaves identically on both paths.
+fn detect_password_prompt(text: &str) -> bool {
+    let lower = text.to_lowercase();
+
+    // Reject passphrase prompts — these need key_passphrase, not the password.
+    let last_line = lower.lines().last().unwrap_or("").trim();
+    if last_line.contains("passphrase for key") || last_line.contains("passphrase for") {
+        return false;
+    }
+
+    lower.ends_with("password: ")
+        || lower.ends_with("password:")
+        || lower.contains("password: \n")
+        || lower.lines().last().is_some_and(|line| {
+            let l = line.trim().to_lowercase();
+            l.ends_with("password:")
+                || l.ends_with("password: ")
+                || l.contains("'s password:")
+                // German
+                || l.ends_with("passwort:")
+                || l.ends_with("passwort: ")
+                || l.ends_with("kennwort:")
+                || l.ends_with("kennwort: ")
+                // French
+                || l.ends_with("mot de passe:")
+                || l.ends_with("mot de passe :")
+                || l.ends_with("mot de passe : ")
+                // Spanish
+                || l.ends_with("contraseña:")
+                || l.ends_with("contraseña: ")
+                // Portuguese
+                || l.ends_with("senha:")
+                || l.ends_with("senha: ")
+                // Ukrainian / Belarusian
+                || l.ends_with("пароль:")
+                || l.ends_with("пароль: ")
+                // Polish
+                || l.ends_with("hasło:")
+                || l.ends_with("hasło: ")
+                // Czech/Slovak
+                || l.ends_with("heslo:")
+                || l.ends_with("heslo: ")
+                // Dutch
+                || l.ends_with("wachtwoord:")
+                || l.ends_with("wachtwoord: ")
+                // Swedish/Danish/Norwegian
+                || l.ends_with("lösenord:")
+                || l.ends_with("lösenord: ")
+                || l.ends_with("adgangskode:")
+                || l.ends_with("adgangskode: ")
+                // Chinese
+                || l.ends_with("密码:")
+                || l.ends_with("密码：")
+                || l.ends_with("密碼:")
+                || l.ends_with("密碼：")
+                // Japanese
+                || l.ends_with("パスワード:")
+                || l.ends_with("パスワード：")
+                // Korean
+                || l.ends_with("비밀번호:")
+                || l.ends_with("비밀번호：")
+                // Generic colon-terminated prompt (catch-all for PAM)
+                || l.ends_with("pass:")
+                || l.ends_with("pass: ")
+        })
+}
+
+/// Builds the SSH command pieces shared by initial connect and in-place
+/// reconnect: the resolved identity file, the extra CLI args (including the
+/// jump-host `ProxyCommand`/`-J` wiring and Flatpak known_hosts), whether
+/// waypipe is used, and the resolved jump-host chain string (for monitoring).
+///
+/// Returns `(identity_file, extra_args, use_waypipe, jump_host_chain)`. For
+/// non-SSH protocols it returns empty defaults.
+///
+/// Extracted from `start_ssh_connection` and `reconnect_ssh_in_place`, which
+/// previously carried ~150 near-identical lines each — a fix to one path could
+/// silently miss the other.
+fn build_ssh_command_args(
+    conn: &rustconn_core::Connection,
+    connection_id: Uuid,
+    state: &SharedAppState,
+    groups: &[rustconn_core::ConnectionGroup],
+) -> (Option<String>, Vec<String>, bool, Option<String>) {
+    let rustconn_core::ProtocolConfig::Ssh(ssh_config) = &conn.protocol_config else {
+        return (None, Vec::new(), false, None);
+    };
+
+    // Resolve key path via inheritance (connection → group → parent group → root)
+    let key = ssh_inheritance::resolve_ssh_key_path(conn, groups)
+        .and_then(|p| {
+            // Resolve stale portal paths: if the stored path doesn't exist,
+            // check the Flatpak SSH dir for a file with the same name.
+            rustconn_core::resolve_key_path(&p)
+        })
+        .map(|p| p.to_string_lossy().to_string());
+
+    // Use build_command_args() for all SSH-specific flags:
+    // identity, IdentitiesOnly, proxy_jump, ControlMaster/Persist,
+    // agent forwarding, X11, compression, custom options, port forwards
+    let mut args = ssh_config.build_command_args();
+
+    // Remove -i <path> from args because the identity file is already
+    // resolved separately via resolve_ssh_key_path() and passed as
+    // `identity_file` to spawn_ssh(). Keeping both causes the key to
+    // appear twice in the final command line.
+    if key.is_some()
+        && let Some(pos) = args.iter().position(|a| a == "-i")
+    {
+        args.remove(pos); // remove "-i"
+        if pos < args.len() {
+            args.remove(pos); // remove the path value
+        }
+    }
+
+    // Resolve jump host chain from connection references (needs state access)
+    let mut jump_hosts = Vec::new();
+    // PKCS#11 provider of the immediate (first) jump hop, if it opts in.
+    // `-o PKCS11Provider` is NOT inherited by ProxyJump child connections,
+    // so it must be injected into the first hop's ProxyCommand explicitly.
+    let mut first_hop_pkcs11: Option<String> = None;
+
+    // Handle string-based proxy jump (legacy/manual or inherited from group)
+    if let Some(proxy) = ssh_inheritance::resolve_ssh_proxy_jump(conn, groups) {
+        jump_hosts.push(proxy);
+    }
+
+    // Handle reference-based jump host (recursive resolution)
+    if let Some(jump_id) = ssh_config.jump_host_id
+        && let Ok(state_ref) = state.try_borrow()
+    {
+        let mut current_id = Some(jump_id);
+        let mut visited = std::collections::HashSet::new();
+        visited.insert(connection_id); // Avoid self-reference loop
+
+        // Limit recursion depth to avoid infinite loops
+        for _ in 0..10 {
+            if let Some(jid) = current_id {
+                if visited.contains(&jid) {
+                    break;
+                }
+                visited.insert(jid);
+
+                if let Some(jump_conn) = state_ref.get_connection(jid) {
+                    // The immediate hop is the one we ProxyCommand into.
+                    let is_first_hop = jump_hosts.is_empty();
+                    // Format: [user@]host[:port]
+                    let mut host_str = jump_conn.host.clone();
+                    if let Some(user) = &jump_conn.username {
+                        host_str = format!("{user}@{host_str}");
+                    }
+                    if jump_conn.port != 22 {
+                        host_str = format!("{}:{}", host_str, jump_conn.port);
+                    }
+                    jump_hosts.push(host_str);
+
+                    // Check if this jump host has its own jumper
+                    if let rustconn_core::ProtocolConfig::Ssh(jump_config) =
+                        &jump_conn.protocol_config
+                    {
+                        // Opt-in PKCS#11 for the first hop (token to reach the bastion)
+                        if is_first_hop {
+                            first_hop_pkcs11 = jump_config
+                                .pkcs11_provider
+                                .clone()
+                                .filter(|p| !p.trim().is_empty());
+                        }
+                        // Prepend manual proxy if exists on jump host (unlikely but possible)
+                        if let Some(p) = &jump_config.proxy_jump {
+                            jump_hosts.insert(jump_hosts.len() - 1, p.clone());
+                        }
+                        current_id = jump_config.jump_host_id;
+                    } else {
+                        current_id = None;
+                    }
+                } else {
+                    current_id = None;
+                }
+            } else {
+                break;
+            }
+        }
+    }
+
+    // In Flatpak, ~/.ssh is read-only — point known_hosts to a writable path.
+    // Must be set BEFORE jump host resolution because ProxyCommand needs it too.
+    let flatpak_known_hosts = {
+        let user_set = ssh_config
+            .custom_options
+            .keys()
+            .any(|k| k.eq_ignore_ascii_case("UserKnownHostsFile"));
+        if user_set {
+            None
+        } else {
+            rustconn_core::get_flatpak_known_hosts_path()
+        }
+    };
+    if let Some(ref kh_path) = flatpak_known_hosts {
+        tracing::debug!(
+            protocol = "ssh",
+            path = %kh_path.display(),
+            "Using Flatpak-writable known_hosts"
+        );
+        args.push("-o".to_string());
+        args.push(format!("UserKnownHostsFile={}", kh_path.display()));
+    }
+
+    // Override proxy_jump with resolved jump host chain if we have
+    // reference-based jump hosts (build_command_args already added -J
+    // for the string-based proxy_jump, so only add if we have more)
+    //
+    // In Flatpak, -J (ProxyJump) spawns a nested SSH process that does NOT
+    // inherit -o or -i flags from the outer command. This means the jump host
+    // SSH tries to write to ~/.ssh/known_hosts (read-only) and cannot find
+    // identity files. Fix: replace -J with -o ProxyCommand that passes
+    // UserKnownHostsFile and identity to the jump host SSH process.
+    let jump_host_str = if jump_hosts.is_empty() {
+        None
+    } else {
+        // Remove the -J added by build_command_args (if proxy_jump was set)
+        if ssh_config.proxy_jump.is_some()
+            && let Some(pos) = args.iter().position(|a| a == "-J")
+        {
+            args.remove(pos); // remove "-J"
+            if pos < args.len() {
+                args.remove(pos); // remove the value
+            }
+        }
+        let chain = jump_hosts.join(",");
+
+        // `-J` spawns a nested SSH process that does NOT inherit -o/-i
+        // from the outer command. When the jump host needs Flatpak
+        // known_hosts/identity OR a PKCS#11 token, switch to an explicit
+        // ProxyCommand that passes those to the first hop.
+        if flatpak_known_hosts.is_some() || first_hop_pkcs11.is_some() {
+            // Build a ProxyCommand for the first hop;
+            // if there are multiple hops, nest them via -J within ProxyCommand.
+            let mut proxy_parts = vec!["ssh".to_string(), "-W".to_string(), "%h:%p".to_string()];
+
+            // Pass identity file to jump host if we have one
+            if let Some(pos) = args.iter().position(|a| a == "-i")
+                && let Some(key_path) = args.get(pos + 1)
+            {
+                proxy_parts.push("-i".to_string());
+                proxy_parts.push(key_path.clone());
+                proxy_parts.push("-o".to_string());
+                proxy_parts.push("IdentitiesOnly=yes".to_string());
+            }
+
+            // Pass PKCS#11 provider to the first hop (token also auths the bastion)
+            if let Some(ref provider) = first_hop_pkcs11 {
+                proxy_parts.push("-o".to_string());
+                proxy_parts.push(format!("PKCS11Provider={}", provider.trim()));
+            }
+
+            // Pass UserKnownHostsFile to jump host (Flatpak only)
+            if let Some(ref kh_path) = flatpak_known_hosts {
+                proxy_parts.push("-o".to_string());
+                proxy_parts.push(format!("UserKnownHostsFile={}", kh_path.display()));
+            }
+
+            // ponytail: PKCS#11/identity reach only the first hop; deeper
+            // hops in `-J b,c` still don't inherit -o. Fine for the common
+            // single-bastion case; per-hop ProxyCommand nesting if needed.
+            if jump_hosts.len() > 1 {
+                let inner_chain = jump_hosts[1..].join(",");
+                proxy_parts.push("-J".to_string());
+                proxy_parts.push(inner_chain);
+            }
+
+            // Add the first hop destination (parse user@host:port into -p port user@host)
+            append_proxy_command_destination(&mut proxy_parts, &jump_hosts[0]);
+
+            let proxy_cmd = proxy_parts.join(" ");
+            tracing::debug!(
+                protocol = "ssh",
+                proxy_command = %proxy_cmd,
+                "Using ProxyCommand instead of -J (Flatpak known_hosts or PKCS#11 jump host)"
+            );
+            args.push("-o".to_string());
+            args.push(format!("ProxyCommand={proxy_cmd}"));
+        } else {
+            // Non-Flatpak: use standard -J
+            args.push("-J".to_string());
+            args.push(chain.clone());
+        }
+
+        Some(chain)
+    };
+
+    // Check waypipe: enabled in config + binary available on PATH
+    let waypipe = ssh_config.waypipe && rustconn_core::protocol::detect_waypipe().installed;
+    if ssh_config.waypipe && !waypipe {
+        tracing::warn!(
+            protocol = "ssh",
+            host = %conn.host,
+            "Waypipe enabled but not found on PATH, falling back to direct SSH"
+        );
+    }
+    if waypipe {
+        tracing::info!(
+            protocol = "ssh",
+            host = %conn.host,
+            "Using waypipe for Wayland application forwarding"
+        );
+    }
+
+    (key, args, waypipe, jump_host_str)
+}
+
 /// Creates a terminal tab and spawns the SSH process with the given configuration.
 pub fn start_ssh_connection(
     state: &SharedAppState,
@@ -215,231 +530,7 @@ fn start_ssh_connection_internal(
 
     // Get SSH-specific options
     let (identity_file, extra_args, use_waypipe, jump_host_chain) =
-        if let rustconn_core::ProtocolConfig::Ssh(ssh_config) = &conn.protocol_config {
-            // Resolve key path via inheritance (connection → group → parent group → root)
-            let key = ssh_inheritance::resolve_ssh_key_path(conn, &groups)
-                .and_then(|p| {
-                    // Resolve stale portal paths: if the stored path doesn't exist,
-                    // check the Flatpak SSH dir for a file with the same name.
-                    rustconn_core::resolve_key_path(&p)
-                })
-                .map(|p| p.to_string_lossy().to_string());
-
-            // Use build_command_args() for all SSH-specific flags:
-            // identity, IdentitiesOnly, proxy_jump, ControlMaster/Persist,
-            // agent forwarding, X11, compression, custom options, port forwards
-            let mut args = ssh_config.build_command_args();
-
-            // Remove -i <path> from args because the identity file is already
-            // resolved separately via resolve_ssh_key_path() and passed as
-            // `identity_file` to spawn_ssh(). Keeping both causes the key to
-            // appear twice in the final command line.
-            if key.is_some()
-                && let Some(pos) = args.iter().position(|a| a == "-i")
-            {
-                args.remove(pos); // remove "-i"
-                if pos < args.len() {
-                    args.remove(pos); // remove the path value
-                }
-            }
-
-            // Resolve jump host chain from connection references (needs state access)
-            let mut jump_hosts = Vec::new();
-            // PKCS#11 provider of the immediate (first) jump hop, if it opts in.
-            // `-o PKCS11Provider` is NOT inherited by ProxyJump child connections,
-            // so it must be injected into the first hop's ProxyCommand explicitly.
-            let mut first_hop_pkcs11: Option<String> = None;
-
-            // Handle string-based proxy jump (legacy/manual or inherited from group)
-            if let Some(proxy) = ssh_inheritance::resolve_ssh_proxy_jump(conn, &groups) {
-                jump_hosts.push(proxy);
-            }
-
-            // Handle reference-based jump host (recursive resolution)
-            if let Some(jump_id) = ssh_config.jump_host_id
-                && let Ok(state_ref) = state.try_borrow()
-            {
-                let mut current_id = Some(jump_id);
-                let mut visited = std::collections::HashSet::new();
-                visited.insert(connection_id); // Avoid self-reference loop
-
-                // Limit recursion depth to avoid infinite loops
-                for _ in 0..10 {
-                    if let Some(jid) = current_id {
-                        if visited.contains(&jid) {
-                            break;
-                        }
-                        visited.insert(jid);
-
-                        if let Some(jump_conn) = state_ref.get_connection(jid) {
-                            // The immediate hop is the one we ProxyCommand into.
-                            let is_first_hop = jump_hosts.is_empty();
-                            // Format: [user@]host[:port]
-                            let mut host_str = jump_conn.host.clone();
-                            if let Some(user) = &jump_conn.username {
-                                host_str = format!("{}@{}", user, host_str);
-                            }
-                            if jump_conn.port != 22 {
-                                host_str = format!("{}:{}", host_str, jump_conn.port);
-                            }
-                            jump_hosts.push(host_str);
-
-                            // Check if this jump host has its own jumper
-                            if let rustconn_core::ProtocolConfig::Ssh(jump_config) =
-                                &jump_conn.protocol_config
-                            {
-                                // Opt-in PKCS#11 for the first hop (token to reach the bastion)
-                                if is_first_hop {
-                                    first_hop_pkcs11 = jump_config
-                                        .pkcs11_provider
-                                        .clone()
-                                        .filter(|p| !p.trim().is_empty());
-                                }
-                                // Prepend manual proxy if exists on jump host (unlikely but possible)
-                                if let Some(p) = &jump_config.proxy_jump {
-                                    jump_hosts.insert(jump_hosts.len() - 1, p.clone());
-                                }
-                                current_id = jump_config.jump_host_id;
-                            } else {
-                                current_id = None;
-                            }
-                        } else {
-                            current_id = None;
-                        }
-                    } else {
-                        break;
-                    }
-                }
-            }
-
-            // In Flatpak, ~/.ssh is read-only — point known_hosts to a writable path.
-            // Must be set BEFORE jump host resolution because ProxyCommand needs it too.
-            let flatpak_known_hosts = {
-                let user_set = ssh_config
-                    .custom_options
-                    .keys()
-                    .any(|k| k.eq_ignore_ascii_case("UserKnownHostsFile"));
-                if user_set {
-                    None
-                } else {
-                    rustconn_core::get_flatpak_known_hosts_path()
-                }
-            };
-            if let Some(ref kh_path) = flatpak_known_hosts {
-                tracing::debug!(
-                    protocol = "ssh",
-                    path = %kh_path.display(),
-                    "Using Flatpak-writable known_hosts"
-                );
-                args.push("-o".to_string());
-                args.push(format!("UserKnownHostsFile={}", kh_path.display()));
-            }
-
-            // Override proxy_jump with resolved jump host chain if we have
-            // reference-based jump hosts (build_command_args already added -J
-            // for the string-based proxy_jump, so only add if we have more)
-            //
-            // In Flatpak, -J (ProxyJump) spawns a nested SSH process that does NOT
-            // inherit -o or -i flags from the outer command. This means the jump host
-            // SSH tries to write to ~/.ssh/known_hosts (read-only) and cannot find
-            // identity files. Fix: replace -J with -o ProxyCommand that passes
-            // UserKnownHostsFile and identity to the jump host SSH process.
-            let jump_host_str = if jump_hosts.is_empty() {
-                None
-            } else {
-                // Remove the -J added by build_command_args (if proxy_jump was set)
-                if ssh_config.proxy_jump.is_some()
-                    && let Some(pos) = args.iter().position(|a| a == "-J")
-                {
-                    args.remove(pos); // remove "-J"
-                    if pos < args.len() {
-                        args.remove(pos); // remove the value
-                    }
-                }
-                let chain = jump_hosts.join(",");
-
-                // `-J` spawns a nested SSH process that does NOT inherit -o/-i
-                // from the outer command. When the jump host needs Flatpak
-                // known_hosts/identity OR a PKCS#11 token, switch to an explicit
-                // ProxyCommand that passes those to the first hop.
-                if flatpak_known_hosts.is_some() || first_hop_pkcs11.is_some() {
-                    // Build a ProxyCommand for the first hop;
-                    // if there are multiple hops, nest them via -J within ProxyCommand.
-                    let mut proxy_parts =
-                        vec!["ssh".to_string(), "-W".to_string(), "%h:%p".to_string()];
-
-                    // Pass identity file to jump host if we have one
-                    if let Some(pos) = args.iter().position(|a| a == "-i")
-                        && let Some(key_path) = args.get(pos + 1)
-                    {
-                        proxy_parts.push("-i".to_string());
-                        proxy_parts.push(key_path.clone());
-                        proxy_parts.push("-o".to_string());
-                        proxy_parts.push("IdentitiesOnly=yes".to_string());
-                    }
-
-                    // Pass PKCS#11 provider to the first hop (token also auths the bastion)
-                    if let Some(ref provider) = first_hop_pkcs11 {
-                        proxy_parts.push("-o".to_string());
-                        proxy_parts.push(format!("PKCS11Provider={}", provider.trim()));
-                    }
-
-                    // Pass UserKnownHostsFile to jump host (Flatpak only)
-                    if let Some(ref kh_path) = flatpak_known_hosts {
-                        proxy_parts.push("-o".to_string());
-                        proxy_parts.push(format!("UserKnownHostsFile={}", kh_path.display()));
-                    }
-
-                    // ponytail: PKCS#11/identity reach only the first hop; deeper
-                    // hops in `-J b,c` still don't inherit -o. Fine for the common
-                    // single-bastion case; per-hop ProxyCommand nesting if needed.
-                    if jump_hosts.len() > 1 {
-                        let inner_chain = jump_hosts[1..].join(",");
-                        proxy_parts.push("-J".to_string());
-                        proxy_parts.push(inner_chain);
-                    }
-
-                    // Add the first hop destination (parse user@host:port into -p port user@host)
-                    append_proxy_command_destination(&mut proxy_parts, &jump_hosts[0]);
-
-                    let proxy_cmd = proxy_parts.join(" ");
-                    tracing::debug!(
-                        protocol = "ssh",
-                        proxy_command = %proxy_cmd,
-                        "Using ProxyCommand instead of -J (Flatpak known_hosts or PKCS#11 jump host)"
-                    );
-                    args.push("-o".to_string());
-                    args.push(format!("ProxyCommand={proxy_cmd}"));
-                } else {
-                    // Non-Flatpak: use standard -J
-                    args.push("-J".to_string());
-                    args.push(chain.clone());
-                }
-
-                Some(chain)
-            };
-
-            // Check waypipe: enabled in config + binary available on PATH
-            let waypipe = ssh_config.waypipe && rustconn_core::protocol::detect_waypipe().installed;
-            if ssh_config.waypipe && !waypipe {
-                tracing::warn!(
-                    protocol = "ssh",
-                    host = %host,
-                    "Waypipe enabled but not found on PATH, falling back to direct SSH"
-                );
-            }
-            if waypipe {
-                tracing::info!(
-                    protocol = "ssh",
-                    host = %host,
-                    "Using waypipe for Wayland application forwarding"
-                );
-            }
-
-            (key, args, waypipe, jump_host_str)
-        } else {
-            (None, Vec::new(), false, None)
-        };
+        build_ssh_command_args(conn, connection_id, state, &groups);
 
     // Update last_connected timestamp
     if let Ok(mut state_mut) = state.try_borrow_mut()
@@ -546,78 +637,13 @@ fn start_ssh_connection_internal(
             let Some(text) = notebook_clone.get_terminal_text(session_id) else {
                 return;
             };
-            let lower = text.to_lowercase();
 
-            // Reject passphrase prompts — these need key_passphrase, not password
-            let last_line = lower.lines().last().unwrap_or("").trim();
-            if last_line.contains("passphrase for key") || last_line.contains("passphrase for") {
-                return;
-            }
-
-            // Check for SSH password prompts in multiple languages (case-insensitive)
-            let has_prompt = lower.ends_with("password: ")
-                || lower.ends_with("password:")
-                || lower.contains("password: \n")
-                || lower.lines().last().is_some_and(|line| {
-                    let l = line.trim().to_lowercase();
-                    l.ends_with("password:")
-                        || l.ends_with("password: ")
-                        || l.contains("'s password:")
-                        // German
-                        || l.ends_with("passwort:")
-                        || l.ends_with("passwort: ")
-                        || l.ends_with("kennwort:")
-                        || l.ends_with("kennwort: ")
-                        // French
-                        || l.ends_with("mot de passe:")
-                        || l.ends_with("mot de passe :")
-                        || l.ends_with("mot de passe : ")
-                        // Spanish
-                        || l.ends_with("contraseña:")
-                        || l.ends_with("contraseña: ")
-                        // Portuguese
-                        || l.ends_with("senha:")
-                        || l.ends_with("senha: ")
-                        // Italian
-                        || l.ends_with("password:")
-                        // Ukrainian / Belarusian
-                        || l.ends_with("пароль:")
-                        || l.ends_with("пароль: ")
-                        // Polish
-                        || l.ends_with("hasło:")
-                        || l.ends_with("hasło: ")
-                        // Czech/Slovak
-                        || l.ends_with("heslo:")
-                        || l.ends_with("heslo: ")
-                        // Dutch
-                        || l.ends_with("wachtwoord:")
-                        || l.ends_with("wachtwoord: ")
-                        // Swedish/Danish/Norwegian
-                        || l.ends_with("lösenord:")
-                        || l.ends_with("lösenord: ")
-                        || l.ends_with("adgangskode:")
-                        || l.ends_with("adgangskode: ")
-                        // Chinese
-                        || l.ends_with("密码:")
-                        || l.ends_with("密码：")
-                        || l.ends_with("密碼:")
-                        || l.ends_with("密碼：")
-                        // Japanese
-                        || l.ends_with("パスワード:")
-                        || l.ends_with("パスワード：")
-                        // Korean
-                        || l.ends_with("비밀번호:")
-                        || l.ends_with("비밀번호：")
-                        // Generic colon-terminated prompt (catch-all for PAM)
-                        || l.ends_with("pass:")
-                        || l.ends_with("pass: ")
-                });
-
-            if has_prompt {
+            if detect_password_prompt(&text) {
                 use secrecy::ExposeSecret;
-                let pw = vault_password.expose_secret();
-                // Send password + Enter
-                let input = format!("{pw}\n");
+                // Wrap in Zeroizing so the plaintext password is wiped from memory
+                // immediately after it is handed to VTE, instead of lingering until GC.
+                let input =
+                    zeroize::Zeroizing::new(format!("{}\n", vault_password.expose_secret()));
                 notebook_clone.send_text_to_session(session_id, &input);
                 password_sent_clone.set(true);
                 tracing::info!(
@@ -863,151 +889,9 @@ pub fn reconnect_ssh_in_place(
             if ssh.jump_host_id.is_some() || ssh.proxy_command.is_some()
     ) || ssh_inheritance::resolve_ssh_proxy_jump(&conn, &groups).is_some();
 
-    // Build SSH args (same logic as start_ssh_connection_internal)
+    // Build SSH args (shared with start_ssh_connection).
     let (identity_file, extra_args, use_waypipe, jump_host_chain) =
-        if let rustconn_core::ProtocolConfig::Ssh(ssh_config) = &conn.protocol_config {
-            // Resolve key path via inheritance (connection → group → parent group → root)
-            let key = ssh_inheritance::resolve_ssh_key_path(&conn, &groups)
-                .and_then(|p| rustconn_core::resolve_key_path(&p))
-                .map(|p| p.to_string_lossy().to_string());
-
-            let mut args = ssh_config.build_command_args();
-
-            // Remove -i <path> from args because the identity file is already
-            // resolved separately via resolve_ssh_key_path() and passed as
-            // `identity_file` to spawn_ssh(). Keeping both causes the key to
-            // appear twice in the final command line.
-            if key.is_some()
-                && let Some(pos) = args.iter().position(|a| a == "-i")
-            {
-                args.remove(pos); // remove "-i"
-                if pos < args.len() {
-                    args.remove(pos); // remove the path value
-                }
-            }
-
-            let mut jump_hosts = Vec::new();
-            // PKCS#11 of the first jump hop (not inherited via -J — see start path).
-            let mut first_hop_pkcs11: Option<String> = None;
-            // Handle string-based proxy jump (legacy/manual or inherited from group)
-            if let Some(proxy) = ssh_inheritance::resolve_ssh_proxy_jump(&conn, &groups) {
-                jump_hosts.push(proxy);
-            }
-            if let Some(jump_id) = ssh_config.jump_host_id
-                && let Ok(state_ref) = state.try_borrow()
-            {
-                let mut current_id = Some(jump_id);
-                let mut visited = std::collections::HashSet::new();
-                visited.insert(connection_id);
-                for _ in 0..10 {
-                    if let Some(jid) = current_id {
-                        if visited.contains(&jid) {
-                            break;
-                        }
-                        visited.insert(jid);
-                        if let Some(jump_conn) = state_ref.get_connection(jid) {
-                            let is_first_hop = jump_hosts.is_empty();
-                            let mut host_str = jump_conn.host.clone();
-                            if let Some(user) = &jump_conn.username {
-                                host_str = format!("{}@{}", user, host_str);
-                            }
-                            if jump_conn.port != 22 {
-                                host_str = format!("{}:{}", host_str, jump_conn.port);
-                            }
-                            jump_hosts.push(host_str);
-                            if let rustconn_core::ProtocolConfig::Ssh(jump_config) =
-                                &jump_conn.protocol_config
-                            {
-                                if is_first_hop {
-                                    first_hop_pkcs11 = jump_config
-                                        .pkcs11_provider
-                                        .clone()
-                                        .filter(|p| !p.trim().is_empty());
-                                }
-                                if let Some(p) = &jump_config.proxy_jump {
-                                    jump_hosts.insert(jump_hosts.len() - 1, p.clone());
-                                }
-                                current_id = jump_config.jump_host_id;
-                            } else {
-                                current_id = None;
-                            }
-                        } else {
-                            current_id = None;
-                        }
-                    } else {
-                        break;
-                    }
-                }
-            }
-
-            let flatpak_known_hosts = {
-                let user_set = ssh_config
-                    .custom_options
-                    .keys()
-                    .any(|k| k.eq_ignore_ascii_case("UserKnownHostsFile"));
-                if user_set {
-                    None
-                } else {
-                    rustconn_core::get_flatpak_known_hosts_path()
-                }
-            };
-            if let Some(ref kh_path) = flatpak_known_hosts {
-                args.push("-o".to_string());
-                args.push(format!("UserKnownHostsFile={}", kh_path.display()));
-            }
-
-            let jump_host_str = if jump_hosts.is_empty() {
-                None
-            } else {
-                if ssh_config.proxy_jump.is_some()
-                    && let Some(pos) = args.iter().position(|a| a == "-J")
-                {
-                    args.remove(pos);
-                    if pos < args.len() {
-                        args.remove(pos);
-                    }
-                }
-                let chain = jump_hosts.join(",");
-                if flatpak_known_hosts.is_some() || first_hop_pkcs11.is_some() {
-                    let mut proxy_parts =
-                        vec!["ssh".to_string(), "-W".to_string(), "%h:%p".to_string()];
-                    if let Some(pos) = args.iter().position(|a| a == "-i")
-                        && let Some(key_path) = args.get(pos + 1)
-                    {
-                        proxy_parts.push("-i".to_string());
-                        proxy_parts.push(key_path.clone());
-                        proxy_parts.push("-o".to_string());
-                        proxy_parts.push("IdentitiesOnly=yes".to_string());
-                    }
-                    if let Some(ref provider) = first_hop_pkcs11 {
-                        proxy_parts.push("-o".to_string());
-                        proxy_parts.push(format!("PKCS11Provider={}", provider.trim()));
-                    }
-                    if let Some(ref kh_path) = flatpak_known_hosts {
-                        proxy_parts.push("-o".to_string());
-                        proxy_parts.push(format!("UserKnownHostsFile={}", kh_path.display()));
-                    }
-                    if jump_hosts.len() > 1 {
-                        let inner_chain = jump_hosts[1..].join(",");
-                        proxy_parts.push("-J".to_string());
-                        proxy_parts.push(inner_chain);
-                    }
-                    append_proxy_command_destination(&mut proxy_parts, &jump_hosts[0]);
-                    let proxy_cmd = proxy_parts.join(" ");
-                    args.push("-o".to_string());
-                    args.push(format!("ProxyCommand={proxy_cmd}"));
-                } else {
-                    args.push("-J".to_string());
-                    args.push(chain.clone());
-                }
-                Some(chain)
-            };
-
-            let waypipe = ssh_config.waypipe && rustconn_core::protocol::detect_waypipe().installed;
-            (key, args, waypipe, jump_host_str)
-        } else {
-            (None, Vec::new(), false, None)
-        };
+        build_ssh_command_args(&conn, connection_id, state, &groups);
 
     // Re-wire child-exited handler for the new process
     MainWindow::setup_child_exited_handler(state, notebook, sidebar, session_id, connection_id);
@@ -1093,28 +977,13 @@ pub fn reconnect_ssh_in_place(
             let Some(text) = notebook_clone.get_terminal_text(session_id) else {
                 return;
             };
-            let lower = text.to_lowercase();
 
-            // Reject passphrase prompts — these need key_passphrase, not password
-            let last_line = lower.lines().last().unwrap_or("").trim();
-            if last_line.contains("passphrase for key") || last_line.contains("passphrase for") {
-                return;
-            }
-
-            let has_prompt = lower.ends_with("password: ")
-                || lower.ends_with("password:")
-                || lower.contains("password: \n")
-                || lower.lines().last().is_some_and(|line| {
-                    let l = line.trim().to_lowercase();
-                    l.ends_with("password:")
-                        || l.ends_with("password: ")
-                        || l.contains("'s password:")
-                });
-
-            if has_prompt {
+            if detect_password_prompt(&text) {
                 use secrecy::ExposeSecret;
-                let pw = vault_password.expose_secret();
-                let input = format!("{pw}\n");
+                // Wrap in Zeroizing so the plaintext password is wiped from memory
+                // immediately after it is handed to VTE, instead of lingering until GC.
+                let input =
+                    zeroize::Zeroizing::new(format!("{}\n", vault_password.expose_secret()));
                 notebook_clone.send_text_to_session(session_id, &input);
                 password_sent_clone.set(true);
             }
