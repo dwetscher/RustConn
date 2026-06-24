@@ -9,9 +9,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **WinBox connection preset** ([#190](https://github.com/totoshko88/RustConn/issues/190)) — added a ready-made template (Remote Desktop category) for MikroTik's WinBox GUI: `WinBox ${host} ${user} ${password}`
 - **Native PKCS#11 / YubiKey SSH authentication** ([#189](https://github.com/totoshko88/RustConn/issues/189)) — a new "PKCS#11 Provider" field in the SSH connection editor (Session group) lets you point at a hardware-token library (e.g. `/usr/lib64/libykcs11.so.2`); it maps to `-o PKCS11Provider=<path>`, so YubiKey/PIV/smart-card keys are offered without the SSH-agent workaround. The directive is also imported from `~/.ssh/config` (`PKCS11Provider`).
   - **Works through SSH tunnels** — because `-o PKCS11Provider` is *not* inherited by `ProxyJump` child connections, the provider of a jump-host connection is now injected explicitly into the first hop's `ProxyCommand` (terminal SSH and RDP/VNC/SPICE tunnels). Enable PKCS#11 on the bastion connection to authenticate the jump itself with the token.
   - PKCS#11 does not force `IdentitiesOnly`, so the token's keys are always offered. The PIN/touch prompt appears in the session terminal. Note: with a jump host the token may prompt once per hop (separate SSH processes).
+
+### Fixed
+
+- **Flatpak: GUI / non-`script` Generic commands now launch** ([#190](https://github.com/totoshko88/RustConn/issues/190)) — a Generic Zero Trust command failed with `Portal call failed: Failed to start command: "script"` whenever the host had no reachable `script` (util-linux) binary — atomic distros, or `script` outside the sandbox PATH the `flatpak-spawn` portal resolves against. GUI tools such as WinBox also do not need the PTY that `script` allocates. The host command is now run through a login shell (`sh -lc`, so the host PATH resolves binaries) that probes for `script` and falls back to a plain `sh -c` when it is absent
 
 ### Changed
 

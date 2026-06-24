@@ -1338,8 +1338,19 @@ pub fn start_zerotrust_connection(
         // Escape single quotes for safe embedding in '...' shell string:
         // replace ' with '\'' (end quote, escaped quote, start quote)
         let escaped = template.replace('\'', "'\\''");
+        // Run on the host through a *login* shell (`sh -lc`) so the host PATH is
+        // used to resolve binaries. `script` (util-linux) allocates a host PTY
+        // for interactive TUI tools, but it is not present on every host
+        // (atomic distros, or `script` outside the sandbox PATH) and GUI tools
+        // (e.g. WinBox, #190) do not need a PTY at all. So we probe the host for
+        // `script` and fall back to a plain `sh -c` when it is missing — this
+        // fixes both the "Failed to start command: script" portal error and
+        // launching GUI programs from a Generic command.
+        // ponytail: single login-shell probe per launch; fine for one-shot
+        // command spawn (not in a hot path).
+        let host_runner = "if command -v script >/dev/null 2>&1; then exec script -qfc \"$1\" /dev/null; else exec sh -c \"$1\"; fi";
         let spawn_cmd = format!(
-            "flatpak-spawn --host --env=TERM=xterm-256color -- script -qfc '{escaped}' /dev/null"
+            "flatpak-spawn --host --env=TERM=xterm-256color -- sh -lc '{host_runner}' rustconn '{escaped}'"
         );
         notebook.spawn_command(session_id, &["/bin/sh", "-c", &spawn_cmd], None, None, None);
     } else {
