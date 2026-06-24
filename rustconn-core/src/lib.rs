@@ -13,7 +13,7 @@
 //! - [`secret`] - Credential backends (`KeePassXC`, libsecret)
 //! - [`search`] - Fuzzy search with caching and debouncing
 //! - [`automation`] - Expect scripts, key sequences, tasks
-//! - [`performance`] - Memory optimization, metrics, pooling
+//! - [`performance`] - Connection-string interner (dedup) + search debouncer
 //!
 //! # Feature Flags
 //!
